@@ -1,7 +1,7 @@
 name: Release
 
-# Push a version tag like v1.0.1 to publish. Uses npm trusted publishing (OIDC):
-# no npm token is stored in GitHub, and provenance is attached automatically.
+# Push a version tag like v1.0.1 to publish. Uses npm trusted publishing (OIDC) once it is set
+# up (see RELEASING.md), and attaches provenance.
 # Only full version tags start a release. The moving major tag (v1) that users pin
 # the action to does not; this workflow moves it after a successful publish.
 on:
@@ -47,7 +47,12 @@ jobs:
       # Prereleases (a "-" in the version) go to the "next" dist-tag, so `npm install setupscore`
       # keeps getting the newest stable version. A version that is already on npm is skipped,
       # so a failed release can be re-run.
+      # The first version is published with a short-lived token (the NPM_TOKEN secret), because
+      # npm only allows trusted publishing for a package that already exists. Once trusted
+      # publishing is set up, delete the secret: npm then signs in with OIDC alone.
       - name: Publish to npm
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
           version="${GITHUB_REF_NAME#v}"
           if [ -n "$(npm view "setupscore@$version" version 2> /dev/null)" ]; then

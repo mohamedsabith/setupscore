@@ -2,7 +2,7 @@
 
 All notable changes to this project are documented here. The project follows [Semantic Versioning](https://semver.org/). The command line, exit codes, `setupscore.yml` and the JSON output (`schemaVersion`) are the public API.
 
-## 1.0.0 - 2026-11-05
+## 1.0.0 - 2026-11-06
 
 First release.
 
