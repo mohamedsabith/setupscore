@@ -13,8 +13,8 @@ inputs:
     description: Extra arguments, for example "--strict" for check or "--setup-b main --baseline --budget 3" for run. Split into words like a shell does (quotes work), but nothing is expanded
     default: ''
   version:
-    description: setupscore version from npm. "0" is the newest 0.x release; pin an exact version such as "0.1.2" for repeatable results
-    default: '0'
+    description: setupscore version from npm. "1" is the newest 1.x release; pin an exact version such as "1.0.0" for repeatable results
+    default: '1'
   claude-code-version:
     description: Claude Code version to install for "run" (an npm version or tag)
     default: latest

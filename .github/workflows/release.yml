@@ -1,14 +1,14 @@
 name: Release
 
-# Push a version tag like v0.1.1 to publish. Uses npm trusted publishing (OIDC):
+# Push a version tag like v1.0.1 to publish. Uses npm trusted publishing (OIDC):
 # no npm token is stored in GitHub, and provenance is attached automatically.
-# Only full version tags start a release. The moving major tag (v0) that users pin
+# Only full version tags start a release. The moving major tag (v1) that users pin
 # the action to does not; this workflow moves it after a successful publish.
 on:
   push:
     tags:
-      - 'v[0-9]+.[0-9]+.[0-9]+' # v0.1.2: published as "latest", moves v0
-      - 'v[0-9]+.[0-9]+.[0-9]+-*' # v0.2.0-beta.1: a prerelease, published as "next"
+      - 'v[0-9]+.[0-9]+.[0-9]+' # v1.0.2: published as "latest", moves v1
+      - 'v[0-9]+.[0-9]+.[0-9]+-*' # v1.1.0-beta.1: a prerelease, published as "next"
 
 permissions:
   contents: read
@@ -17,7 +17,7 @@ jobs:
   publish:
     runs-on: ubuntu-latest
     permissions:
-      contents: write # create the GitHub release and move the major tag (v0)
+      contents: write # create the GitHub release and move the major tag (v1)
       id-token: write # npm trusted publishing and provenance
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -71,7 +71,7 @@ jobs:
           gh release create "$GITHUB_REF_NAME" --title "$GITHUB_REF_NAME" --verify-tag ${prerelease[@]+"${prerelease[@]}"} \
             --notes "See [CHANGELOG.md](https://github.com/$GITHUB_REPOSITORY/blob/main/CHANGELOG.md)."
 
-      # Users pin the action to the major tag (mohamedsabith/setupscore@v0). Move it to this
+      # Users pin the action to the major tag (mohamedsabith/setupscore@v1). Move it to this
       # release, unless this is a prerelease or an older line than the newest release of the major.
       # Needs contents: write (above). If a tag ruleset protects v* tags, let GitHub Actions bypass it.
       - name: Move the major tag

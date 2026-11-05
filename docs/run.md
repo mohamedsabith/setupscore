@@ -176,7 +176,7 @@ jobs:
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0     # tasks come from git history
-      - uses: mohamedsabith/setupscore@v0
+      - uses: mohamedsabith/setupscore@v1
         with:
           command: run
           args: --setup-b origin/main --limit 5 --budget 3 --fail-under 60
@@ -187,4 +187,4 @@ The action posts the results as a pull request comment, and updates the same com
 
 Secrets are not available to pull requests from forks, so `run` only works for branches in your own repository: without a key or token, the action stops before installing anything and says so. Use `command: check` for everything else; it's free. `run` needs Linux or macOS runners, because native Windows has no sandbox.
 
-`args` is split into words like a shell does, so quotes work (`--claude-bin "node ./agent.mjs"`), but nothing is expanded: no `*`, `$VAR` or `$(...)`. To pin versions, set `version` (setupscore, default `0`, the newest `0.x`) and `claude-code-version` (default `latest`).
+`args` is split into words like a shell does, so quotes work (`--claude-bin "node ./agent.mjs"`), but nothing is expanded: no `*`, `$VAR` or `$(...)`. To pin versions, set `version` (setupscore, default `1`, the newest `1.x`) and `claude-code-version` (default `latest`).

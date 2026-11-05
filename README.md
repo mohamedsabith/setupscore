@@ -312,7 +312,7 @@ jobs:
       - uses: actions/setup-node@v7
         with:
           node-version: 22
-      - run: npx setupscore@0
+      - run: npx setupscore@1
 ```
 
 Or use the GitHub Action, which can also score the setup on pull requests and post the result as a comment:
@@ -331,7 +331,7 @@ jobs:
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0                      # tasks come from git history
-      - uses: mohamedsabith/setupscore@v0
+      - uses: mohamedsabith/setupscore@v1
         with:
           command: run                        # or "check" (free)
           args: --setup-b origin/main --limit 5 --budget 3 --fail-under 60
@@ -342,7 +342,7 @@ jobs:
 | --- | --- | --- |
 | `command` | `check` | `check` (free, offline) or `run` (calls Claude Code and costs money) |
 | `args` |  | Extra arguments. Quotes work as in a shell (`--claude-bin "my agent"`); nothing is expanded |
-| `version` | `0` | setupscore version from npm: the newest `0.x`, or an exact version such as `0.1.2` |
+| `version` | `0` | setupscore version from npm: the newest `1.x`, or an exact version such as `1.0.0` |
 | `claude-code-version` | `latest` | Claude Code version to install for `run` |
 | `anthropic-api-key` |  | For `run`: a secret such as `${{ secrets.ANTHROPIC_API_KEY }}` |
 | `claude-code-oauth-token` |  | For `run`, instead of the key: a token from `claude setup-token` |
@@ -369,7 +369,7 @@ Every error message says what went wrong and what to do next. If you hit somethi
 ```json
 {
   "schemaVersion": 1,
-  "tool": { "name": "setupscore", "version": "0.1.0" },
+  "tool": { "name": "setupscore", "version": "1.0.0" },
   "health": 2,
   "summary": { "files": 4, "errors": 4, "warnings": 8, "fixable": 0, "startupTokens": 144 },
   "issues": [
