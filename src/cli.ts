@@ -38,6 +38,9 @@ function start(): void {
     .then((m) => m.main(process.argv.slice(2)))
     .then((code) => {
       process.exitCode = code;
+      // Exit once the output is written. Left to wind down by itself, Node puts back the default
+      // Ctrl+C action while it closes, so a second Ctrl+C right then killed us instead of exit 4.
+      process.stdout.write('', () => process.stderr.write('', () => process.exit(code)));
     })
     .catch((err: unknown) => {
       process.stderr.write(`setupscore could not start: ${err instanceof Error ? err.message : String(err)}\n`);
