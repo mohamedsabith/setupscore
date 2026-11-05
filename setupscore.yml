@@ -1,0 +1,4 @@
+# setupscore checks this repo in CI (dogfooding). The example project is broken on purpose.
+version: 1
+ignore:
+  - 'examples/**'

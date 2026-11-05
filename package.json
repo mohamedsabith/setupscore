@@ -1,0 +1,79 @@
+{
+  "name": "setupscore",
+  "version": "1.0.0",
+  "description": "Check your Claude Code setup (CLAUDE.md, rules, skills, agents, settings, .mcp.json) for broken paths, leaked secrets and contradictions, then measure whether it actually helps: real tasks from your git history, run in an OS sandbox, with a Setup Score.",
+  "keywords": [
+    "claude",
+    "claude-code",
+    "claude-md",
+    "ai-agents",
+    "coding-agent",
+    "lint",
+    "linter",
+    "skills",
+    "mcp",
+    "cli"
+  ],
+  "homepage": "https://github.com/mohamedsabith/setupscore#readme",
+  "bugs": {
+    "url": "https://github.com/mohamedsabith/setupscore/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mohamedsabith/setupscore.git"
+  },
+  "license": "MIT",
+  "author": "Mohamed Sabith (https://github.com/mohamedsabith)",
+  "type": "module",
+  "bin": {
+    "setupscore": "dist/cli.js"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist",
+    "docs/rules.md",
+    "docs/sandbox.md",
+    "docs/run.md",
+    "CHANGELOG.md"
+  ],
+  "engines": {
+    "node": ">=22.12"
+  },
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "typecheck": "tsc --noEmit",
+    "test": "npm run build && vitest run",
+    "test:watch": "vitest",
+    "check:self": "node dist/cli.js check examples/bakery-api",
+    "prepublishOnly": "npm run typecheck && npm test"
+  },
+  "dependencies": {
+    "commander": "^15.0.0",
+    "picocolors": "^1.1.1",
+    "picomatch": "^4.0.7",
+    "yaml": "^2.9.1",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@anthropic-ai/sandbox-runtime": "0.0.81",
+    "@types/node": "^22.19.0",
+    "@types/picomatch": "^4.0.3",
+    "prettier": "3.9.10",
+    "tsup": "^9.0.0",
+    "typescript": "~6.0.3",
+    "vitest": "^5.1.0"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  }
+}

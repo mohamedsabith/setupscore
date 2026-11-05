@@ -1,0 +1,78 @@
+name: Missed problem
+description: Your setup has a real problem that setupscore didn't catch.
+labels: ['type: missed problem', 'area: rules', 'status: needs triage']
+body:
+  - type: markdown
+    attributes:
+      value: |
+        This helps setupscore catch more. A new check must not cause false alarms in other setups, so a small, real example matters most.
+
+        For a completely new kind of check, an [Ideas discussion](https://github.com/mohamedsabith/setupscore/discussions/new?category=ideas) may be a better start.
+
+        Remove API keys, tokens and private paths from everything you paste.
+  - type: textarea
+    id: problem
+    attributes:
+      label: What is wrong in the setup?
+    validations:
+      required: true
+  - type: textarea
+    id: example
+    attributes:
+      label: Smallest example
+      description: The smallest files that show the problem, with their paths.
+      render: text
+    validations:
+      required: true
+  - type: textarea
+    id: impact
+    attributes:
+      label: How does it hurt Claude?
+      description: What Claude did wrong because of it, or a link to documentation or other evidence.
+    validations:
+      required: true
+  - type: dropdown
+    id: rule
+    attributes:
+      label: Which rule should have caught it?
+      options:
+        - broken-reference
+        - broken-import
+        - missing-script
+        - invalid-config
+        - secret
+        - misnamed-file
+        - risky-permission
+        - env-not-denied
+        - mcp-config
+        - contradiction
+        - vague-rule
+        - duplicate-rule
+        - too-long
+        - deep-import
+        - unused-path-rule
+        - skill-frontmatter
+        - agent-frontmatter
+        - A new rule
+        - Not sure
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: setupscore version
+      description: Output of `npx setupscore --version`
+      placeholder: 1.0.0
+    validations:
+      required: true
+  - type: checkboxes
+    id: confirm
+    attributes:
+      label: Before you submit
+      options:
+        - label: I tried the newest version (`npx setupscore@latest`).
+          required: true
+        - label: I removed secrets from everything above.
+          required: true
+        - label: If AI helped me write this report, I checked it and can answer questions about it.
+          required: true

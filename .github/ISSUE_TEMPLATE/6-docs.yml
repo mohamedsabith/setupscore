@@ -1,0 +1,40 @@
+name: Documentation
+description: Something in the README or the docs is wrong, missing, outdated or unclear.
+labels: ['type: docs', 'status: needs triage']
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Small fixes, such as a typo or a broken link, can go straight to a pull request. Use the pencil icon on the page on GitHub.
+  - type: input
+    id: where
+    attributes:
+      label: Where?
+      description: The file and section, or a link.
+      placeholder: docs/rules.md, section broken-reference
+    validations:
+      required: true
+  - type: dropdown
+    id: kind
+    attributes:
+      label: What is wrong?
+      options:
+        - Incorrect
+        - Missing
+        - Unclear or hard to translate
+        - Outdated
+        - Typo or broken link
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: What is the problem?
+      description: Quote the text, and say what is wrong with it.
+    validations:
+      required: true
+  - type: textarea
+    id: fix
+    attributes:
+      label: What should it say?
+      description: Your suggested text, if you have one.

@@ -1,0 +1,39 @@
+# Code owners are asked to review every pull request that changes their paths.
+# https://docs.github.com/articles/about-code-owners
+#
+# Today one maintainer owns everything. The paths below are security-sensitive: they are listed
+# on their own so that, once there are more maintainers, they can require a review from the
+# people who know them (see GOVERNANCE.md, "How the project grows"). On a personal account,
+# owners must be people; teams need a GitHub organization. The last matching line wins.
+
+*                           @mohamedsabith
+
+# Repository automation, releases and the published package
+/.github/                   @mohamedsabith
+/.releaserc.json            @mohamedsabith
+/scripts/                   @mohamedsabith
+/package.json               @mohamedsabith
+/package-lock.json          @mohamedsabith
+
+# The GitHub Action
+/action.yml                 @mohamedsabith
+/action/                    @mohamedsabith
+
+# The sandbox, secrets and safe file writes
+/src/sandbox/               @mohamedsabith
+/src/core/redact.ts         @mohamedsabith
+/src/core/secrets.ts        @mohamedsabith
+/src/core/fsx.ts            @mohamedsabith
+
+# What keeps the score honest: hidden tests, the answer kept out of reach, the agent's environment
+/src/run/checks.ts          @mohamedsabith
+/src/run/setups.ts          @mohamedsabith
+/src/tasks/testsetup.ts     @mohamedsabith
+/src/tasks/workspace.ts     @mohamedsabith
+/src/agent/                 @mohamedsabith
+/test/sandbox.test.ts       @mohamedsabith
+
+# Policies
+/SECURITY.md                @mohamedsabith
+/GOVERNANCE.md              @mohamedsabith
+/MAINTAINERS.md             @mohamedsabith

@@ -1,0 +1,101 @@
+name: Score looks wrong
+description: A Setup Score, a verdict, or the result of an attempt in `run` or `watch` looks wrong.
+labels: ['type: score looks wrong', 'area: run', 'status: needs triage']
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you. Scores are only useful if you can trust them, so these reports matter.
+
+        **Did Claude pass without a real fix, or see the answer (the later commit or the hidden tests)?** That is a security problem. Don't open an issue: [report it privately](https://github.com/mohamedsabith/setupscore/security/advisories/new).
+
+        How the score works is explained in [docs/run.md](https://github.com/mohamedsabith/setupscore/blob/main/docs/run.md#the-setup-score). Remove API keys, tokens and private paths from everything you paste. Don't paste whole transcripts: they contain your code. We will ask for the lines we need.
+  - type: dropdown
+    id: kind
+    attributes:
+      label: What looks wrong?
+      options:
+        - An attempt failed, but Claude's change was correct
+        - An attempt was marked as looking up the answer, but it didn't
+        - An infrastructure problem (API, network, install) counted against a setup
+        - A task is broken or unfair (its tests fail with the real commit, or the prompt is unclear)
+        - A part of the score looks miscalculated (success, rule following, consistency, efficiency, health)
+        - The verdict or a 95% range looks wrong
+        - Rule breaks ("never use X") were counted wrongly
+        - Cost or budget
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: command
+    attributes:
+      label: What you ran
+      description: The exact command, with all flags.
+      placeholder: npx setupscore run --baseline --repeat 2 --limit 5
+      render: shell
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: What looks wrong, and what did you expect?
+      description: Name the task and the attempt if you can, for example "task a41c9e2, setup A, repeat 2".
+    validations:
+      required: true
+  - type: textarea
+    id: results
+    attributes:
+      label: Results
+      description: The run id, and the part of the terminal output, `report.md` or `results.json` that shows the problem. They are in `.setupscore/runs/<run-id>/`.
+      render: text
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: setupscore version
+      description: Output of `npx setupscore --version`
+      placeholder: 1.0.0
+    validations:
+      required: true
+  - type: input
+    id: claude
+    attributes:
+      label: Claude Code version and model
+      description: Output of `claude --version`, and the model if you set one (`--model` or `agent.model`).
+      placeholder: 2.1.318, claude-sonnet-5-5
+    validations:
+      required: true
+  - type: dropdown
+    id: os
+    attributes:
+      label: Operating system
+      options:
+        - macOS
+        - Linux
+        - Windows with WSL2
+        - GitHub Actions runner
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: doctor
+    attributes:
+      label: Output of `npx setupscore doctor --json`
+      render: json
+  - type: input
+    id: repo
+    attributes:
+      label: Public repository
+      description: If the project is public, a link and the commit you ran on help a lot.
+  - type: checkboxes
+    id: confirm
+    attributes:
+      label: Before you submit
+      options:
+        - label: I read how the Setup Score works in docs/run.md.
+          required: true
+        - label: I removed secrets from everything above.
+          required: true
+        - label: If AI helped me write this report, I checked it, the output is real, and I can answer questions about it.
+          required: true

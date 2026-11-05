@@ -1,0 +1,9 @@
+# Prettier also skips everything in .gitignore (node_modules/, dist/, coverage/, .setupscore/).
+package-lock.json
+
+# Written by semantic-release in its own Markdown style.
+CHANGELOG.md
+
+# Inputs that must stay exactly as they are: the example is broken on purpose, fixtures are test data.
+examples/
+test/fixtures/

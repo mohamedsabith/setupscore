@@ -1,0 +1,56 @@
+name: Feature request
+description: Suggest a new command, flag, rule, output or integration.
+labels: ['type: feature', 'status: needs triage']
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Open-ended ideas fit better in [Discussions: Ideas](https://github.com/mohamedsabith/setupscore/discussions/new?category=ideas). Check the [roadmap](https://github.com/mohamedsabith/setupscore/blob/main/ROADMAP.md) too: it lists what is planned and what is not.
+
+        Changes to the public contract (commands, flags, exit codes, `setupscore.yml`, the JSON output, the Action's inputs and outputs) are discussed before anyone writes code. For a new rule, evidence matters most: a real setup where the problem made Claude Code do a worse job.
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - check and rules
+        - tasks
+        - run and the Setup Score
+        - report, suggest or watch
+        - GitHub Action
+        - setupscore.yml
+        - Library API
+        - Other agents (Codex, Cursor, Gemini CLI)
+        - Docs
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem does this solve?
+      description: Describe the situation and who has it, not the solution.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: What would you like setupscore to do?
+      description: For a rule, give one example it should catch and one it must not flag.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives you considered
+      description: Other tools, workarounds, or other ways setupscore could solve it.
+  - type: checkboxes
+    id: confirm
+    attributes:
+      label: Before you submit
+      options:
+        - label: I searched the open and closed issues and discussions.
+          required: true
+        - label: If AI helped me write this, I checked it and can answer questions about it.
+          required: true
+        - label: I would like to open a pull request for this.

@@ -1,0 +1,3 @@
+# Keep LF line endings on every platform (Windows checkouts too), so file contents,
+# hashes and line numbers match what the tests expect.
+* text=auto eol=lf

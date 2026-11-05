@@ -1,0 +1,117 @@
+name: Bug report
+description: setupscore crashed, printed something wrong, or a command didn't do what the docs say.
+labels: ['type: bug', 'status: needs triage']
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for reporting this. Before you start:
+
+        - **setupscore flagged something that is fine?** Use the [False alarm](https://github.com/mohamedsabith/setupscore/issues/new?template=2-false-alarm.yml) form.
+        - **A Setup Score or an attempt result looks wrong?** Use the [Score looks wrong](https://github.com/mohamedsabith/setupscore/issues/new?template=4-score-looks-wrong.yml) form.
+        - **A security problem** (a way out of the sandbox, a leaked secret, a way to read the answer or fake a pass)? Don't open an issue. [Report it privately](https://github.com/mohamedsabith/setupscore/security/advisories/new).
+        - **A question?** Ask in [Discussions](https://github.com/mohamedsabith/setupscore/discussions/new?category=q-a).
+
+        Remove API keys, tokens, `.env` values and private paths from everything you paste. You can write in your own language with a translator.
+  - type: dropdown
+    id: command
+    attributes:
+      label: Command
+      description: Which command or part of setupscore has the problem?
+      options:
+        - check
+        - check --fix
+        - doctor
+        - tasks
+        - run
+        - report
+        - suggest
+        - watch
+        - GitHub Action
+        - Library API (import { check } from 'setupscore')
+        - Other or not sure
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: setupscore version
+      description: Output of `npx setupscore --version`. Please try the newest version first (`npx setupscore@latest`).
+      placeholder: 1.0.0
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: The exact command you ran, and what went wrong.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect?
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: How can we reproduce it?
+      description: A link to a public repository, or the smallest CLAUDE.md, .claude/ files, .mcp.json or setupscore.yml that show the problem.
+      placeholder: |
+        1. Create CLAUDE.md with ...
+        2. Run `npx setupscore check`
+        3. See ...
+    validations:
+      required: true
+  - type: textarea
+    id: output
+    attributes:
+      label: Output
+      description: The terminal output or the `--json` output, as text (not a screenshot). For a crash, run the command again with `SETUPSCORE_DEBUG=1` and paste that output. For `run`, include the run id.
+      render: shell
+    validations:
+      required: true
+  - type: textarea
+    id: doctor
+    attributes:
+      label: Output of `npx setupscore doctor --json`
+      description: Needed for `tasks`, `run`, `watch` and sandbox problems.
+      render: json
+  - type: dropdown
+    id: os
+    attributes:
+      label: Operating system
+      options:
+        - macOS
+        - Linux
+        - Windows
+        - Windows with WSL2
+        - GitHub Actions runner
+        - Other
+    validations:
+      required: true
+  - type: input
+    id: node
+    attributes:
+      label: Node.js version
+      description: Output of `node --version`
+      placeholder: v24.11.0
+    validations:
+      required: true
+  - type: input
+    id: claude
+    attributes:
+      label: Claude Code version
+      description: Only for `run`, `suggest` and `watch`. Output of `claude --version`.
+  - type: checkboxes
+    id: confirm
+    attributes:
+      label: Before you submit
+      options:
+        - label: I searched the open and closed issues, and this is not a duplicate.
+          required: true
+        - label: I removed secrets from everything above.
+          required: true
+        - label: If AI helped me write this report, I checked it, the output is real, and I can answer questions about it.
+          required: true

@@ -1,0 +1,14 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Ask a question
+    url: https://github.com/mohamedsabith/setupscore/discussions/new?category=q-a
+    about: How do I ...? Help with setupscore.yml, CI, or reading a Setup Score. Please don't open an issue for questions.
+  - name: Suggest an idea or a new rule
+    url: https://github.com/mohamedsabith/setupscore/discussions/new?category=ideas
+    about: Not sure yet if it is a bug or a feature? Start a discussion first.
+  - name: Report a security vulnerability
+    url: https://github.com/mohamedsabith/setupscore/security/advisories/new
+    about: A way out of the sandbox, a leaked secret, a way to read the answer or fake a pass. Report it privately, never in a public issue.
+  - name: Problem with Claude Code itself
+    url: https://github.com/anthropics/claude-code/issues
+    about: setupscore checks and measures your setup. Bugs in Claude Code, its sign-in or its answers belong in Anthropic's tracker.

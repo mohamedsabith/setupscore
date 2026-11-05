@@ -1,0 +1,9 @@
+{
+  "name": "bakery-api",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "test": "node --test",
+    "lint": "echo lint ok"
+  }
+}

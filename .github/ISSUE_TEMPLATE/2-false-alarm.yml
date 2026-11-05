@@ -1,0 +1,85 @@
+name: False alarm
+description: setupscore flagged something in your setup that is actually fine.
+labels: ['type: false alarm', 'area: rules', 'status: needs triage']
+body:
+  - type: markdown
+    attributes:
+      value: |
+        False alarms are the most useful reports we get: a linter that people turn off helps nobody.
+
+        Until it is fixed, you can silence the line with `<!-- setupscore-disable-next-line rule-id -->` above it, or turn the rule off in `setupscore.yml`. See [docs/rules.md](https://github.com/mohamedsabith/setupscore/blob/main/docs/rules.md).
+
+        Remove API keys, tokens and private paths from everything you paste.
+  - type: dropdown
+    id: rule
+    attributes:
+      label: Rule
+      description: The rule id at the end of the finding.
+      options:
+        - broken-reference
+        - broken-import
+        - missing-script
+        - invalid-config
+        - secret
+        - misnamed-file
+        - risky-permission
+        - env-not-denied
+        - mcp-config
+        - contradiction
+        - vague-rule
+        - duplicate-rule
+        - too-long
+        - deep-import
+        - unused-path-rule
+        - skill-frontmatter
+        - agent-frontmatter
+        - Other or not sure
+    validations:
+      required: true
+  - type: textarea
+    id: lines
+    attributes:
+      label: The flagged lines
+      description: The file path, and the flagged lines from your CLAUDE.md, rule, skill, agent, settings.json or .mcp.json, with a few lines around them.
+      render: text
+    validations:
+      required: true
+  - type: textarea
+    id: finding
+    attributes:
+      label: setupscore's output
+      description: The finding as setupscore printed it.
+      render: text
+    validations:
+      required: true
+  - type: textarea
+    id: why
+    attributes:
+      label: Why is this fine?
+      description: For example, the file is created by the build, or the two instructions apply to different folders.
+    validations:
+      required: true
+  - type: input
+    id: repo
+    attributes:
+      label: Public repository
+      description: If the setup is public, a link to it helps a lot.
+  - type: input
+    id: version
+    attributes:
+      label: setupscore version
+      description: Output of `npx setupscore --version`
+      placeholder: 1.0.0
+    validations:
+      required: true
+  - type: checkboxes
+    id: confirm
+    attributes:
+      label: Before you submit
+      options:
+        - label: I tried the newest version (`npx setupscore@latest`).
+          required: true
+        - label: I removed secrets from everything above.
+          required: true
+        - label: If AI helped me write this report, I checked it, the output is real, and I can answer questions about it.
+          required: true

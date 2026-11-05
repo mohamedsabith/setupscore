@@ -1,0 +1,26 @@
+import { isAbsolute, posix, relative, sep } from 'node:path';
+
+/** Turn any OS path into a forward-slash path. */
+export const toPosix = (p: string): string => (sep === '\\' ? p.replaceAll('\\', '/') : p);
+
+/** Normalise a relative path: remove `./`, resolve `..`, keep forward slashes. */
+export const normRel = (p: string): string => {
+  const n = posix.normalize(toPosix(p));
+  return n === '.' ? '' : n.replace(/^\.\//, '');
+};
+
+/** Join a folder (relative to the root) and a path written inside a file. */
+export const joinRel = (dir: string, p: string): string => normRel(posix.join(dir, p));
+
+export const dirOf = (rel: string): string => {
+  const d = posix.dirname(rel);
+  return d === '.' ? '' : d;
+};
+
+export const baseOf = (rel: string): string => posix.basename(rel);
+
+/** A path to show the user: relative to the current folder when it is inside it, otherwise absolute. */
+export const displayPath = (abs: string, cwd: string = process.cwd()): string => {
+  const rel = relative(cwd, abs);
+  return !rel ? '.' : rel.startsWith('..') || isAbsolute(rel) ? abs : rel;
+};

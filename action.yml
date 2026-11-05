@@ -1,0 +1,181 @@
+name: setupscore
+description: Check your Claude Code setup on every pull request, and optionally score it on real tasks from your git history.
+author: Mohamed Sabith
+branding:
+  icon: check-circle
+  color: blue
+
+inputs:
+  command:
+    description: '"check" (free, offline) or "run" (calls Claude Code and costs money)'
+    default: check
+  args:
+    description: Extra arguments, for example "--strict" for check or "--setup-b main --baseline --budget 3" for run. Split into words like a shell does (quotes work), but nothing is expanded
+    default: ''
+  version:
+    description: setupscore version from npm. "0" is the newest 0.x release; pin an exact version such as "0.1.2" for repeatable results
+    default: '0'
+  claude-code-version:
+    description: Claude Code version to install for "run" (an npm version or tag)
+    default: latest
+  anthropic-api-key:
+    description: Needed for "run". Pass a secret, e.g. secrets.ANTHROPIC_API_KEY
+    required: false
+  claude-code-oauth-token:
+    description: Alternative to the API key, from "claude setup-token" (your Claude subscription)
+    required: false
+  comment:
+    description: Post or update a pull request comment with the run results ("run" only; needs pull-requests write permission)
+    default: 'true'
+
+outputs:
+  exit-code:
+    description: setupscore's exit code (0 ok, 1 problems, 2 usage, 3 environment, 4 stopped early)
+    value: ${{ steps.setupscore.outputs.exit-code || steps.install.outputs.exit-code || steps.prepare.outputs.exit-code }}
+  report:
+    description: Path to the Markdown summary of this run ("run" only; empty if the run stopped before writing one)
+    value: ${{ steps.setupscore.outputs.report }}
+
+runs:
+  using: composite
+  steps:
+    # Inputs are passed through environment variables, never pasted into a script,
+    # so text from a pull request cannot inject shell commands.
+    # Everything that can fail fast is checked here, before anything is installed.
+    - id: prepare
+      name: Check the inputs
+      shell: bash
+      env:
+        SETUPSCORE_COMMAND: ${{ inputs.command }}
+        HAS_KEY: ${{ inputs.anthropic-api-key != '' || inputs.claude-code-oauth-token != '' }}
+      run: |
+        fail() {
+          echo "::error title=setupscore::$2"
+          echo "exit-code=$1" >> "$GITHUB_OUTPUT"
+          exit "$1"
+        }
+        command=$(printf '%s' "$SETUPSCORE_COMMAND" | tr '[:upper:]' '[:lower:]')
+        case "$command" in
+          check|run) ;;
+          *) fail 2 'command must be check or run.' ;;
+        esac
+        if [ "$command" = run ]; then
+          if [ "$RUNNER_OS" = Windows ]; then
+            fail 3 'command: run needs an OS sandbox, and native Windows has none. Run this job on ubuntu-latest or macos-latest (command: check works on Windows).'
+          fi
+          if [ "$HAS_KEY" != true ] && [ -z "${ANTHROPIC_AUTH_TOKEN:-}" ] && [ -z "${CLAUDE_CODE_USE_BEDROCK:-}" ]; then
+            fail 3 'command: run got no key or token. Pass anthropic-api-key or claude-code-oauth-token from a repository secret. GitHub gives no secrets to pull requests from forks, so use command: check for those (it is free and needs no key).'
+          fi
+        fi
+        echo "command=$command" >> "$GITHUB_OUTPUT"
+        # Keep the job's own Node.js when it is new enough; set one up only when it is missing or too old.
+        if node -e 'const [a, b] = process.versions.node.split(".").map(Number); process.exit(a > 22 || (a === 22 && b >= 12) ? 0 : 1)' 2> /dev/null; then
+          echo "setup-node=false" >> "$GITHUB_OUTPUT"
+        else
+          echo "Node.js 22.12 or newer is needed and not on this runner, so it is set up now."
+          echo "setup-node=true" >> "$GITHUB_OUTPUT"
+        fi
+
+    - if: steps.prepare.outputs.setup-node == 'true'
+      uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+      with:
+        node-version: 22
+
+    - id: install
+      name: Install the sandbox tools and Claude Code
+      if: steps.prepare.outputs.command == 'run'
+      shell: bash
+      env:
+        CLAUDE_CODE_VERSION: ${{ inputs.claude-code-version }}
+      run: |
+        # The OS sandbox needs bubblewrap and socat on Linux, and ripgrep (rg) on Linux and macOS.
+        install() {
+          if [ "$RUNNER_OS" = "Linux" ]; then
+            sudo apt-get update -q || return
+            sudo apt-get install -y -q bubblewrap socat ripgrep || return
+            sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0 || true
+          elif [ "$RUNNER_OS" = "macOS" ] && ! command -v rg > /dev/null; then
+            brew install ripgrep || return
+          fi
+          npm install -g "@anthropic-ai/claude-code@${CLAUDE_CODE_VERSION:-latest}" || return
+        }
+        if ! install; then
+          echo "::error title=setupscore::Could not install the sandbox tools (bubblewrap, socat, ripgrep) or Claude Code (see the log above)."
+          echo "exit-code=3" >> "$GITHUB_OUTPUT"
+          exit 3
+        fi
+
+    - id: setupscore
+      shell: bash
+      env:
+        SETUPSCORE_COMMAND: ${{ steps.prepare.outputs.command }}
+        SETUPSCORE_ARGS: ${{ inputs.args }}
+        SETUPSCORE_VERSION: ${{ inputs.version }}
+        ANTHROPIC_API_KEY: ${{ inputs.anthropic-api-key }}
+        CLAUDE_CODE_OAUTH_TOKEN: ${{ inputs.claude-code-oauth-token }}
+      run: |
+        dir=$(mktemp -d "${RUNNER_TEMP:-/tmp}/setupscore.XXXXXX")
+        # Split args like a shell would (quotes work), but never expand globs, variables or
+        # $(commands). The words come back separated by NUL bytes.
+        if ! node "$GITHUB_ACTION_PATH/action/split-args.mjs" > "$dir/args" 2> "$dir/args-error"; then
+          echo "::error title=setupscore::$(head -n 1 "$dir/args-error")"
+          echo "exit-code=2" >> "$GITHUB_OUTPUT"
+          exit 0
+        fi
+        args=()
+        while IFS= read -r -d '' a; do args+=("$a"); done < "$dir/args"
+        if [ "$SETUPSCORE_COMMAND" = run ]; then
+          args=(--yes ${args[@]+"${args[@]}"})
+          # setupscore writes this run's Markdown summary here, so an older run's report is never posted.
+          export SETUPSCORE_REPORT_FILE="$dir/report.md"
+        fi
+        set +e
+        npx --yes "setupscore@${SETUPSCORE_VERSION}" "$SETUPSCORE_COMMAND" ${args[@]+"${args[@]}"}
+        code=$?
+        set -e
+        echo "exit-code=$code" >> "$GITHUB_OUTPUT"
+        if [ -n "${SETUPSCORE_REPORT_FILE:-}" ] && [ -s "$SETUPSCORE_REPORT_FILE" ]; then
+          echo "report=$SETUPSCORE_REPORT_FILE" >> "$GITHUB_OUTPUT"
+          if [ -n "${GITHUB_STEP_SUMMARY:-}" ]; then
+            cat "$SETUPSCORE_REPORT_FILE" >> "$GITHUB_STEP_SUMMARY" || echo "::warning title=setupscore::Could not add the results to the job summary."
+          fi
+        fi
+
+    # A comment that cannot be posted is only a warning: it never changes the job's result.
+    - name: Comment on the pull request
+      if: steps.prepare.outputs.command == 'run' && inputs.comment == 'true' && github.event_name == 'pull_request'
+      shell: bash
+      env:
+        GH_TOKEN: ${{ github.token }}
+        GH_REPO: ${{ github.repository }}
+        PR: ${{ github.event.pull_request.number }}
+        REPORT: ${{ steps.setupscore.outputs.report }}
+      run: |
+        if [ -z "$REPORT" ] || [ ! -s "$REPORT" ]; then
+          echo "This run stopped before writing its results, so no comment is posted (see the step above)."
+          exit 0
+        fi
+        warn() {
+          echo "::warning title=setupscore::Could not $1 the pull request comment, so the results are only in the job summary. Comments need 'pull-requests: write' permission."
+        }
+        # Update setupscore's own earlier comment: written by this bot and starting with the marker.
+        ids=$(gh api "repos/$GH_REPO/issues/$PR/comments?per_page=100" --paginate \
+          --jq '.[] | select(.user.login == "github-actions[bot]" and ((.body // "") | startswith("<!-- setupscore -->"))) | .id') || ids=""
+        id=${ids%%$'\n'*}
+        if [ -n "$id" ]; then
+          gh api -X PATCH "repos/$GH_REPO/issues/comments/$id" -F "body=@$REPORT" > /dev/null || warn update
+        else
+          gh pr comment "$PR" --body-file "$REPORT" > /dev/null || warn post
+        fi
+
+    - name: Result
+      if: ${{ !cancelled() }}
+      shell: bash
+      env:
+        CODE: ${{ steps.setupscore.outputs.exit-code || steps.install.outputs.exit-code || steps.prepare.outputs.exit-code }}
+      run: |
+        if [ -z "$CODE" ]; then
+          echo "::error title=setupscore::setupscore did not run (see the steps above)."
+          exit 1
+        fi
+        exit "$CODE"
