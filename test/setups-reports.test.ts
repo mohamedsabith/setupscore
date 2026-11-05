@@ -14,7 +14,7 @@ import {
 } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import { mdText, renderRunMarkdown } from '../src/report/run.js';
 import { scoreRun } from '../src/run/score.js';
@@ -23,6 +23,8 @@ import type { RunRecord } from '../src/run/store.js';
 import { applySuggestion, suggest, trimEnd, type Suggestion } from '../src/run/suggest.js';
 import { Workspace } from '../src/tasks/workspace.js';
 import { git, initGit, makeRepo, writeFiles } from './helpers.js';
+
+const posixOnly = process.platform === 'win32' ? it.skip : it;
 
 const CLI = fileURLToPath(new URL('../dist/cli.js', import.meta.url));
 const FAKE = fileURLToPath(new URL('./fixtures/fake-claude.mjs', import.meta.url));
@@ -94,7 +96,7 @@ describe('what a setup holds (C3, C5)', () => {
       'New setup',
     );
     chmodSync(join(root, '.claude/hooks/check.sh'), 0o755);
-    git(root, 'add', '-A');
+    git(root, 'update-index', '--chmod=+x', '.claude/hooks/check.sh'); // Windows files have no executable bit
     git(root, 'commit', '-qm', 'Hook is executable');
     // Personal and ignored files that are not part of the setup.
     writeFiles(root, {
@@ -106,7 +108,8 @@ describe('what a setup holds (C3, C5)', () => {
     return root;
   }
 
-  it('copies whole skill folders and hook scripts (executable), never personal files', async () => {
+  // Reads the executable bit from disk, which Windows does not have.
+  posixOnly('copies whole skill folders and hook scripts (executable), never personal files', async () => {
     const root = repo();
     for (const source of ['working', 'HEAD']) {
       const s = await snapshotSetup(root, source, 'A', quiet().warn);
@@ -217,7 +220,7 @@ describe('monorepo packages (C4)', () => {
     const ws = await Workspace.create(pkg);
     try {
       await ws.checkout(git(root, 'rev-list', '--max-parents=0', 'HEAD').trim());
-      expect(readFileSync(join(ws.root, 'CLAUDE.md'), 'utf8')).toBe('- ROOT-OLD\n');
+      expect(readFileSync(join(ws.root, 'CLAUDE.md'), 'utf8').replaceAll('\r\n', '\n')).toBe('- ROOT-OLD\n'); // Windows git may check out CRLF
       applySetup(ws.dir, setup);
       expect(readFileSync(join(ws.root, 'CLAUDE.md'), 'utf8')).toBe('- ROOT-NEW\n');
       expect(existsSync(join(ws.root, '.claude/rules/old.md'))).toBe(false);
@@ -289,7 +292,8 @@ describe('links and big files (C6, C8)', () => {
     }
   });
 
-  it('a link that leads out of the repository is left out with a warning', async () => {
+  // Symbolic links need extra rights on Windows.
+  posixOnly('a link that leads out of the repository is left out with a warning', async () => {
     const outside = mkdtempSync(join(tmpdir(), 'setupscore-outside-'));
     writeFileSync(join(outside, 'x.md'), 'outside\n');
     const root = makeRepo({ 'a.txt': 'a\n' });
@@ -303,7 +307,7 @@ describe('links and big files (C6, C8)', () => {
     );
   });
 
-  it('reads a setup from a git ref with a few git processes, however many files and links it has', async () => {
+  posixOnly('reads a setup from a git ref with a few git processes, however many files and links it has', async () => {
     const files: Record<string, string> = {};
     for (let i = 0; i < 300; i++) {
       files[`.claude/skills/s${i}/SKILL.md`] =
@@ -602,7 +606,7 @@ syncBuiltinESMExports();
 
 describe('saving files the user asked for (F4)', () => {
   const withFault = (path: string, code: string) => ({
-    NODE_OPTIONS: `--import ${faultPreload()}`,
+    NODE_OPTIONS: `--import ${pathToFileURL(faultPreload()).href}`, // a URL: --import rejects C:\ paths
     FAULT_PATH: path,
     FAULT_CODE: code,
   });

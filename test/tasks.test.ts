@@ -20,6 +20,8 @@ import { newTestNames, testNames } from '../src/tasks/testnames.js';
 import { explainGitFailure, git as git2, GitError, gitTimeoutMs } from '../src/tasks/git.js';
 import { git, initGit, makeRepo, writeFiles } from './helpers.js';
 
+const posixOnly = process.platform === 'win32' ? it.skip : it;
+
 describe('finding candidate commits', () => {
   it('keeps commits that change both tests and source code, newest first', async () => {
     const root = makeRepo({ 'src/a.ts': '1', 'README.md': 'x' });
@@ -59,7 +61,8 @@ describe('finding candidate commits', () => {
     expect(candidates[0]).toMatchObject({ testFiles: ['src/x.test.js'], sourceFiles: ['src/x.js'] });
   });
 
-  it('reads file names exactly: unicode, quotes and spaces', async () => {
+  // Windows file names cannot hold quotes.
+  posixOnly('reads file names exactly: unicode, quotes and spaces', async () => {
     const root = makeRepo({ 'src/a.js': '1', 'test/a.test.js': 't' });
     initGit(root);
     writeFiles(root, { 'src/ünï.js': '2', 'test/café "q".test.js': 't', 'test/my two.test.js': 't' });
@@ -139,7 +142,7 @@ describe('finding candidate commits', () => {
     const mono = makeRepo({ 'packages/api/package.json': '{}', 'packages/api/test/fixtures/x/package.json': '{}' });
     initGit(mono);
     await expect(checkProjectFolder(mono)).rejects.toMatchObject({
-      fixes: [expect.stringMatching(/setupscore tasks .*packages\/api$/)],
+      fixes: [expect.stringMatching(/setupscore tasks .*packages[\\/]api$/)],
     });
     await expect(checkProjectFolder(join(mono, 'packages/api'))).resolves.toBeUndefined();
     await expect(findCandidates(root, { max: 10, since: 'not-a-date' })).rejects.toMatchObject({
@@ -390,7 +393,7 @@ describe('package managers', () => {
     }
   });
 
-  it('runs only the given files through the real test runner in the test script', () => {
+  posixOnly('runs only the given files through the real test runner in the test script', () => {
     const f = ['a.test.js'];
     expect(runnerCommand('node --test && npm run check:type:ts', f)).toBe("node --test 'a.test.js'");
     expect(runnerCommand('cross-env NODE_ENV=test jest --runInBand', f)).toBe(
@@ -409,14 +412,17 @@ describe('package managers', () => {
     expect(runnerCommand('jest | tee out.txt', f)).toBeNull();
     expect(runnerCommand('node scripts/test.js --test', f)).toBeNull();
     const pm = detectPm(
-      makeRepo({ 'package.json': JSON.stringify({ scripts: { test: 'turbo run test' } }), 'package-lock.json': '{}' }),
+      makeRepo({
+        'package.json': JSON.stringify({ scripts: { test: 'turbo run test' } }),
+        'package-lock.json': '{}',
+      }),
     );
     if ('error' in pm) throw new Error(pm.error);
     expect(pm.test(['x.test.ts'])).toBe('npm test --silent');
     expect(pm.wholeScript).toBe(true);
   });
 
-  it('passes file names so each runner reads them literally', () => {
+  posixOnly('passes file names so each runner reads them literally', () => {
     const f = ['app/[id]/a.test.js', 'app/(shop)/b.test.js'];
     // jest and playwright read regular expressions
     expect(runnerCommand('jest', f)).toBe("jest 'app/\\[id\\]/a\\.test\\.js' 'app/\\(shop\\)/b\\.test\\.js'");
@@ -435,7 +441,7 @@ describe('package managers', () => {
     expect(runnerCommand('cd .. && node --test', ['test/a.test.js'])).toBeNull();
   });
 
-  it('turns off watch mode and coverage thresholds, and runs pretest first', () => {
+  posixOnly('turns off watch mode and coverage thresholds, and runs pretest first', () => {
     const f = ['a.test.js'];
     expect(runnerCommand('vitest --watch', f)).toBe("vitest 'a.test.js'");
     expect(runnerCommand('vitest watch --reporter=dot', f)).toBe("vitest run --reporter=dot 'a.test.js'");
@@ -471,7 +477,7 @@ describe('package managers', () => {
     expect(runnerCommand('tsc -p . && npx jest', f, { pnp: true })).toBe("yarn tsc -p . && yarn jest 'a\\.test\\.ts'");
   });
 
-  it('follows "npm run test:unit" to the runner, and runners started through yarn or pnpm', () => {
+  posixOnly('follows "npm run test:unit" to the runner, and runners started through yarn or pnpm', () => {
     const f = ['test/a.test.js'];
     const scripts = {
       'test:unit': 'node --test',

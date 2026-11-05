@@ -19,6 +19,13 @@ export const dirOf = (rel: string): string => {
 
 export const baseOf = (rel: string): string => posix.basename(rel);
 
+/** A word to paste into a shell hint, quoted only when needed. Windows keeps backslashes inside "...". */
+export function shellArg(s: string): string {
+  const win = process.platform === 'win32';
+  if ((win ? /^[\w@%+=:,./\\-][\w@%+=:,./\\~-]*$/ : /^[\w@%+=:,./-][\w@%+=:,./~-]*$/).test(s)) return s;
+  return win ? `"${s}"` : JSON.stringify(s);
+}
+
 /** A path to show the user: relative to the current folder when it is inside it, otherwise absolute. */
 export const displayPath = (abs: string, cwd: string = process.cwd()): string => {
   const rel = relative(cwd, abs);

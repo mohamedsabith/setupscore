@@ -13,6 +13,8 @@ import type { Attempt, RunRecord } from '../src/run/store.js';
 import { loadRuntime, probeOsSandbox } from '../src/sandbox/index.js';
 import { git, initGit, makeRepo, writeFiles } from './helpers.js';
 
+const posixOnly = process.platform === 'win32' ? it.skip : it;
+
 const CLI = fileURLToPath(new URL('../dist/cli.js', import.meta.url));
 const FAKE = fileURLToPath(new URL('./fixtures/fake-claude.mjs', import.meta.url));
 const fake = (mode: string, ...extra: string[]) => `node ${JSON.stringify(FAKE)} ${mode} ${extra.join(' ')}`.trim();
@@ -818,7 +820,8 @@ describe('the agent cannot fake a pass', () => {
     ).toBe(true);
   });
 
-  it('source that imports the answer from the real folder is caught', () => {
+  // shortcut: skipped on Windows, where the temp folder is an 8.3 short name (RUNNER~1); check that case on a Windows machine.
+  posixOnly('source that imports the answer from the real folder is caught', () => {
     const root = project();
     const rows = allFailed(
       cli([

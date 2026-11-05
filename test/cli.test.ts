@@ -15,6 +15,7 @@ import { beforeAll, describe, expect, it, vi } from 'vitest';
 import { findClaude, stripAnsi } from '../src/agent/claude.js';
 import { runDoctor } from '../src/commands/doctor.js';
 import { NothingToDo } from '../src/core/errors.js';
+import { shellArg } from '../src/core/paths.js';
 import { closestCommand, handleError } from '../src/main.js';
 import { gitRepoProblem } from '../src/commands/doctor.js';
 import { git, initGit, makeRepo, writeFiles } from './helpers.js';
@@ -214,6 +215,22 @@ describe('setupscore CLI', () => {
     expect(run(['help', 'run']).out).toContain('Usage: setupscore run');
     expect(closestCommand('doctr')).toBe('doctor');
     expect(closestCommand('banana')).toBeUndefined();
+  });
+
+  it('quotes paths in hints only when needed, the way each shell reads them', () => {
+    const platform = Object.getOwnPropertyDescriptor(process, 'platform')!;
+    try {
+      expect(shellArg('/tmp/a~1/b')).toBe('/tmp/a~1/b');
+      expect(shellArg('~/b')).toBe('"~/b"');
+      expect(shellArg('a b')).toBe('"a b"');
+      expect(shellArg('a\\b')).toBe('"a\\\\b"');
+      expect(shellArg('')).toBe('""');
+      Object.defineProperty(process, 'platform', { value: 'win32' });
+      expect(shellArg('C:\\Users\\RUNNER~1\\x')).toBe('C:\\Users\\RUNNER~1\\x');
+      expect(shellArg('C:\\My Projects\\x')).toBe('"C:\\My Projects\\x"');
+    } finally {
+      Object.defineProperty(process, 'platform', platform);
+    }
   });
 
   it('says when a file is given where a folder is expected (B20)', () => {

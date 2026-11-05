@@ -42,7 +42,7 @@ vi.mock('node:fs', async (importOriginal) => {
   };
   const ci = (p: unknown) => (fsHooks.caseInsensitive && typeof p === 'string' ? fold(p) : (p as string));
   const denied = (re: RegExp | null, p: unknown) => {
-    if (re && typeof p === 'string' && re.test(p)) {
+    if (re && typeof p === 'string' && re.test(p.replaceAll('\\', '/'))) {
       throw Object.assign(new Error(`EACCES: permission denied, open '${p}'`), { code: 'EACCES', path: p });
     }
   };
@@ -249,7 +249,7 @@ describe('files that cannot be read (B18, F17)', () => {
     } finally {
       fsHooks.denyRead = null;
     }
-    fsHooks.denyDir = new RegExp(`${root}$`);
+    fsHooks.denyDir = new RegExp(`${root.replaceAll('\\', '/')}$`);
     try {
       expect(() => check(root, NO_CONFIG)).toThrow(expect.objectContaining({ code: 'EACCES' }));
     } finally {
@@ -269,9 +269,12 @@ describe('files that cannot be read (B18, F17)', () => {
   }, 30_000);
 
   it('gives a clear error for a setupscore.yml that is a FIFO, a folder, UTF-16 or holds bad ignore patterns', () => {
-    const fifo = makeRepo({ 'CLAUDE.md': 'x' });
-    execFileSync('mkfifo', [join(fifo, 'setupscore.yml')]);
-    expect(() => loadConfig(fifo, RULE_IDS)).toThrow(/not a regular file/);
+    if (process.platform !== 'win32') {
+      // mkfifo makes no real FIFO on Windows.
+      const fifo = makeRepo({ 'CLAUDE.md': 'x' });
+      execFileSync('mkfifo', [join(fifo, 'setupscore.yml')]);
+      expect(() => loadConfig(fifo, RULE_IDS)).toThrow(/not a regular file/);
+    }
     const dir = makeRepo({ 'setupscore.yml/x': '' });
     expect(() => loadConfig(dir, RULE_IDS)).toThrow(/is a folder/);
     const utf16 = makeRepo({});

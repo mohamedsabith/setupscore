@@ -10,7 +10,7 @@ import { NothingToDo, StoppedEarly, UsageError } from './core/errors.js';
 import { renderTasksSummary, runTasks, type TasksFlags } from './commands/tasks.js';
 import { check, type CheckRun } from './core/check.js';
 import { ConfigError, loadConfig, type Config } from './core/config.js';
-import { displayPath } from './core/paths.js';
+import { displayPath, shellArg as asArg } from './core/paths.js';
 import { EnvironmentError } from './sandbox/types.js';
 import { assertSandboxModeAllowed, runProgram, windowsRefusal, type SandboxMode } from './sandbox/index.js';
 import { applyFixes, type Applied } from './core/fix.js';
@@ -35,8 +35,6 @@ interface CheckFlags {
 const write = (text: string) => process.stdout.write(text.endsWith('\n') ? text : `${text}\n`);
 
 /** A path as the user would type it in a command: quoted when it has spaces or other special characters. */
-const asArg = (p: string) => (/[^\w@%+=:,./\\-]/.test(p) ? JSON.stringify(p) : p);
-
 function runCheck(dir: string, flags: CheckFlags): number {
   let run: CheckRun = check(dir);
   let fixed: Applied[] = [];

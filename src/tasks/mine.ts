@@ -1,6 +1,7 @@
 import { existsSync } from 'node:fs';
 import { dirname, join, relative, resolve } from 'node:path';
 import { UsageError } from '../core/errors.js';
+import { shellArg } from '../core/paths.js';
 import { git, tryGit } from './git.js';
 import { TEST_SUPPORT } from './testsetup.js';
 
@@ -181,8 +182,6 @@ export function parseLog(out: string): LogEntry[] {
 }
 
 const here = (dir: string) => (resolve(dir) === process.cwd() ? 'This folder' : dir);
-const shellArg = (s: string) => (/^[\w@%+=:,./-]+$/.test(s) ? s : JSON.stringify(s));
-
 /**
  * Tasks need a JavaScript or TypeScript project (a package.json). Without one, say what to do
  * instead of finding nothing: run on the project folder above ("setupscore tasks src" from inside

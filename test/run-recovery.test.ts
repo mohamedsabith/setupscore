@@ -24,6 +24,8 @@ import { commandPaths } from '../src/sandbox/env.js';
 import { loadRuntime, probeOsSandbox } from '../src/sandbox/index.js';
 import { git, initGit, makeRepo, writeFiles } from './helpers.js';
 
+const posixOnly = process.platform === 'win32' ? it.skip : it;
+
 const CLI = fileURLToPath(new URL('../dist/cli.js', import.meta.url));
 const FAKE = fileURLToPath(new URL('./fixtures/fake-claude.mjs', import.meta.url));
 const fake = (mode: string, ...extra: string[]) => `node ${JSON.stringify(FAKE)} ${mode} ${extra.join(' ')}`.trim();
@@ -186,32 +188,35 @@ describe('a setup that solves nothing scores 0 (X2, C2, run-compare 1.21, 5.43, 
 });
 
 describe('nothing measured is never a pass (R4, C1, D2, F3, I04, I11, real-claude: retries stack)', () => {
-  it('an API that stays down stops the run after 3 sessions in a row, exit 3, every session paid for is counted, --json still prints', () => {
-    const root = project();
-    const n = counter();
-    const r = cli([
-      'run',
-      root,
-      '--claude-bin',
-      counted(n, 'overloaded-always', '--cost=0.01'),
-      '--repeat',
-      '2',
-      '--fail-under',
-      '10',
-      '--json',
-      ...NONE,
-    ]);
-    expect(r.code, r.err).toBe(3);
-    expect(r.err).toMatch(/Claude API could not be used: 3 Claude Code sessions in a row/);
-    expect(r.err).toContain('--resume');
-    expect(calls(n)).toBe(3);
-    const json = JSON.parse(r.out); // the results reach stdout even when the run stops (R10, X6)
-    expect(json.setups[0].attempts).toBe(0);
-    expect(runJson(root).status).toBe('failed');
-    const recorded = lines(root);
-    expect(recorded).toHaveLength(1);
-    expect(recorded[0].metrics.costUsd).toBeCloseTo(0.03);
-  });
+  posixOnly(
+    'an API that stays down stops the run after 3 sessions in a row, exit 3, every session paid for is counted, --json still prints',
+    () => {
+      const root = project();
+      const n = counter();
+      const r = cli([
+        'run',
+        root,
+        '--claude-bin',
+        counted(n, 'overloaded-always', '--cost=0.01'),
+        '--repeat',
+        '2',
+        '--fail-under',
+        '10',
+        '--json',
+        ...NONE,
+      ]);
+      expect(r.code, r.err).toBe(3);
+      expect(r.err).toMatch(/Claude API could not be used: 3 Claude Code sessions in a row/);
+      expect(r.err).toContain('--resume');
+      expect(calls(n)).toBe(3);
+      const json = JSON.parse(r.out); // the results reach stdout even when the run stops (R10, X6)
+      expect(json.setups[0].attempts).toBe(0);
+      expect(runJson(root).status).toBe('failed');
+      const recorded = lines(root);
+      expect(recorded).toHaveLength(1);
+      expect(recorded[0].metrics.costUsd).toBeCloseTo(0.03);
+    },
+  );
 });
 
 describe('budget (R2, R6, R8, B01-B09, B25)', () => {
@@ -251,7 +256,7 @@ describe('budget (R2, R6, R8, B01-B09, B25)', () => {
     expect(lines(root).map((a) => a.status)).toEqual(['passed', 'passed']);
   });
 
-  it('a resume keeps the budget unless --budget is given, asks first, and follows its own hint', () => {
+  posixOnly('a resume keeps the budget unless --budget is given, asks first, and follows its own hint', () => {
     const root = project();
     expect(
       cli(['run', root, '--claude-bin', fake('solve', '--cost=0.15'), '--repeat', '2', '--budget', '0.3', ...NONE])
@@ -514,7 +519,7 @@ describe('a missing package manager stops the run once, with an install hint (li
     expect(missingTool(null)).toBeNull();
   });
 
-  it('in a run', () => {
+  posixOnly('in a run', () => {
     const root = project();
     writeFileSync(join(root, 'setupscore.yml'), 'version: 1\ntasks:\n  install: nosuch-pm install\n');
     const n = counter();
