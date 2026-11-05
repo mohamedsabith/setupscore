@@ -647,7 +647,7 @@ describe('keeping the answer out of reach', () => {
     const top = mkdtempSync(join(tmpdir(), 'setupscore-gitmeta-'));
     writeFiles(top, { 'a.txt': 'x' });
     initGit(top);
-    const hidden = gitMetadata(top).map((p) => p.slice(top.length + 1));
+    const hidden = gitMetadata(top).map((p) => p.slice(top.length + 1).replaceAll('\\', '/'));
     expect(hidden).toContain('.git/HEAD');
     expect(hidden).toContain('.git/refs');
     expect(hidden).not.toContain('.git/objects');

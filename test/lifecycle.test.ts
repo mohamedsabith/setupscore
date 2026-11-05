@@ -258,7 +258,8 @@ describe('workspaces', () => {
       mode: 0o755,
     });
     const home = mkdtempSync(join(tmpdir(), 'setupscore-home-'));
-    writeFileSync(join(home, '.gitconfig'), `[core]\n\thooksPath = ${hookDir}\n`);
+    // Forward slashes: git reads a backslash in its config as an escape.
+    writeFileSync(join(home, '.gitconfig'), `[core]\n\thooksPath = ${hookDir.replaceAll('\\', '/')}\n`);
     const saved = process.env.HOME;
     process.env.HOME = home;
     try {

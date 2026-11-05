@@ -169,7 +169,7 @@ const childOf = (gitCmd, head) => sh(`${gitCmd} log --all --format="%H %P"`).spl
 function findFix(head) {
   const repo = opt('repo', '');
   if (repo) return childOf(`git -C "${repo}"`, head);
-  const commits = sh("git cat-file --batch-all-objects --batch-check='%(objectname) %(objecttype)'")
+  const commits = sh('git cat-file --batch-all-objects --batch-check="%(objectname) %(objecttype)"')
     .split('\n')
     .filter((l) => l.endsWith(' commit'))
     .map((l) => l.split(' ')[0]);
