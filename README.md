@@ -1,6 +1,6 @@
 # setupscore
 
-[![npm](https://img.shields.io/npm/v/setupscore)](https://www.npmjs.com/package/setupscore) [![CI](https://github.com/mohamedsabith/setupscore/actions/workflows/ci.yml/badge.svg)](https://github.com/mohamedsabith/setupscore/actions/workflows/ci.yml) [![license: MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
+[![npm](https://img.shields.io/npm/v/setupscore)](https://www.npmjs.com/package/setupscore) [![license: MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 
 **Check your Claude Code setup before it quietly makes Claude worse.**
 
