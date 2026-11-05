@@ -1,24 +1,63 @@
-# setupscore
+<p align="center">
+  <img src="https://raw.githubusercontent.com/mohamedsabith/setupscore/main/docs/assets/banner.png" alt="setupscore: stop vibe-checking your CLAUDE.md. Benchmark it on your own code: real commits, hidden tests, one score out of 100." width="100%">
+</p>
 
-[![npm](https://img.shields.io/npm/v/setupscore)](https://www.npmjs.com/package/setupscore) [![license: MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
+<p align="center">
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue" alt="License: MIT"></a>
+  <img src="https://img.shields.io/badge/node-%E2%89%A5%2022.12-339933?logo=node.js&logoColor=white" alt="Node.js 22.12 or newer">
+  <img src="https://img.shields.io/badge/check-offline%20%C2%B7%20no%20AI%20calls-2ea44f" alt="check runs offline with no AI calls">
+  <img src="https://img.shields.io/badge/sandbox-no%20Docker%20needed-8250df" alt="OS sandbox, no Docker needed">
+</p>
+
+<p align="center">
+  <a href="#quick-start">Quick start</a> ·
+  <a href="#what-it-checks">What it checks</a> ·
+  <a href="#measure-your-setup-with-claude-code">Measure your setup</a> ·
+  <a href="#use-it-in-ci">CI</a> ·
+  <a href="docs/rules.md">Rules</a> ·
+  <a href="#faq">FAQ</a>
+</p>
+
+# setupscore
 
 **Check your Claude Code setup before it quietly makes Claude worse.**
 
 `CLAUDE.md`, rules, skills, subagents, `settings.json` and `.mcp.json` rot like any other code. A folder gets renamed and the path in `CLAUDE.md` now points nowhere. A script is removed but the instructions still say to run it. Two rules start to disagree. Someone pastes an API key into a skill. Claude doesn't complain; it just does a worse job.
 
-setupscore does two things:
+<p align="center">
+  <img src="https://raw.githubusercontent.com/mohamedsabith/setupscore/main/docs/assets/demo.gif" alt="Running npx setupscore in a project: it lists broken paths, a missing npm script, contradicting and vague rules, a leaked password and MCP problems, then gives an instruction health of 2/10." width="100%">
+</p>
 
-1. **`setupscore check`** finds these problems in about a second. It is **free, offline and makes no AI calls**. Nothing leaves your machine.
-2. **`setupscore run`** measures whether your setup actually helps. It gives Claude Code real tasks from your git history, once with your setup and once without it (or with an older version), checks the work with hidden tests, and gives you a **Setup Score** out of 100.
+## Quick start
 
 ```bash
-npx setupscore          # check
-npx setupscore run      # measure (uses your Claude key, inside an OS sandbox, no Docker)
+npx setupscore          # check: free, offline, about a second
+npx setupscore run      # measure: real tasks from your git history, scored out of 100
 ```
 
 Requires Node.js 22.12 or newer. `check` works on macOS, Linux and Windows; `run` works on macOS, Linux and WSL2.
 
+## Two tools in one
+
+|  | `setupscore check` | `setupscore run` |
+| --- | --- | --- |
+| **Question it answers** | Is my setup broken? | Does my setup actually help Claude? |
+| **How** | Lints `CLAUDE.md`, `.claude/` and `.mcp.json` | Gives Claude Code real tasks from your git history, with and without your setup, and checks the work with hidden tests |
+| **Result** | Errors, warnings and an instruction health score out of 10 | A **Setup Score** out of 100, with 95% ranges |
+| **Network and AI** | None. Nothing leaves your machine | Uses your Claude key or subscription, inside an OS sandbox |
+| **Cost** | Free | A few dollars for 5 tasks (you set the budget) |
+| **Time** | About a second | Minutes |
+
 ## What it looks like
+
+<p align="center">
+  <img src="https://raw.githubusercontent.com/mohamedsabith/setupscore/main/docs/assets/check.png" alt="Terminal output of setupscore check on the example project: 4 errors and 8 warnings across CLAUDE.md, a skill and .mcp.json, each with a plain-English fix." width="100%">
+</p>
+
+This is the [example project](examples/bakery-api) in this repo, which is broken on purpose (output shortened). Secrets are never printed in full.
+
+<details>
+<summary>The same output as text</summary>
 
 ```text
 $ npx setupscore
@@ -46,7 +85,7 @@ CLAUDE.md
   Instruction health 2/10
 ```
 
-This is the [example project](examples/bakery-api) in this repo, which is broken on purpose (output shortened). Secrets are never printed in full.
+</details>
 
 ## Install
 
@@ -152,6 +191,15 @@ Report: .setupscore/runs/20261105-101500-a1b2/report.html
 This is an example: your numbers depend on your project, your tasks and the model. `npx setupscore suggest --apply run-tests` would add the suggested step to CLAUDE.md for you.
 
 How a run works:
+
+```mermaid
+flowchart LR
+  A["Your git history"] -->|"commits that changed code and tests"| B["Tasks<br/>tests fail before, pass after"]
+  B --> C["Claude Code in an OS sandbox<br/>at the commit before, tests hidden"]
+  C -->|"setup A: yours"| D["Hidden tests put back and run"]
+  C -->|"setup B: none or older"| D
+  D --> E["Setup Score 0–100<br/>with 95% ranges"]
+```
 
 1. **Tasks** come from your git history (see [below](#turn-git-history-into-test-tasks)).
 2. Each task goes to Claude Code (`claude -p`) in a throwaway clone at the commit before the change, with the commit's tests hidden. Claude works on its own copy of `node_modules`. This happens once for every setup you compare and every repeat.
