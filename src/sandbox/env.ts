@@ -228,15 +228,19 @@ export function commandPaths(
       if (!dir) continue;
       // Every spelling found in the first folder that has one (claude and claude.cmd): keeping an
       // extra file visible is harmless, hiding the one the shell runs is not.
-      const found = new Set<string>();
+      // Keyed in lower case on Windows: its file system finds claude.cmd as claude.CMD too.
+      const found = new Map<string, string>();
       for (const ext of exts) {
         for (const name of ext ? [first + ext.toLowerCase(), first + ext.toUpperCase()] : [first]) {
           const candidate = join(dir.replace(/^"(.*)"$/, '$1'), name);
-          if (existsSync(candidate)) found.add(real(candidate));
+          if (!existsSync(candidate)) continue;
+          const path = real(candidate);
+          const key = win ? path.toLowerCase() : path;
+          if (!found.has(key)) found.set(key, path);
         }
       }
       if (found.size) {
-        out.push(...found);
+        out.push(...found.values());
         break;
       }
     }

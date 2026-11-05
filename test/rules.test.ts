@@ -972,20 +972,24 @@ describe('skill-frontmatter: odd YAML', () => {
 
 describe('misnamed-file', () => {
   it('warns about wrong letter case and loose skill files (M10, W10)', () => {
-    const issues = lint('misnamed-file', {
-      'claude.md': '- rules',
-      '.Claude/settings.json': '{}',
-      '.Claude/rules/a.md': '- a',
-      '.claude/skills/deploy/skill.md': '---\ndescription: d\n---\n',
-      '.claude/skills/release.md': '# Release',
-    });
-    expect(
-      issues.map((i) => [i.file, i.message.match(/"([^"]+)", not/)?.[1] ?? i.message.match(/\(([^)]+)\)/)?.[1]]),
-    ).toEqual([
+    const found = (files: Record<string, string>) =>
+      lint('misnamed-file', files).map((i) => [
+        i.file,
+        i.message.match(/"([^"]+)", not/)?.[1] ?? i.message.match(/\(([^)]+)\)/)?.[1],
+      ]);
+    // Two projects: on macOS and Windows .Claude/ and .claude/ would be the same folder.
+    expect(found({ 'claude.md': '- rules', '.Claude/settings.json': '{}', '.Claude/rules/a.md': '- a' })).toEqual([
       ['.Claude', '.claude'],
+      ['claude.md', 'CLAUDE.md'],
+    ]);
+    expect(
+      found({
+        '.claude/skills/deploy/skill.md': '---\ndescription: d\n---\n',
+        '.claude/skills/release.md': '# Release',
+      }),
+    ).toEqual([
       ['.claude/skills/deploy/skill.md', '.claude/skills/deploy/SKILL.md'],
       ['.claude/skills/release.md', '.claude/skills/release/SKILL.md'],
-      ['claude.md', 'CLAUDE.md'],
     ]);
   });
 

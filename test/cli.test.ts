@@ -353,7 +353,8 @@ describe('handleError', () => {
       return true;
     });
     try {
-      return { code: handleError(err), text };
+      // CI turns colour on, which wraps the arrows in escape codes.
+      return { code: handleError(err), text: stripAnsi(text) };
     } finally {
       spy.mockRestore();
     }

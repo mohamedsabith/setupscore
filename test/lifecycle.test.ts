@@ -123,7 +123,8 @@ describe.runIf(process.platform !== 'win32')('signals stop a run cleanly (R3, F2
     it(`${sig}: exit 4, run marked stopped, no agent left running, no workspace left`, async () => {
       const root = project();
       const r = await startSlowRun(root);
-      expect(processesWith(r.marker).length, r.output()).toBeGreaterThan(0);
+      // processesWith reads /proc, so it can only see the agent on Linux.
+      if (linux) expect(processesWith(r.marker).length, r.output()).toBeGreaterThan(0);
       r.child.kill(sig);
       const code = await r.done;
       expect(code, r.output()).toBe(4);
