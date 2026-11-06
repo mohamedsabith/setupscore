@@ -13,7 +13,7 @@ npx setupscore suggest                      # evidence-based changes to CLAUDE.m
 
 ## What happens in a run
 
-1. **Tasks.** setupscore reads `.setupscore/tasks.json`. If there is none, it builds tasks from your git history first, as [`setupscore tasks`](../README.md#turn-git-history-into-test-tasks) does, and saves them to `.setupscore/tasks.json` so the next run reuses them. Each task is a past commit whose tests fail before the change and pass after it.
+1. **Tasks.** setupscore reads `.setupscore/tasks.json`. If there is none, it builds tasks from your git history first, as [`setupscore tasks`](reference.md#turn-git-history-into-test-tasks) does, and saves them to `.setupscore/tasks.json` so the next run reuses them. Each task is a past commit whose tests fail before the change and pass after it.
 2. **Setups.** A setup is every `CLAUDE.md`, the `.claude/` folder (rules, skills, agents, commands, `settings.json`) and `.mcp.json`. Personal files (`CLAUDE.local.md`, `settings.local.json`) are never included.
    - `--setup-a` (default `working`) is your files as they are now, uncommitted changes included.
    - `--setup-b <ref>` is another setup from a branch, tag or commit, for example `main` or `HEAD~5`.

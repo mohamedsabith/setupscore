@@ -42,6 +42,7 @@
     "docs/rules.md",
     "docs/sandbox.md",
     "docs/run.md",
+    "docs/reference.md",
     "CHANGELOG.md"
   ],
   "engines": {
