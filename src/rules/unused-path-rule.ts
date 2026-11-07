@@ -53,19 +53,37 @@ export const unusedPathRule: Rule = {
     const files = ctx.repoFiles().map((f) => f.normalize('NFC'));
     const sorted = files.every((p, i) => i === 0 || files[i - 1]! <= p) ? files : [...files].sort();
     const compiled = new Map<string, { base: string; match: (p: string) => boolean } | null>();
-    /** True when some file matches the glob. Only files under the glob's fixed folder are tested. */
-    const anyMatch = (glob: string): boolean => {
-      let c = compiled.get(glob);
+    /**
+     * True when some file under `root` (the rule's base folder, "" or "pkg/") matches the pattern.
+     * Claude Code reads patterns like .gitignore: one without a slash ("*.md") matches a file name at
+     * any depth, a leading slash ("/*.md") anchors it to the base folder, and any other slash anchors
+     * it too ("src/*.ts"). Only files under the pattern's fixed folder are tested.
+     */
+    const anyMatch = (root: string, pattern: string): boolean => {
+      const key = `${root}\0${pattern}`;
+      let c = compiled.get(key);
       if (c === undefined) {
         try {
-          const scan = picomatch.scan(glob);
-          let base = scan.isGlob ? scan.base : glob.slice(0, Math.max(0, glob.lastIndexOf('/')));
+          const anywhere = !pattern.includes('/');
+          const glob = root + pattern.replace(/^\/+/, '');
+          let base = root.replace(/\/$/, '');
+          if (!anywhere) {
+            const scan = picomatch.scan(glob);
+            base = scan.isGlob ? scan.base : glob.slice(0, Math.max(0, glob.lastIndexOf('/')));
+          }
           if (base.includes('\\')) base = ''; // escaped characters: test every file
-          c = { base: base ? `${base}/` : '', match: picomatch(glob, { dot: true }) };
+          const prefix = base ? `${base}/` : '';
+          const match = anywhere
+            ? (() => {
+                const m = picomatch(pattern, { dot: true, basename: true });
+                return (p: string) => m(p.slice(root.length));
+              })()
+            : picomatch(glob, { dot: true });
+          c = { base: prefix, match };
         } catch {
           c = null; // not a glob picomatch can read: cannot check it
         }
-        compiled.set(glob, c);
+        compiled.set(key, c);
       }
       if (c === null) return true;
       for (let i = lowerBound(sorted, c.base); i < sorted.length && sorted[i]!.startsWith(c.base); i++) {
@@ -77,10 +95,10 @@ export const unusedPathRule: Rule = {
       const patterns = toPatterns(f.frontmatter?.data?.paths);
       if (patterns.length === 0 || patterns.some((p) => p.length > MAX_PATTERN)) continue;
       // Folders we do not walk (node_modules, dist, ...) cannot be checked.
-      if (patterns.some((p) => SKIP_DIRS.has(p.split('/')[0]!))) continue;
+      if (patterns.some((p) => SKIP_DIRS.has(p.replace(/^\/+/, '').split('/')[0]!))) continue;
       // Rules in pkg/.claude/rules/ are relative to pkg/.
       const base = f.path.slice(0, f.path.indexOf('.claude/rules/'));
-      if (patterns.some((p) => anyMatch((base + p).normalize('NFC')))) continue;
+      if (patterns.some((p) => anyMatch(base.normalize('NFC'), p.normalize('NFC')))) continue;
       const line = f.lines.find((l) => l.inFrontmatter && /^\s*paths\s*:/.test(l.text))?.n ?? 1;
       const shown =
         patterns

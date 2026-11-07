@@ -958,6 +958,85 @@ describe('unused-path-rule: odd globs', () => {
   });
 });
 
+// How Claude Code matches `paths:` (code.claude.com/docs/en/memory, "Path-specific rules"): a pattern
+// without a slash matches a file name at any depth, a leading slash anchors it to the base folder,
+// and any other slash anchors it too. The base folder is the one that holds the rule's .claude/.
+describe('unused-path-rule: patterns match the way Claude Code matches them', () => {
+  // [rule folder, paths value, files in the repo, flagged?]
+  const cases: [string, string, string[], boolean][] = [
+    // Patterns without a slash match a file name at any depth.
+    ['', '*.mdx', ['docs/guide/a.mdx'], false],
+    ['', '*.mdx', ['a.mdx'], false],
+    ['', '*.mdx', ['src/a.ts'], true],
+    ['', '*.test.ts', ['src/deep/a.test.ts'], false],
+    ['', '*.test.ts', ['src/a.ts'], true],
+    ['', '*.{ts,tsx}', ['web/app/b.tsx'], false],
+    ['', '*.{ts,tsx}', ['web/app/b.js'], true],
+    ['', 'Dockerfile', ['Dockerfile'], false],
+    ['', 'Dockerfile', ['services/api/Dockerfile'], false],
+    ['', 'Dockerfile', ['Dockerfile.dev'], true],
+    ['', 'package.json', ['packages/a/package.json'], false],
+    ['', '*.yml', ['.github/workflows/ci.yml'], false],
+    ['', '*', ['a/b/c.txt'], false],
+    ['', '**', ['a.txt'], false],
+    // A leading slash anchors the pattern to the base folder.
+    ['', '/*.mdx', ['a.mdx'], false],
+    ['', '/*.mdx', ['docs/a.mdx'], true],
+    ['', '/Dockerfile', ['services/api/Dockerfile'], true],
+    ['', '/src/*.ts', ['src/a.ts'], false],
+    ['', '/src/*.ts', ['x/src/a.ts'], true],
+    // Any other slash anchors the pattern too.
+    ['', 'src/*.ts', ['src/a.ts'], false],
+    ['', 'src/*.ts', ['pkg/src/a.ts'], true],
+    ['', 'src/*.ts', ['src/deep/a.ts'], true],
+    ['', 'src/components/*.tsx', ['src/components/a.tsx'], false],
+    ['', 'src/components/*.tsx', ['src/components/x/a.tsx'], true],
+    ['', 'src/components/*.tsx', ['other/src/components/a.tsx'], true],
+    ['', 'src/**/*', ['src/a/b.ts'], false],
+    ['', 'src/**/*', ['lib/a.ts'], true],
+    ['', '**/*.ts', ['a/b/c.ts'], false],
+    ['', '**/*.ts', ['c.ts'], false],
+    ['', '**/*.ts', ['c.js'], true],
+    ['', 'src/api/**/*.ts', ['src/api/v1/a.ts'], false],
+    ['', 'src/api/**/*.ts', ['src/api/a.ts'], false],
+    ['', 'src/api/**/*.ts', ['src/server/a.ts'], true],
+    ['', 'src/**/*.{ts,tsx}', ['src/x/y.tsx'], false],
+    ['', '{src,lib}/*.ts', ['lib/a.ts'], false],
+    ['', '{src,lib}/*.ts', ['app/a.ts'], true],
+    ['', 'tests/**/*.test.ts', ['tests/unit/a.test.ts'], false],
+    ['', '.github/**', ['.github/workflows/ci.yml'], false],
+    ['', './src/*.ts', ['src/a.ts'], false],
+    // Several patterns: the rule loads when any one matches.
+    ['', 'src/gone/**, *.mdx', ['docs/a.mdx'], false],
+    ['', 'src/gone/**, lib/gone/**', ['a.mdx'], true],
+    // Folders setupscore does not walk cannot be checked, so they are never flagged.
+    ['', 'node_modules/**', [], false],
+    ['', '/node_modules/**', [], false],
+    ['', 'dist/**', [], false],
+    // A rule in pkg/.claude/rules/ is relative to pkg/.
+    ['pkg/', '*.mdx', ['pkg/docs/a.mdx'], false],
+    ['pkg/', '*.mdx', ['other/a.mdx'], true],
+    ['pkg/', '*.mdx', ['a.mdx'], true],
+    ['pkg/', '/*.mdx', ['pkg/a.mdx'], false],
+    ['pkg/', '/*.mdx', ['pkg/docs/a.mdx'], true],
+    ['pkg/', 'src/*.ts', ['pkg/src/a.ts'], false],
+    ['pkg/', 'src/*.ts', ['src/a.ts'], true],
+    ['pkg/', '**/*.ts', ['pkg/a/b.ts'], false],
+    ['pkg/', '**/*.ts', ['other/b.ts'], true],
+    ['pkg/', 'Dockerfile', ['pkg/deploy/Dockerfile'], false],
+    ['pkg/', 'Dockerfile', ['deploy/Dockerfile'], true],
+  ];
+  it.each(cases)('rule in "%s.claude/rules", paths %s, files %j: flagged %s', (dir, paths, present, flagged) => {
+    const files: Record<string, string> = { [`${dir}.claude/rules/r.md`]: `---\npaths: "${paths}"\n---\n- x\n` };
+    for (const f of present) files[f] = '';
+    expect(lint('unused-path-rule', files).length).toBe(flagged ? 1 : 0);
+  });
+
+  it('counts the rule file itself: "*.md" always matches its own .md file', () => {
+    expect(lint('unused-path-rule', { '.claude/rules/r.md': '---\npaths: "*.md"\n---\n- x\n' })).toEqual([]);
+  });
+});
+
 describe('skill-frontmatter: odd YAML', () => {
   it('survives a circular alias and shortens very long names', () => {
     const issues = lint('skill-frontmatter', {

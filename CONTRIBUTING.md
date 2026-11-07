@@ -135,9 +135,9 @@ The full map, and the rules for changing code, are in [AGENTS.md](AGENTS.md). Cl
 1. Create `src/rules/<rule-id>.ts`. Export a `Rule` with `id`, `severity`, `summary`, `why` and `check(ctx)`.
 2. Register it in `src/rules/index.ts`.
 3. Add tests to `test/rules.test.ts`: at least one for what it **catches**, and one for what it **must not flag**.
-4. Document it in `docs/rules.md` and in the rules table in `README.md`.
+4. Document it in `docs/rules.md` and in the rules table in `docs/reference.md`.
 5. Add the rule id to the **Rule** lists in `.github/ISSUE_TEMPLATE/2-false-alarm.yml` and `.github/ISSUE_TEMPLATE/3-missed-problem.yml`.
-6. Run it on a few real repositories that use Claude Code, and read every finding. If more than a rare one is wrong, make the rule stricter or make it a warning. Say which repositories you tried in the pull request.
+6. Run it on real repositories that use Claude Code, and read every finding. `npm run corpus` checks the repositories in `scripts/corpus-repos.txt` with the newest release and with your build, and prints every finding that was added or removed (`-- --base 1.0.0 --limit 10` to choose the version and the count). If more than a rare one is wrong, make the rule stricter or make it a warning. Say which repositories you tried in the pull request.
 
 A new rule is a `feat(rules): ...` pull request, so it ships in a minor release.
 

@@ -180,12 +180,12 @@ describe('config', () => {
 });
 
 describe('docs', () => {
-  it('document every rule in docs/rules.md and the README table', () => {
+  it('document every rule in docs/rules.md and the table in docs/reference.md', () => {
     const docs = readFileSync(new URL('../docs/rules.md', import.meta.url), 'utf8');
-    const readme = readFileSync(new URL('../README.md', import.meta.url), 'utf8');
+    const reference = readFileSync(new URL('../docs/reference.md', import.meta.url), 'utf8');
     for (const id of RULE_IDS) {
       expect(docs, `docs/rules.md is missing "## ${id}"`).toContain(`## ${id}\n`);
-      expect(readme, `README.md table is missing ${id}`).toContain(`| \`${id}\` |`);
+      expect(reference, `docs/reference.md table is missing ${id}`).toContain(`| \`${id}\` |`);
     }
   });
 });
