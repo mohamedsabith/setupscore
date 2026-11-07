@@ -135,10 +135,10 @@
   color: '0366d6'
   description: 'Dependency updates (Dependabot)'
 
-# Releases: added by semantic-release to the issues and pull requests a release includes.
+# Releases: added by the maintainer to the issues and pull requests a release includes.
 - name: 'released'
   color: 'bfe5bf'
-  description: 'Included in a release. The bot comment says which one'
+  description: 'Included in a release. CHANGELOG.md says which one'
 - name: 'released on @beta'
   color: 'bfe5bf'
   description: 'Included in a beta prerelease'
