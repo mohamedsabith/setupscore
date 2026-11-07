@@ -1,0 +1,6 @@
+{
+  "$schema": "https://unpkg.com/knip@6/schema.json",
+  "entry": ["action/split-args.mjs", "scripts/*.mjs"],
+  "project": ["src/**/*.ts", "test/**/*.{ts,mjs}", "scripts/**/*.mjs", "action/**/*.mjs"],
+  "ignoreBinaries": ["mkfifo", "setsid", "mount", "umount"]
+}

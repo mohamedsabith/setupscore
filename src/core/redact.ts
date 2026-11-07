@@ -20,6 +20,7 @@ const SECRET_VARS = [
 /** Key shapes that are secret wherever they appear. */
 // A key may follow a word boundary, or a JSON escape such as \n (the text may be serialized JSON).
 const START = '(?:(?<=\\\\[nrtbf])|(?<![A-Za-z0-9_]))';
+// eslint-disable-next-line security/detect-non-literal-regexp -- built from the fixed key shapes below
 const SECRET_SHAPES = new RegExp(
   [
     'sk-ant-[\\w-]{16,}', // Anthropic
@@ -48,7 +49,8 @@ function valuesRegex(env: NodeJS.ProcessEnv): RegExp | null {
   const key = values.join('\0');
   if (cached?.key === key) return cached.re;
   const re = values.length
-    ? new RegExp(
+    ? // eslint-disable-next-line security/detect-non-literal-regexp -- every value is escaped (escapeRe)
+      new RegExp(
         [...new Set(values)]
           .sort((a, b) => b.length - a.length)
           .map(escapeRe)

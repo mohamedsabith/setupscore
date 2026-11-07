@@ -4,7 +4,7 @@ import type { Attempt, RunRecord } from '../run/store.js';
 import type { Suggestion } from '../run/suggest.js';
 import { VERSION } from '../version.js';
 
-export const RUN_REPORT_SCHEMA_VERSION = 1;
+const RUN_REPORT_SCHEMA_VERSION = 1;
 
 const pct = (x: number) => `${Math.round(x * 100)}%`;
 const money = (x: number) => `$${x < 0.1 && x > 0 ? x.toFixed(3) : x.toFixed(2)}`;
@@ -132,7 +132,7 @@ export function mdText(value: unknown): string {
 }
 
 /** A code span for a table cell (| escaped for the table), or escaped plain text when it holds backticks or < >. */
-export function mdCodeCell(value: unknown): string {
+function mdCodeCell(value: unknown): string {
   const text = String(value ?? '')
     .replace(/\s+/g, ' ')
     .trim();

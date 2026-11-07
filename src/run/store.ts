@@ -29,9 +29,9 @@ import type { SetupSnapshot } from './setups.js';
  */
 export const RUN_SCHEMA_VERSION = 1;
 
-export type AttemptStatus = 'passed' | 'failed' | 'error' | 'cancelled';
+type AttemptStatus = 'passed' | 'failed' | 'error' | 'cancelled';
 /** Why an attempt did not pass. Only "task" counts against the setup. */
-export type FailureKind = 'task' | 'infra';
+type FailureKind = 'task' | 'infra';
 
 export interface SetupRecord extends SetupSnapshot {
   /** Instruction health of this setup, 0-10 (from setupscore check). */
@@ -211,7 +211,7 @@ function readChecks(v: unknown): CheckResults | undefined {
 
 /** What one attempt keeps of the test output and of reasons: enough to see what failed. */
 export const MAX_TEST_OUTPUT = 8 * 1024;
-export const MAX_REASON = 1024;
+const MAX_REASON = 1024;
 const MAX_OUTPUT_LINE = 500;
 
 /** Keep the end of a long text (where test summaries are), with long lines shortened. */
@@ -228,7 +228,7 @@ export function capOutput(s: string, max = MAX_TEST_OUTPUT): string {
   return out.length > max ? out.slice(-max) : out;
 }
 
-export const capReason = (s: string | undefined): string | undefined =>
+const capReason = (s: string | undefined): string | undefined =>
   s === undefined ? undefined : s.length > MAX_REASON ? `${s.slice(0, MAX_REASON)}…` : s;
 
 /** Parse an attempts.jsonl line; null for anything that is not a usable attempt. */

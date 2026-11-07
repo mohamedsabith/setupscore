@@ -9,7 +9,7 @@ import { discover } from './discover.js';
 import { gitRenames } from './git.js';
 import { readDisables } from './markdown.js';
 import { maskSecrets } from './secrets.js';
-import type { CheckResult, Context, Issue, Rule, Severity } from './types.js';
+import type { CheckResult, Context, Issue, Rule } from './types.js';
 import { exactLookup, isSetupLink, walk } from './walk.js';
 
 export interface CheckOptions {
@@ -37,13 +37,13 @@ const order = (a: Issue, b: Issue) =>
 
 /** Control characters (terminal escape sequences) from files must never reach the terminal. */
 // eslint-disable-next-line no-control-regex -- matching control characters is the point: they are removed
-const CONTROL = /[\u0000-\u0008\u000b-\u001f\u007f-\u009f‪-‮⁦-⁩]/g;
+const CONTROL = /[\u0000-\u0008\u000b-\u001f\u007f-\u009f\u202a-\u202e\u2066-\u2069]/g;
 
 /**
  * Make text from a setup file safe to print: every secret masked, control characters replaced.
  * Every message and hint goes through this, whatever rule wrote it.
  */
-export const safeText = (text: string): string => maskSecrets(text).replace(CONTROL, '�');
+const safeText = (text: string): string => maskSecrets(text).replace(CONTROL, '�');
 
 function compileIgnore(patterns: string[], source: string | undefined): (rel: string) => boolean {
   if (patterns.length === 0) return () => false;

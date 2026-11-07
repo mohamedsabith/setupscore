@@ -5,7 +5,7 @@ import picomatch from 'picomatch';
 import { parse as parseYaml } from 'yaml';
 import { trimEndWhile } from '../core/text.js';
 
-export type PmName = 'npm' | 'pnpm' | 'yarn' | 'bun';
+type PmName = 'npm' | 'pnpm' | 'yarn' | 'bun';
 
 export interface Pm {
   name: PmName;
@@ -58,7 +58,7 @@ type Read = { ok: true; data: Buffer } | { ok: false; why: 'missing' | 'not-a-fi
  * Read a small file without ever blocking: a FIFO, a device (/dev/zero) or a folder in place of
  * the file is refused instead of read. The file is opened non-blocking and checked before reading.
  */
-export function readRegularFile(path: string, maxBytes = 64 * 1024 * 1024): Read {
+function readRegularFile(path: string, maxBytes = 64 * 1024 * 1024): Read {
   let fd: number;
   try {
     fd = openSync(path, constants.O_RDONLY | (constants.O_NONBLOCK ?? 0));
@@ -103,7 +103,7 @@ interface PackageJson {
 }
 
 /** package.json as an object, or a plain-English reason why it cannot be used. */
-export function readPackageJson(dir: string): PackageJson | { error: string } {
+function readPackageJson(dir: string): PackageJson | { error: string } {
   const r = readRegularFile(join(dir, 'package.json'), 16 * 1024 * 1024);
   if (!r.ok) {
     if (r.why === 'missing')

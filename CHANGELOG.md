@@ -8,6 +8,12 @@ All notable changes to this project are documented here. The project follows [Se
 
 - Hints that show a folder to paste into a shell (`setupscore tasks ...`) now quote it with `'...'` when it contains `$`, `` ` ``, `!` or a control character. Inside `"..."` the shell changed those, so the pasted command used a different folder. Found by the new property-based tests.
 
+### Changed (development only, nothing changes for users)
+
+- New checks in `npm run check-all`: security lint rules (eslint-plugin-security), import rules (eslint-plugin-import-x), folder layers (dependency-cruiser), unused code (Knip), the public API report (API Extractor), package checks (publint, Are the Types Wrong), property-based tests (fast-check) and stricter TypeScript settings.
+- Commit messages are checked with commitlint in a Husky commit-msg hook.
+- Removed code that nothing used.
+
 ## 1.0.4 - 2026-11-07
 
 ### Security

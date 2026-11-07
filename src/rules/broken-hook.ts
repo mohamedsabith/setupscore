@@ -185,6 +185,7 @@ function scriptsOf(h: Record<string, unknown>): Script[] {
     return out;
   }
   // Shell form: find each placeholder path; the word before it says how it is run.
+  // eslint-disable-next-line security/detect-non-literal-regexp -- a fresh copy of the fixed PLACEHOLDER pattern
   for (const m of command.matchAll(new RegExp(PLACEHOLDER.source, 'g'))) {
     const after = command.slice(m.index + m[0].length);
     if (UNRESOLVED.test(after)) continue;
@@ -308,6 +309,7 @@ function checkMatcher(matcher: unknown, event: string, line: number | undefined,
   }
   if (kind.kind === 'regex') {
     try {
+      // eslint-disable-next-line security/detect-non-literal-regexp -- only compiled to see if it is valid, never run on any text
       new RegExp(matcher);
     } catch {
       add({

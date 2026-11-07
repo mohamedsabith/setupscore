@@ -45,8 +45,8 @@ export interface FindOptions {
 }
 
 /** Commits looked through by default, and with --since (which bounds the history by date). */
-export const SCAN_DEFAULT = 1_000;
-export const SCAN_WITH_SINCE = 20_000;
+const SCAN_DEFAULT = 1_000;
+const SCAN_WITH_SINCE = 20_000;
 
 export interface FindResult {
   candidates: Candidate[];
@@ -155,7 +155,7 @@ interface LogEntry {
  * Read `git log -z --name-status --format=%x1e...` output. Fields are NUL-separated: each commit
  * is a header (starting with \x1e), then status letters and one path (two for renames and copies).
  */
-export function parseLog(out: string): LogEntry[] {
+function parseLog(out: string): LogEntry[] {
   const entries: LogEntry[] = [];
   const tokens = out.split('\0');
   let current: LogEntry | null = null;

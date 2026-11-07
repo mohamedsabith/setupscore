@@ -35,7 +35,7 @@ export interface Task {
   testCommand?: string;
 }
 
-export interface Rejected {
+interface Rejected {
   hash: string;
   title: string;
   reason: string;

@@ -2,7 +2,7 @@ import { posix } from 'node:path';
 import { baseOf, dirOf, normRel } from './paths.js';
 import type { Context } from './types.js';
 
-export function levenshtein(a: string, b: string): number {
+function levenshtein(a: string, b: string): number {
   if (a === b) return 0;
   if (!a.length) return b.length;
   if (!b.length) return a.length;
@@ -18,7 +18,7 @@ export function levenshtein(a: string, b: string): number {
 }
 
 /** Similarity from 0 to 1. */
-export const similarity = (a: string, b: string): number =>
+const similarity = (a: string, b: string): number =>
   1 - levenshtein(a.toLowerCase(), b.toLowerCase()) / Math.max(a.length, b.length, 1);
 
 /** The closest word from a list, if it is close enough to be a likely typo. */
@@ -117,17 +117,4 @@ export function suggestPath(ctx: Context, missing: string): PathSuggestion | und
   }
   if (siblings.length === 1) return remember({ path: siblings[0]!, safe: false, reason: 'similar' });
   return remember(undefined);
-}
-
-/**
- * Write a replacement path in the same style as the original:
- * root-relative stays root-relative, and `./` or `../` stays relative to the file.
- */
-export function rewriteLike(original: string, fileDir: string, newRootRel: string): string {
-  if (/^\.{1,2}\//.test(original)) {
-    let rel = posix.relative(fileDir || '.', newRootRel);
-    if (!rel.startsWith('.')) rel = `./${rel}`;
-    return rel;
-  }
-  return newRootRel;
 }

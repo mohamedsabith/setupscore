@@ -16,6 +16,8 @@ permissions:
 jobs:
   publish:
     runs-on: ubuntu-latest
+    env:
+      HUSKY: 0 # no git hooks are needed on the release machine
     permissions:
       contents: write # create the GitHub release and move the major tag (v1)
       id-token: write # npm trusted publishing and provenance

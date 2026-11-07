@@ -38,7 +38,7 @@ import { tryGit } from '../tasks/git.js';
 import { tempFolderProblem, Workspace } from '../tasks/workspace.js';
 import { cacheDir } from '../sandbox/runtime.js';
 import { VERSION } from '../version.js';
-import { failUnder } from './report.js';
+import { failUnder, type Log } from './report.js';
 import { TASKS_SCHEMA_VERSION } from './tasks.js';
 import { trimEndWhile } from '../core/text.js';
 
@@ -65,7 +65,7 @@ export interface RunFlags {
   explicit?: Set<string>;
 }
 
-export type Log = (message: string) => void;
+export type { Log } from './report.js';
 
 const money = (x: number) => `$${x.toFixed(2)}`;
 const secs = (ms: number) =>
@@ -281,7 +281,7 @@ const flagName = (k: string) => Object.entries(OPTION_FLAGS).find(([, v]) => v =
  * Options given on the command line (not defaults). The caller says so in `flags.explicit`;
  * without it they are read from the command line itself.
  */
-export function explicitOptions(flags: RunFlags, argv: string[] = process.argv.slice(2)): Set<string> {
+function explicitOptions(flags: RunFlags, argv: string[] = process.argv.slice(2)): Set<string> {
   if (flags.explicit) return flags.explicit;
   const out = new Set<string>();
   for (const a of argv) {
@@ -293,7 +293,7 @@ export function explicitOptions(flags: RunFlags, argv: string[] = process.argv.s
 }
 
 /** Most attempts one run may plan (repeat x tasks x setups); more is a typo, not a plan. */
-export const MAX_PLANNED_ATTEMPTS = 10_000;
+const MAX_PLANNED_ATTEMPTS = 10_000;
 
 /**
  * `setupscore run`: check everything first, ask before spending, run every attempt in the sandbox,

@@ -1,0 +1,42 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/api-extractor/v7/api-extractor.schema.json",
+  // The public library API is what dist/index.d.ts declares (tsup builds it from src/index.ts).
+  // `npm run api` compares it with api/setupscore.api.md and fails when they differ, so a change
+  // to the public API is always seen in review. After an intended change: `npm run api:update`.
+  "mainEntryPointFilePath": "<projectFolder>/dist/index.d.ts",
+  // The repository uses LF line endings everywhere (.gitattributes).
+  "newlineKind": "lf",
+  "compiler": {
+    // Only the built declarations are read, so the source tsconfig is not needed.
+    "overrideTsconfig": {
+      "compilerOptions": {
+        "target": "ES2023",
+        "module": "NodeNext",
+        "moduleResolution": "NodeNext",
+        "lib": ["ES2024"],
+        "types": ["node"],
+        "strict": true,
+        "skipLibCheck": true
+      },
+      "files": ["dist/index.d.ts"]
+    }
+  },
+  "apiReport": {
+    "enabled": true,
+    "reportFolder": "<projectFolder>/api/",
+    "reportTempFolder": "<projectFolder>/node_modules/.cache/api-extractor/"
+  },
+  "docModel": { "enabled": false },
+  "dtsRollup": { "enabled": false },
+  "tsdocMetadata": { "enabled": false },
+  "messages": {
+    "extractorMessageReporting": {
+      // setupscore does not mark APIs as @public/@beta: everything exported from the entry point is public.
+      "ae-missing-release-tag": { "logLevel": "none" }
+    },
+    "tsdocMessageReporting": {
+      // Doc comments are plain text, not TSDoc.
+      "default": { "logLevel": "none" }
+    }
+  }
+}

@@ -1,9 +1,6 @@
 # Prettier also skips everything in .gitignore (node_modules/, dist/, coverage/, .setupscore/).
 package-lock.json
 
-# Written by semantic-release in its own Markdown style.
-CHANGELOG.md
-
 # Inputs that must stay exactly as they are: the example is broken on purpose, fixtures are test data.
 examples/
 test/fixtures/
@@ -14,3 +11,6 @@ reports/
 
 # Written by ESLint (npx eslint . --prune-suppressions).
 eslint-suppressions.json
+
+# Written by API Extractor (npm run api:update).
+api/

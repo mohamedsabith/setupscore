@@ -54,7 +54,9 @@ interface Distro {
 export function linuxDistro(file = '/etc/os-release'): Distro | null {
   try {
     const text = readFileSync(file, 'utf8');
-    const value = (key: string) => text.match(new RegExp(`^${key}=["']?([^"'\\n]*)`, 'm'))?.[1]?.toLowerCase() ?? '';
+    const value = (key: string) =>
+      // eslint-disable-next-line security/detect-non-literal-regexp -- key is "ID" or "ID_LIKE"
+      text.match(new RegExp(`^${key}=["']?([^"'\\n]*)`, 'm'))?.[1]?.toLowerCase() ?? '';
     return { id: value('ID'), like: value('ID_LIKE').split(/\s+/).filter(Boolean) };
   } catch {
     return null;
@@ -91,7 +93,7 @@ const inContainer = () =>
 const onWsl = () => /microsoft/i.test(readText('/proc/version'));
 
 /** bwrap could not create its namespaces (disabled by the kernel, AppArmor or a container). */
-export const isNamespaceError = (detail: string): boolean =>
+const isNamespaceError = (detail: string): boolean =>
   /namespace|uid map|setting up uid|unprivileged|clone.*(not permitted|EPERM)|unshare.*(not permitted|EPERM)|Operation not permitted/i.test(
     detail,
   );

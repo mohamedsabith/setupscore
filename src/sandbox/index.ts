@@ -7,10 +7,10 @@ import { missingSandboxTools } from './tools.js';
 import { EnvironmentError, type Check, type ExecOptions, type Sandbox, type SandboxMode } from './types.js';
 
 export * from './types.js';
-export { secretPaths, safeEnv } from './env.js';
-export { probeOsSandbox, sandboxFix } from './os.js';
+export { safeEnv } from './env.js';
+export { probeOsSandbox } from './os.js';
 export { cacheDir, loadRuntime, runProgram, RUNTIME_PACKAGE, RUNTIME_VERSION, type ProgramResult } from './runtime.js';
-export { installCommand, linuxDistro, missingSandboxTools, onPath } from './tools.js';
+export { installCommand, linuxDistro, missingSandboxTools } from './tools.js';
 
 /** No isolation. Only for throwaway machines such as CI runners. */
 class NoSandbox implements Sandbox {
@@ -22,7 +22,7 @@ class NoSandbox implements Sandbox {
   async close() {}
 }
 
-export const isCI = (): boolean => !!process.env.CI && process.env.CI !== 'false' && process.env.CI !== '0';
+const isCI = (): boolean => !!process.env.CI && process.env.CI !== 'false' && process.env.CI !== '0';
 
 const NONE_MESSAGE = "--sandbox none runs the project's install scripts and tests directly on this machine.";
 const NONE_FIXES = [

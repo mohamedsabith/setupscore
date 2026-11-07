@@ -5,8 +5,10 @@ import comments from '@eslint-community/eslint-plugin-eslint-comments/configs';
 import js from '@eslint/js';
 import vitest from '@vitest/eslint-plugin';
 import { defineConfig } from 'eslint/config';
+import { createNodeResolver, importX } from 'eslint-plugin-import-x';
 import n from 'eslint-plugin-n';
 import regexp from 'eslint-plugin-regexp';
+import security from 'eslint-plugin-security';
 import { fileURLToPath } from 'node:url';
 import globals from 'globals';
 import tseslint from 'typescript-eslint';
@@ -34,6 +36,55 @@ export default defineConfig(
     rules: {
       'regexp/no-super-linear-backtracking': 'error',
       'regexp/no-super-linear-move': 'error',
+    },
+  },
+
+  // Security: every rule of eslint-plugin-security is an error, except three that cannot tell
+  // safe code from unsafe code in a tool like this one.
+  {
+    plugins: { security },
+    rules: {
+      ...Object.fromEntries(Object.keys(security.rules).map((r) => [`security/${r}`, 'error'])),
+      // setupscore's job is reading the user's files, so almost every path comes from a variable.
+      // Paths are checked where they enter (core/discover.ts, core/fsx.ts), not at each read.
+      'security/detect-non-literal-fs-filename': 'off',
+      // Reports every obj[key]; with noUncheckedIndexedAccess the types already make these safe.
+      'security/detect-object-injection': 'off',
+      // A rough guess (safe-regex) with false alarms and misses. regexp/no-super-linear-* above is exact.
+      'security/detect-unsafe-regex': 'off',
+    },
+  },
+
+  // Imports: no import loops, and the published code (src/) only imports packages listed in
+  // "dependencies" (a devDependency is missing when users install setupscore).
+  // Unknown or wrong imports are TypeScript's job, so the rules that repeat it are not used.
+  {
+    plugins: { 'import-x': importX },
+    settings: {
+      // Without these, .ts files are not read and import loops go unnoticed (tested: a planted loop is caught).
+      'import-x/extensions': ['.ts', '.js', '.mjs'],
+      'import-x/parsers': { '@typescript-eslint/parser': ['.ts'] },
+      // Source files import each other as ./x.js while the file on disk is ./x.ts.
+      'import-x/resolver-next': [
+        createNodeResolver({ extensions: ['.ts', '.js', '.mjs'], extensionAlias: { '.js': ['.ts', '.js'] } }),
+      ],
+    },
+    rules: {
+      'import-x/no-cycle': 'error',
+      'import-x/no-self-import': 'error',
+      'import-x/no-duplicates': 'error',
+      'import-x/no-useless-path-segments': 'error',
+      'import-x/no-mutable-exports': 'error',
+      'import-x/no-absolute-path': 'error',
+      'import-x/no-relative-packages': 'error',
+      'import-x/no-extraneous-dependencies': [
+        'error',
+        {
+          devDependencies: ['test/**', 'scripts/**', 'action/**', '*.config.{js,ts}'],
+          optionalDependencies: false,
+          peerDependencies: false,
+        },
+      ],
     },
   },
 

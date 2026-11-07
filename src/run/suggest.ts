@@ -74,6 +74,7 @@ function suggestFor(run: RunRecord, attempts: Attempt[], score: RunScore, projec
   if (skipped >= Math.max(2, total * 0.4)) {
     const pm = detectPm(projectDir);
     const cmd = 'error' in pm ? 'npm test' : pm.name === 'npm' ? 'npm test' : `${pm.name} test`;
+    // eslint-disable-next-line security/detect-non-literal-regexp -- cmd is "npm test", "pnpm test", "yarn test" or "bun test"
     const mentions = new RegExp(`\\b${cmd.replace(/\s+/g, '\\s+')}\\b`).test(claudeMd);
     out.push({
       id: 'run-tests',

@@ -249,6 +249,7 @@ describe('files that cannot be read (B18, F17)', () => {
     } finally {
       fsHooks.denyRead = null;
     }
+    // eslint-disable-next-line security/detect-non-literal-regexp -- test only: the temp folder that makeRepo made
     fsHooks.denyDir = new RegExp(`${root.replaceAll('\\', '/')}$`);
     try {
       expect(() => check(root, NO_CONFIG)).toThrow(expect.objectContaining({ code: 'EACCES' }));

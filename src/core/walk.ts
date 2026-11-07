@@ -33,7 +33,7 @@ export const SKIP_DIRS = new Set([
   '.setupscore',
 ]);
 
-export const MAX_FILES = 100_000;
+const MAX_FILES = 100_000;
 
 export interface WalkResult {
   files: string[];

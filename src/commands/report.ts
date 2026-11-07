@@ -8,7 +8,6 @@ import { RunStore } from '../run/store.js';
 import { applySuggestion, mainSetup, saveTextFile, suggest } from '../run/suggest.js';
 import type { RunScore } from '../run/score.js';
 import type { RunRecord } from '../run/store.js';
-import type { Log } from './run.js';
 
 export interface ReportFlags {
   run?: string;
@@ -18,6 +17,9 @@ export interface ReportFlags {
 }
 
 /** Show a finished (or partial) run again, in any format. */
+/** Prints one line of output. */
+export type Log = (message: string) => void;
+
 export function reportCommand(dir: string, flags: ReportFlags, write: Log): number {
   const store = RunStore.open(dir, flags.run ?? 'latest');
   const run = store.readRun();

@@ -42,7 +42,7 @@ export function onCleanup(fn: () => void): () => void {
   return () => cleanups.delete(fn);
 }
 
-export function killAllProcesses(): void {
+function killAllProcesses(): void {
   for (const pid of running) {
     try {
       if (process.platform === 'win32') process.kill(pid, 'SIGKILL');

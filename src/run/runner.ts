@@ -35,7 +35,7 @@ const MAX_RETRIES = 2;
  * After this many sessions in a row end that way (across the whole run), the run stops instead of
  * spending more time: the API, the network or the gateway is down, not the setup.
  */
-export const MAX_API_FAILURES_IN_A_ROW = 3;
+const MAX_API_FAILURES_IN_A_ROW = 3;
 /** Transcripts larger than this are read only at the start and the end. */
 const MAX_TRANSCRIPT_BYTES = 64 * 1024 * 1024;
 
@@ -78,7 +78,7 @@ export interface RunOutcome {
 }
 
 /** Stops the whole run (bad key, no credit, Claude Code missing): retrying cannot help. */
-export class FatalRunError extends Error {
+class FatalRunError extends Error {
   constructor(
     message: string,
     readonly fix: string,

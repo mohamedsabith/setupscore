@@ -6,7 +6,7 @@
  * Unknown events and broken lines are skipped, never fatal: parseTranscript never throws.
  */
 
-export type AgentOutcome =
+type AgentOutcome =
   | 'completed' // the agent finished on its own
   | 'max_turns' // stopped by --max-turns
   | 'budget' // stopped by --max-budget-usd
@@ -18,7 +18,7 @@ export type AgentOutcome =
  * notices, background task lists) are skipped, so that "Claude Code was only waiting on the API"
  * can be told apart from "a command of the agent was still running".
  */
-export type LastEventKind =
+type LastEventKind =
   | 'init' // nothing but the start: the first API request never got an answer
   | 'api_retry' // Claude Code was retrying an API request
   | 'api_error' // Claude Code gave up on an API request (synthetic "API Error" message)

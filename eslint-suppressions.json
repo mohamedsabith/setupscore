@@ -58,12 +58,6 @@
     "@typescript-eslint/no-unnecessary-type-conversion": {
       "count": 1
     },
-    "@typescript-eslint/no-unused-vars": {
-      "count": 1
-    },
-    "regexp/no-obscure-range": {
-      "count": 2
-    },
     "regexp/no-unused-capturing-group": {
       "count": 2
     }
@@ -225,9 +219,6 @@
     "regexp/no-invisible-character": {
       "count": 1
     },
-    "regexp/no-obscure-range": {
-      "count": 2
-    },
     "regexp/use-ignore-case": {
       "count": 3
     }
@@ -364,9 +355,6 @@
   },
   "src/tasks/workspace.ts": {
     "@typescript-eslint/no-unnecessary-type-assertion": {
-      "count": 1
-    },
-    "@typescript-eslint/no-unused-vars": {
       "count": 1
     },
     "no-useless-assignment": {

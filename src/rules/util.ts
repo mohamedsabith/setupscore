@@ -44,7 +44,7 @@ const describeChar = (ch: string | undefined): string =>
  * Find the first JSON mistake and say what it is in plain words, without depending on the
  * wording of Node's own error messages (they change between versions). `at` is an offset in `text`.
  */
-export function diagnoseJson(text: string): { message: string; at: number } | undefined {
+function diagnoseJson(text: string): { message: string; at: number } | undefined {
   let i = 0;
   const n = text.length;
   // Each entry: what the container expects next.
@@ -247,13 +247,10 @@ export function packageOf(abs: string): { name?: string; scripts: Record<string,
   return pkgCache.get(abs)!;
 }
 
-/** The "scripts" of a package.json, or null if it cannot be read. */
-export const scriptsOf = (abs: string): Record<string, string> | null => packageOf(abs)?.scripts ?? null;
-
 export const clearCaches = (): void => pkgCache.clear();
 
 // eslint-disable-next-line no-control-regex -- matching control characters is the point: they are removed
-const CONTROL = /[\u0000-\u001f\u007f-\u009f‪-‮⁦-⁩]/g;
+const CONTROL = /[\u0000-\u001f\u007f-\u009f\u202a-\u202e\u2066-\u2069]/g;
 
 /**
  * Text from a file, safe to put in a message: secrets masked, control characters removed,

@@ -28,7 +28,7 @@ export function kindOf(rel: string): FileKind | null {
  * claude.md -> CLAUDE.md, .Claude/settings.json -> .claude/settings.json, skills/x/skill.md -> skills/x/SKILL.md.
  * Only names that are clearly meant for Claude Code: a lower-case claude.md only at the root or in .claude/.
  */
-export function misnamedAs(rel: string): string | null {
+function misnamedAs(rel: string): string | null {
   if (kindOf(rel) !== null) return null;
   const parts = rel.split('/');
   if (parts.some((p) => p.startsWith('._'))) return null;
@@ -55,13 +55,10 @@ export function misnamedAs(rel: string): string | null {
 }
 
 const MARKDOWN_KINDS = new Set<FileKind>(['claude-md', 'claude-local-md', 'rule', 'skill', 'agent', 'command']);
-const JSON_KINDS = new Set<FileKind>(['settings', 'settings-local', 'mcp']);
 
 /** True for files written as instructions to Claude (markdown), as opposed to JSON config. */
 export const isInstruction = (f: SetupFile): boolean =>
   MARKDOWN_KINDS.has(f.kind) || (f.kind === 'import' && /\.(md|mdx|markdown|txt)$/i.test(f.path));
-
-export const isJson = (f: SetupFile): boolean => JSON_KINDS.has(f.kind);
 
 export type ReadResult = { text: string } | { problem: SkippedFile['problem']; detail: string } | null;
 
@@ -138,7 +135,7 @@ function loadsAtStart(rel: string, kind: FileKind, fm: SetupFile['frontmatter'])
   }
 }
 
-export function makeSetupFile(root: string, rel: string, kind: FileKind, text: string): SetupFile {
+function makeSetupFile(root: string, rel: string, kind: FileKind, text: string): SetupFile {
   const markdownLike = kind !== 'settings' && kind !== 'settings-local' && kind !== 'mcp';
   const { lines, frontmatter } = toLines(text, markdownLike && kind !== 'claude-md' && kind !== 'claude-local-md');
   return {
@@ -166,7 +163,7 @@ function trimTrailing(raw: string): string {
 }
 
 /** Find `@path` imports in an instruction file. Imports inside code blocks and `code spans` are ignored, as in Claude Code. */
-export function findImports(f: SetupFile): { raw: string; line: number; column: number }[] {
+function findImports(f: SetupFile): { raw: string; line: number; column: number }[] {
   const out: { raw: string; line: number; column: number }[] = [];
   for (const l of f.lines) {
     if (l.inFence || l.inFrontmatter || !l.text.includes('@')) continue;
@@ -383,5 +380,3 @@ export function discover(root: string, repoFiles: string[], options: DiscoverOpt
 
   return { files, imports, skipped, misnamed };
 }
-
-export { joinRel };

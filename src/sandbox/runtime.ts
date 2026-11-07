@@ -36,7 +36,7 @@ export function cacheDir(): string {
   return join(absoluteDir(process.env.XDG_CACHE_HOME) ?? join(homedir(), '.cache'), 'setupscore');
 }
 
-export const runtimeDir = (): string => join(cacheDir(), 'sandbox-runtime', RUNTIME_VERSION);
+const runtimeDir = (): string => join(cacheDir(), 'sandbox-runtime', RUNTIME_VERSION);
 
 /** Written into the cache copy once it has loaded correctly, so it is only checked once. */
 const VERIFIED = '.setupscore-verified';

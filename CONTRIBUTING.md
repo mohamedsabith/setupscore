@@ -24,7 +24,7 @@ git clone https://github.com/<you>/setupscore     # your fork
 cd setupscore
 nvm use                  # the Node.js version in .nvmrc (or fnm, volta)
 npm ci                   # installs dependencies and the git hooks
-npm run check-all        # format, lint, types, unused code, tests, package checks: the same as CI
+npm run check-all        # every check: format, lint, types, layers, unused code, tests, API, package
 node dist/cli.js check examples/bakery-api       # try it on the example, which is broken on purpose
 ```
 
@@ -49,26 +49,23 @@ Check your machine with `node dist/cli.js doctor`.
 | `npm run test:fast` | Only the core and rule unit tests. Takes seconds. Use it while you work |
 | `npm run lint` | ESLint with type information (typescript-eslint strict), regex safety (ReDoS) and Node checks. Fails on any warning. There is no `lint:fix`: an automatic regex fix can change what a rule matches, so fix each finding by hand and check it with the tests and `npm run corpus` |
 | `npm run format` | Format every file with Prettier. `npm run format:check` only checks |
-| `npm run typecheck` | `tsc --noEmit` |
-| `npm run check-all` | All checks, like CI: format, lint, types, unused code (knip), tests, package checks |
+| `npm run typecheck` | `tsc --noEmit` with strict settings (see `tsconfig.json`) |
+| `npm run deps` | [dependency-cruiser](https://github.com/sverweij/dependency-cruiser): no import loops, and each folder of `src/` only imports the layers below it (see `.dependency-cruiser.mjs`) |
+| `npm run knip` | [Knip](https://knip.dev): unused files, exports and dependencies |
+| `npm run api` | [API Extractor](https://api-extractor.com): fails when the public library API (`dist/index.d.ts`) differs from `api/setupscore.api.md`. After an intended change, run `npm run api:update` and commit the new report |
+| `npm run check:package` | [publint](https://publint.dev) and [Are the Types Wrong](https://arethetypeswrong.github.io) on the packed package: what users install resolves and has its types |
+| `npm run coverage` | Tests with a coverage report in `coverage/` |
+| `npm run check-all` | Every check above, in order. Run it before you open a pull request |
 
-**Editor.** VS Code picks up the settings in `.vscode/`: format on save with Prettier, and ESLint fixes. Other editors read `.editorconfig`.
+**Editor.** Editors read `.editorconfig`. Install the Prettier and ESLint extensions to see the same results as `npm run check-all` while you type.
 
 ### Git hooks
 
-`npm ci` installs [Husky](https://typicode.github.io/husky/) hooks:
-
-| Hook | What it runs |
-| --- | --- |
-| pre-commit | [lint-staged](https://github.com/lint-staged/lint-staged): `eslint --fix` and `prettier --write` on the staged files only. ESLint runs without type information here, so it takes a second or two |
-| commit-msg | [commitlint](https://commitlint.js.org): checks that the message is a Conventional Commit |
-| pre-push | `npm run typecheck` and `npm run test:fast` |
-
-Skip them once with `git commit --no-verify` or `git push --no-verify`. Turn them off with `HUSKY=0`. CI runs every check anyway.
+`npm ci` installs one [Husky](https://typicode.github.io/husky/) hook, commit-msg: [commitlint](https://commitlint.js.org) checks that the message is a Conventional Commit (see `commitlint.config.js`). Skip it once with `git commit --no-verify`, or turn it off with `HUSKY=0`.
 
 ## Commit messages and pull request titles
 
-setupscore uses [Conventional Commits](https://www.conventionalcommits.org): `type(scope): subject`. Write the subject in lowercase, in the imperative ("add", not "added"), with no period at the end.
+setupscore uses [Conventional Commits](https://www.conventionalcommits.org): `type(scope): subject`. Start the subject with a lowercase word (names such as Claude or README keep their capitals), write it in the imperative ("add", not "added"), and end it without a period.
 
 ```text
 feat(rules): flag MCP servers without a pinned version
@@ -100,12 +97,12 @@ So choose the title with care. A check on every pull request enforces the format
 
 1. **Fork** the repository and create a branch from `main`, for example `fix/broken-reference-dist`.
 2. **Make one change per pull request.** Smaller pull requests are reviewed faster.
-3. **Add tests** (see [Tests](#tests)) and update the docs if users will notice the change: `README.md`, `docs/`, and `docs/rules.md` for rules. Don't edit `CHANGELOG.md` or the version in `package.json`: the release workflow writes them.
+3. **Add tests** (see [Tests](#tests)) and update the docs if users will notice the change: `README.md`, `docs/`, and `docs/rules.md` for rules. Don't edit `CHANGELOG.md` or the version in `package.json`: the maintainer updates them for each release.
 4. **Run `npm run check-all`.**
 5. **Open the pull request.** Use a Conventional Commit title, fill in the template, and link the issue (`Fixes #123`). Open it as a draft if you want early feedback.
-6. **CI must pass.** The required check is called **CI OK**. It runs on Linux, macOS and Windows. For a first-time contributor, a maintainer must approve the CI run first; this is a GitHub safety rule, not a judgement on your work.
+6. **Checks.** A maintainer runs `npm run check-all` again before merging.
 7. **Review.** A maintainer looks at new pull requests within a week. Answer review comments yourself, and push new commits to the same branch.
-8. **Merge and release.** A maintainer squash-merges the pull request. If the title is a `feat`, `fix` or `perf`, a release is published automatically, and the bot comments on your pull request with the version.
+8. **Merge and release.** A maintainer squash-merges the pull request. It is published with the next release (see [RELEASING.md](RELEASING.md)).
 
 A pull request with no activity for a long time may be closed. You can always reopen it.
 
@@ -156,7 +153,7 @@ Rules for rules:
 - **No network and no real Claude API.** `test/fixtures/fake-claude.mjs` behaves like `claude -p --output-format stream-json`. Its mode decides what it does: for example `solve`, `needs-claude-md`, `break-rule`, `auth-fail` or `overloaded-once`. The `cheat-*` modes try to fake a pass or look up the answer.
 - **Every protection has a test that attacks it.** When you add a protection against cheating, add a `cheat-*` mode to the fake Claude and a test in `test/run.test.ts` that proves it is caught. `test/sandbox.test.ts` runs a malicious test file that must not escape. Keep it passing.
 - **Fake secrets only.** Use values that are clearly fake, such as `sk-ant-api03-TESTKEY0123456789abcdef`. GitHub's push protection blocks commits that contain real-looking keys.
-- **Every OS.** CI runs on Linux, macOS and Windows. Use `node:path` to build paths. For tests that only work on some systems, use `it.skipIf(...)` or `it.runIf(...)`, and say why.
+- **Every OS.** setupscore runs on Linux, macOS and Windows. Use `node:path` to build paths. For tests that only work on some systems, use `it.skipIf(...)` or `it.runIf(...)`, and say why.
 - **No flaky tests.** Don't depend on timing, the current date or the order of files on disk.
 
 To try a real run, set `ANTHROPIC_API_KEY` and keep the budget small:

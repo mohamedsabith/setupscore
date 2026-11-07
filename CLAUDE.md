@@ -7,6 +7,7 @@ TypeScript CLI that lints Claude Code setups (CLAUDE.md, .claude/, .mcp.json) an
 - `npm run build`: bundle with tsup into dist/
 - `npm test`: builds, then runs vitest (unit tests plus CLI tests against dist/cli.js)
 - `npm run typecheck`: strict TypeScript check
+- `npm run check-all`: every check before a commit (format, lint, types, layers, unused code, tests, API report, package)
 - `node dist/cli.js check examples/bakery-api`: try it on the broken example
 
 ## Layout

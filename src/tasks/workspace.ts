@@ -14,7 +14,7 @@ import {
   writeFileSync,
 } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { dirname, isAbsolute, join, normalize, sep } from 'node:path';
+import { isAbsolute, join, normalize, sep } from 'node:path';
 import { onCleanup, trackProcess } from '../core/lifecycle.js';
 import { git, gitEnv, gitTimeoutMs, gitWithInput, tryGit } from './git.js';
 

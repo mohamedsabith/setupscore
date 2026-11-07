@@ -10,7 +10,7 @@ import { runShell } from './spawn.js';
 import type { Check, ExecOptions, ExecResult, Policy, Sandbox } from './types.js';
 import { linuxSandboxFix, LINUX_TOOLS, missingTools, onPath } from './tools.js';
 
-export const PLATFORM_LABEL: Record<string, string> = {
+const PLATFORM_LABEL: Record<string, string> = {
   darwin: 'macOS Seatbelt',
   linux: 'Linux bubblewrap',
 };

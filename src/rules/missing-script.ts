@@ -89,6 +89,7 @@ export const missingScript: Rule = {
       const name = packageOf(join(ctx.root, pkgPath))?.name;
       const words = [folder, name, name?.replace(/^@[^/]+\//, '')].filter((w): w is string => !!w && w.length >= 2);
       return words.some((w) =>
+        // eslint-disable-next-line security/detect-non-literal-regexp -- the package name is escaped on this line
         new RegExp(`(?<![\\w-])${w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?![\\w-])`, 'i').test(line),
       );
     };

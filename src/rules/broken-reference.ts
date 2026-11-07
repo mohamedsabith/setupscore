@@ -16,6 +16,7 @@ const SEP = String.raw`(?:\/|\\(?=[\p{L}\p{N}]))`;
  * .github/workflows/ci.yml, docs/menü.md, src\utils\old.ts.
  * The look-behind skips URLs, @imports, absolute paths and paths glued to other words.
  */
+// eslint-disable-next-line security/detect-non-literal-regexp -- built from the fixed W and SEP character classes
 const PATH = new RegExp(
   String.raw`(?<![${W}@$/.~\\:-])((?:\.{1,2}${SEP})*(?:\.?[${W}-][${W}.@-]*${SEP})+[${W}@-][${W}.@-]*\.[A-Za-z][A-Za-z0-9]{0,9})(?![${W}/\\{<$[-]|\.[${W}{<$[])`,
   'gu',

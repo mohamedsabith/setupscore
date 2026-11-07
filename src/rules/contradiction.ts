@@ -154,6 +154,7 @@ export const contradiction: Rule = {
       const reported = new Set<RuleLine>();
       for (const [key, { neg, scope, others }] of bySubject) {
         const subj = key.slice(0, key.indexOf('|'));
+        // eslint-disable-next-line security/detect-non-literal-regexp -- the subject from the file is escaped (escapeRe)
         const positive = new RegExp(
           `\\b(?:${VERBS}|prefer|always use)\\s+(?:the\\s+|a\\s+|an\\s+)?${escapeRe(subj)}\\b`,
           'i',

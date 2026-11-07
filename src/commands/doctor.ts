@@ -205,7 +205,9 @@ async function packageManagerChecks(dir: string, overrides?: PmOverrides): Promi
   // Nothing to install, and the tests run without it (node --test, vitest…): it is not needed.
   const testCommand = pm.test([]);
   const needed =
-    pm.install !== null || new RegExp(`(^|[\\s&;|(])${pm.name === 'npm' ? 'npx?' : pm.name}\\b`).test(testCommand);
+    pm.install !== null ||
+    // eslint-disable-next-line security/detect-non-literal-regexp -- pm.name is one of npm, pnpm, yarn, bun
+    new RegExp(`(^|[\\s&;|(])${pm.name === 'npm' ? 'npx?' : pm.name}\\b`).test(testCommand);
   const checks: Check[] = [
     {
       name: 'Package manager',
@@ -313,8 +315,6 @@ const NAMES = [
 ];
 const WIDTH = Math.max(...NAMES.map((n) => n.length));
 
-export const renderDoctorHeader = (): string => `${pc.bold('setupscore doctor')}\n`;
-
 /** One check, with its fix under it when it failed. */
 export function renderCheck(c: Check, width = WIDTH): string {
   const icon = c.ok ? pc.green('✔') : c.required ? pc.red('✖') : pc.yellow('⚠');
@@ -339,9 +339,4 @@ export function renderDoctorSummary(checks: Check[]): string {
         : pc.green('✔ Ready for "setupscore tasks".') + pc.yellow(' Fix the ⚠ items above before "setupscore run".'),
   );
   return out.join('\n');
-}
-
-export function renderDoctor(checks: Check[]): string {
-  const width = Math.max(...checks.map((c) => c.name.length));
-  return [renderDoctorHeader(), ...checks.map((c) => renderCheck(c, width)), renderDoctorSummary(checks)].join('\n');
 }

@@ -3,3 +3,10 @@ dist/
 coverage/
 *.tgz
 .DS_Store
+# setupscore's own results when it runs on this repository (tasks, runs, reports).
+.setupscore/
+*.log
+.eslintcache
+# Secrets never belong in git.
+.env
+.env.*

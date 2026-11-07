@@ -146,7 +146,7 @@ const JOB_VAR = 'SETUPSCORE_JOB';
  * Kill every process that carries this command's mark (Linux: read from /proc). Catches
  * background processes that left the process group, for example with setsid or nohup.
  */
-export function killJob(job: string): void {
+function killJob(job: string): void {
   if (process.platform !== 'linux') return;
   let pids: string[];
   try {

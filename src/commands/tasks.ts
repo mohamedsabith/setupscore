@@ -30,7 +30,7 @@ export interface TasksOutcome {
 
 const short = (h: string) => h.slice(0, 7);
 
-export function progressPrinter(log: (m: string) => void): (p: Progress) => void {
+function progressPrinter(log: (m: string) => void): (p: Progress) => void {
   return (p) => {
     switch (p.type) {
       case 'scan':

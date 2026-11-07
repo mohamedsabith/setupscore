@@ -11,9 +11,9 @@ import type { Attempt, RunRecord, SetupRecord } from './store.js';
  *   Instruction health 10 from setupscore check (not measured for a setup with no files)
  * Every part except health rewards solved tasks, and a setup that solves nothing scores 0.
  */
-export const WEIGHTS = { success: 40, rules: 20, consistency: 15, efficiency: 15, health: 10 } as const;
+const WEIGHTS = { success: 40, rules: 20, consistency: 15, efficiency: 15, health: 10 } as const;
 
-export interface ScorePart {
+interface ScorePart {
   name: keyof typeof WEIGHTS;
   max: number;
   earned: number;
@@ -67,7 +67,7 @@ export function wilson(passed: number, n: number, z = 1.96): [number, number] {
   return [Math.max(0, centre - margin), Math.min(1, centre + margin)];
 }
 
-export const median = (xs: number[]): number => {
+const median = (xs: number[]): number => {
   if (!xs.length) return 0;
   const s = [...xs].sort((a, b) => a - b);
   const mid = Math.floor(s.length / 2);

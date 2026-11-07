@@ -105,6 +105,7 @@ export function findViolations(
 ): { rule: string; token: string; file: string }[] {
   const out: { rule: string; token: string; file: string }[] = [];
   for (const r of rules) {
+    // eslint-disable-next-line security/detect-non-literal-regexp -- the token from the file is escaped (escapeRe)
     const re = new RegExp(`(^|[^\\w$])${escapeRe(r.token)}(?![\\w$])`);
     for (const [file, lines] of added) {
       if (lines.some((l) => re.test(l))) {
