@@ -21,14 +21,14 @@ function structured(f: SetupFile): { key: string; value: string }[] {
   const { value } = parseJson(f);
   if (!isObject(value)) return [];
   const blocks: Record<string, unknown>[] = [];
-  if (f.kind === 'mcp' && isObject(value.mcpServers)) {
-    for (const server of Object.values(value.mcpServers)) {
+  if (f.kind === 'mcp' && isObject(value['mcpServers'])) {
+    for (const server of Object.values(value['mcpServers'])) {
       if (!isObject(server)) continue;
-      if (isObject(server.env)) blocks.push(server.env);
-      if (isObject(server.headers)) blocks.push(server.headers);
+      if (isObject(server['env'])) blocks.push(server['env']);
+      if (isObject(server['headers'])) blocks.push(server['headers']);
     }
   }
-  if ((f.kind === 'settings' || f.kind === 'settings-local') && isObject(value.env)) blocks.push(value.env);
+  if ((f.kind === 'settings' || f.kind === 'settings-local') && isObject(value['env'])) blocks.push(value['env']);
 
   const out: { key: string; value: string }[] = [];
   for (const block of blocks) {

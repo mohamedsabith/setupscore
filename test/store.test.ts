@@ -244,7 +244,7 @@ describe('attempts.jsonl', () => {
 
   it('caps what one attempt stores, and stores no secrets (D5, V06, perf)', () => {
     const key = 'sk-ant-api03-STORETESTKEY0123456789abcdef';
-    process.env.ANTHROPIC_API_KEY_FOR_TEST = key;
+    process.env['ANTHROPIC_API_KEY_FOR_TEST'] = key;
     const { store, file } = withRun();
     store.appendAttempt(
       attempt('t1', 'A', 1, {
@@ -265,7 +265,7 @@ describe('attempts.jsonl', () => {
     expect(text.length).toBeLessThan(MAX_TEST_OUTPUT + 4000);
     const a = store.readAttempts()[0]!;
     expect(a.checks!.testOutput).toContain('[redacted]'); // the end of the output is kept
-    delete process.env.ANTHROPIC_API_KEY_FOR_TEST;
+    delete process.env['ANTHROPIC_API_KEY_FOR_TEST'];
   });
 
   it('reads files line by line, past what one string can hold, skipping lines that are too long', () => {

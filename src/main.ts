@@ -163,7 +163,7 @@ async function requireGitRepo(dir: string, command: string): Promise<void> {
 async function beforeProjectCode(
   dir: string,
   command: string,
-  flags: { sandbox: SandboxMode; yes?: boolean },
+  flags: { sandbox: SandboxMode; yes?: boolean | undefined },
 ): Promise<void> {
   projectFolder(dir, command);
   assertSandboxModeAllowed(flags.sandbox, flags.yes);
@@ -744,8 +744,8 @@ export function handleError(err: unknown): number {
   say(`Something went wrong inside setupscore: ${message}`, [
     'This is a bug, not something you did. Please report it with the command you ran:',
     `${REPO_URL}/issues`,
-    ...(process.env.SETUPSCORE_DEBUG ? [] : ['Run again with SETUPSCORE_DEBUG=1 to see the details.']),
+    ...(process.env['SETUPSCORE_DEBUG'] ? [] : ['Run again with SETUPSCORE_DEBUG=1 to see the details.']),
   ]);
-  if (process.env.SETUPSCORE_DEBUG) process.stderr.write(`${(e as Error)?.stack ?? String(err)}\n`);
+  if (process.env['SETUPSCORE_DEBUG']) process.stderr.write(`${(e as Error)?.stack ?? String(err)}\n`);
   return EXIT.usage;
 }

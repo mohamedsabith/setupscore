@@ -17,8 +17,8 @@ export function startupTokens(f: SetupFile): number {
   if (f.kind === 'skill' || f.kind === 'agent' || f.kind === 'command') {
     // Only the name and description are always loaded; the body loads when used.
     const d = f.frontmatter?.data;
-    const name = typeof d?.name === 'string' ? d.name : '';
-    const desc = typeof d?.description === 'string' ? d.description : '';
+    const name = typeof d?.['name'] === 'string' ? d['name'] : '';
+    const desc = typeof d?.['description'] === 'string' ? d['description'] : '';
     return name || desc ? estimateTokens(`${name}: ${desc}`) : 0;
   }
   return 0;

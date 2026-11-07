@@ -56,7 +56,6 @@ export function tempFolderProblem(
     const script = join(probe, 'probe.sh');
     writeFileSync(script, '#!/bin/sh\nexit 0\n', { mode: 0o755 });
     const r = spawnSync(script, [], { stdio: 'ignore', timeout: 10_000 });
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion -- needed: tsc reports "no 'code' on Error" without it
     const code = (r.error as NodeJS.ErrnoException | undefined)?.code;
     if (code === 'EACCES' || code === 'EPERM') {
       return {

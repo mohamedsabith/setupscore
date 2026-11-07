@@ -51,9 +51,9 @@ export const envNotDenied: Rule = {
     const denies: Deny[] = [];
     for (const f of ctx.files.filter((f) => f.kind === 'settings' || f.kind === 'settings-local')) {
       const { value } = parseJson(f);
-      if (!isObject(value) || !isObject(value.permissions) || !Array.isArray(value.permissions.deny)) continue;
+      if (!isObject(value) || !isObject(value['permissions']) || !Array.isArray(value['permissions']['deny'])) continue;
       const base = f.path.slice(0, Math.max(0, f.path.indexOf('.claude/') - 1));
-      for (const d of value.permissions.deny) {
+      for (const d of value['permissions']['deny']) {
         if (typeof d !== 'string') continue;
         const m = d.trim().match(/^(?:Read|Edit|Write)(?:\((.*)\))?$/);
         if (m) denies.push({ base, pattern: m[1] ?? '' });

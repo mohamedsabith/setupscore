@@ -16,8 +16,8 @@ export const LINUX_TOOLS: { bin: string; pkg: string; missing: string }[] = [
 
 /** The full path of a program on PATH, without starting anything. */
 export function onPath(bin: string, env: NodeJS.ProcessEnv = process.env): string | null {
-  const path = env.PATH ?? env.Path ?? '';
-  const exts = process.platform === 'win32' ? (env.PATHEXT ?? '.EXE;.CMD;.BAT').split(';') : [''];
+  const path = env['PATH'] ?? env['Path'] ?? '';
+  const exts = process.platform === 'win32' ? (env['PATHEXT'] ?? '.EXE;.CMD;.BAT').split(';') : [''];
   for (const dir of path.split(delimiter)) {
     if (!dir) continue;
     for (const ext of exts) {

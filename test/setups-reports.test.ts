@@ -29,7 +29,7 @@ const posixOnly = process.platform === 'win32' ? it.skip : it;
 const CLI = fileURLToPath(new URL('../dist/cli.js', import.meta.url));
 const FAKE = fileURLToPath(new URL('./fixtures/fake-claude.mjs', import.meta.url));
 const fake = (mode: string, ...extra: string[]) => `node ${JSON.stringify(FAKE)} ${mode} ${extra.join(' ')}`.trim();
-const CACHE = process.env.SETUPSCORE_CACHE_DIR ?? join(tmpdir(), 'fix-setups-reports', 'cache');
+const CACHE = process.env['SETUPSCORE_CACHE_DIR'] ?? join(tmpdir(), 'fix-setups-reports', 'cache');
 
 function cli(args: string[], env: Record<string, string | undefined> = {}) {
   const merged: Record<string, string | undefined> = {
@@ -328,14 +328,14 @@ describe('links and big files (C6, C8)', () => {
       `#!/bin/sh\necho "$1" >> ${JSON.stringify(log)}\nexec ${JSON.stringify(real)} "$@"\n`,
     );
     chmodSync(join(bin, 'git'), 0o755);
-    const path = process.env.PATH;
-    process.env.PATH = `${bin}:${path}`;
+    const path = process.env['PATH'];
+    process.env['PATH'] = `${bin}:${path}`;
     try {
       const s = await snapshotSetup(root, 'HEAD', 'B', quiet().warn);
       expect(Object.keys(s.files)).toHaveLength(700);
       expect(s.files['.claude/rules/r7.md']).toBe('rule 7\n');
     } finally {
-      process.env.PATH = path;
+      process.env['PATH'] = path;
     }
     expect(readFileSync(log, 'utf8').trim().split('\n').length).toBeLessThanOrEqual(8);
   });

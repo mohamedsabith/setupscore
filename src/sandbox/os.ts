@@ -60,8 +60,8 @@ export class OsSandbox implements Sandbox {
 
   static async open(rt: Runtime): Promise<OsSandbox> {
     // The runtime takes its temp folder from these; setupscore's policies expect the default.
-    delete process.env.CLAUDE_CODE_TMPDIR;
-    delete process.env.CLAUDE_TMPDIR;
+    delete process.env['CLAUDE_CODE_TMPDIR'];
+    delete process.env['CLAUDE_TMPDIR'];
     // Start closed: no network, no writes. Each command gets its own policy.
     await rt.SandboxManager.initialize(toConfig({ writable: [], hidden: [], domains: [] }));
     return new OsSandbox(rt);
@@ -72,7 +72,7 @@ export class OsSandbox implements Sandbox {
     // An unguessable id ties network traffic to this one command's allow list.
     const commandId = randomBytes(18).toString('base64url');
     // The runtime points TMPDIR at a folder shared by every command. Use the workspace's own.
-    const tmp = o.env?.TMPDIR;
+    const tmp = o.env?.['TMPDIR'];
     const inner = tmp
       ? `export TMPDIR=${shellQuote(tmp)} TMP=${shellQuote(tmp)} TEMP=${shellQuote(tmp)}; ${command}`
       : command;

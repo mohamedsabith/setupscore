@@ -326,7 +326,7 @@ describe('resume safety (R7, R11, R12)', () => {
       cli(['run', root, '--claude-bin', fake('solve', '--cost=0.2'), '--repeat', '2', '--budget', '0.3', ...NONE]).code,
     ).toBe(4);
     const env = { ...process.env, NO_COLOR: '1', ANTHROPIC_API_KEY: KEY } as Record<string, string>;
-    delete env.CI;
+    delete env['CI'];
     const args = [
       CLI,
       'run',
@@ -409,14 +409,14 @@ describe('cheap checks happen before asking and before the run exists (W11, C9, 
       yes: true,
       claudeBin: fake('solve'),
     } as RunFlags;
-    const saved = process.env.ANTHROPIC_API_KEY;
-    process.env.ANTHROPIC_API_KEY = KEY;
+    const saved = process.env['ANTHROPIC_API_KEY'];
+    process.env['ANTHROPIC_API_KEY'] = KEY;
     try {
       await expect(startRun({ dir: root, flags, config: {} as never, log: () => {} })).rejects.toBeInstanceOf(
         NothingToDo,
       );
     } finally {
-      process.env.ANTHROPIC_API_KEY = saved;
+      process.env['ANTHROPIC_API_KEY'] = saved;
     }
     const r = cli(['run', root, '--claude-bin', fake('solve'), ...NONE]);
     expect(r.code).toBe(1);

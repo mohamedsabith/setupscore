@@ -41,11 +41,11 @@ export const skillFrontmatter: Rule = {
         f.lines.find((l) => l.inFrontmatter && l.text.trimStart().startsWith(`${key}:`))?.n ?? 1;
 
       if (
-        data.name !== undefined &&
-        (typeof data.name !== 'string' || !NAME.test(data.name) || data.name.length > 64)
+        data['name'] !== undefined &&
+        (typeof data['name'] !== 'string' || !NAME.test(data['name']) || data['name'].length > 64)
       ) {
         const what =
-          typeof data.name === 'string' ? `name ${quote(data.name, 60)} is not valid.` : 'name must be text.';
+          typeof data['name'] === 'string' ? `name ${quote(data['name'], 60)} is not valid.` : 'name must be text.';
         issues.push(
           issue(
             f,
@@ -56,7 +56,7 @@ export const skillFrontmatter: Rule = {
         );
       }
 
-      const desc = data.description;
+      const desc = data['description'];
       if (desc === undefined || desc === null || (typeof desc === 'string' && desc.trim() === '')) {
         issues.push(
           issue(

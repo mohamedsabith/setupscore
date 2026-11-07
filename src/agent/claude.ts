@@ -13,7 +13,7 @@ function commonLocations(): string[] {
   const home = homedir();
   return process.platform === 'win32'
     ? [
-        ...(process.env.APPDATA ? [join(process.env.APPDATA, 'npm', 'claude.cmd')] : []),
+        ...(process.env['APPDATA'] ? [join(process.env['APPDATA'], 'npm', 'claude.cmd')] : []),
         join(home, '.local', 'bin', 'claude.exe'),
       ]
     : [
@@ -117,7 +117,10 @@ async function probeVersion(bin: string, label: string, timeoutMs: number): Prom
  * (`--version` hangs, fails or prints nothing), or the given path does not exist, it throws an
  * EnvironmentError that says what happened.
  */
-export async function findClaude(preferred?: string, options: { timeoutMs?: number } = {}): Promise<ClaudeInfo | null> {
+export async function findClaude(
+  preferred?: string,
+  options: { timeoutMs?: number | undefined } = {},
+): Promise<ClaudeInfo | null> {
   const timeoutMs = options.timeoutMs ?? VERSION_TIMEOUT_MS;
   if (preferred !== undefined) {
     const given = preferred.trim();
@@ -189,10 +192,14 @@ export interface AuthStatus {
 }
 
 export function authStatus(env: NodeJS.ProcessEnv = process.env): AuthStatus {
-  if (env.ANTHROPIC_API_KEY) return { ok: true, via: 'ANTHROPIC_API_KEY' };
-  if (env.CLAUDE_CODE_OAUTH_TOKEN) return { ok: true, via: 'CLAUDE_CODE_OAUTH_TOKEN (your Claude subscription)' };
-  if (env.ANTHROPIC_AUTH_TOKEN) return { ok: true, via: 'ANTHROPIC_AUTH_TOKEN' };
-  if (env.CLAUDE_CODE_USE_BEDROCK && (env.AWS_ACCESS_KEY_ID || env.AWS_BEARER_TOKEN_BEDROCK) && env.AWS_REGION)
+  if (env['ANTHROPIC_API_KEY']) return { ok: true, via: 'ANTHROPIC_API_KEY' };
+  if (env['CLAUDE_CODE_OAUTH_TOKEN']) return { ok: true, via: 'CLAUDE_CODE_OAUTH_TOKEN (your Claude subscription)' };
+  if (env['ANTHROPIC_AUTH_TOKEN']) return { ok: true, via: 'ANTHROPIC_AUTH_TOKEN' };
+  if (
+    env['CLAUDE_CODE_USE_BEDROCK'] &&
+    (env['AWS_ACCESS_KEY_ID'] || env['AWS_BEARER_TOKEN_BEDROCK']) &&
+    env['AWS_REGION']
+  )
     return { ok: true, via: 'Amazon Bedrock' };
   return {
     ok: false,
@@ -209,17 +216,17 @@ export function authStatus(env: NodeJS.ProcessEnv = process.env): AuthStatus {
 /** Network destinations the agent may reach: the Claude API (or your gateway) only. */
 export function agentDomains(env: NodeJS.ProcessEnv = process.env): string[] {
   const out = new Set(['api.anthropic.com']);
-  if (env.ANTHROPIC_BASE_URL) {
+  if (env['ANTHROPIC_BASE_URL']) {
     try {
-      const host = new URL(env.ANTHROPIC_BASE_URL.trim()).hostname;
+      const host = new URL(env['ANTHROPIC_BASE_URL'].trim()).hostname;
       // Only names the sandbox's allow list accepts (checked before the run by endpointProblem).
       if (isAllowableHost(host)) out.add(host);
     } catch {
       // ignored: endpointProblem reports a bad URL before the run
     }
   }
-  if (env.CLAUDE_CODE_USE_BEDROCK && env.AWS_REGION && /^[a-z0-9-]+$/.test(env.AWS_REGION))
-    out.add(`bedrock-runtime.${env.AWS_REGION}.amazonaws.com`);
+  if (env['CLAUDE_CODE_USE_BEDROCK'] && env['AWS_REGION'] && /^[a-z0-9-]+$/.test(env['AWS_REGION']))
+    out.add(`bedrock-runtime.${env['AWS_REGION']}.amazonaws.com`);
   return [...out];
 }
 
@@ -277,7 +284,7 @@ export async function endpointProblem(
 ): Promise<EndpointProblem | null> {
   const env = o.env ?? process.env;
   const platform = o.platform ?? process.platform;
-  const raw = env.ANTHROPIC_BASE_URL?.trim();
+  const raw = env['ANTHROPIC_BASE_URL']?.trim();
   if (!raw) return null;
   let url: URL;
   try {
@@ -372,7 +379,7 @@ export function agentEnv(configDir: string, env: NodeJS.ProcessEnv = process.env
     DISABLE_AUTOUPDATER: '1',
   };
   // AWS credentials only go in when Claude Code is told to use Bedrock.
-  const bedrock = !!env.CLAUDE_CODE_USE_BEDROCK && env.CLAUDE_CODE_USE_BEDROCK !== '0';
+  const bedrock = !!env['CLAUDE_CODE_USE_BEDROCK'] && env['CLAUDE_CODE_USE_BEDROCK'] !== '0';
   for (const k of AUTH_VARS) if (env[k] && (bedrock || !k.startsWith('AWS_'))) out[k] = env[k]!;
   return out;
 }
@@ -391,7 +398,7 @@ export interface CommandOptions {
   stderrFile?: string;
   maxTurns: number;
   maxBudgetUsd: number;
-  model?: string;
+  model?: string | undefined;
 }
 
 /** The shell command for one headless Claude Code session. The prompt comes from a file on stdin. */

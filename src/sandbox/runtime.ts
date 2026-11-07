@@ -29,11 +29,11 @@ const absoluteDir = (v: string | undefined): string | undefined => (v && isAbsol
 
 export function cacheDir(): string {
   // Resolved once against the folder setupscore started in, so installing and finding agree.
-  if (process.env.SETUPSCORE_CACHE_DIR) return resolve(process.env.SETUPSCORE_CACHE_DIR);
+  if (process.env['SETUPSCORE_CACHE_DIR']) return resolve(process.env['SETUPSCORE_CACHE_DIR']);
   if (process.platform === 'win32')
-    return join(absoluteDir(process.env.LOCALAPPDATA) ?? join(homedir(), 'AppData', 'Local'), 'setupscore', 'Cache');
+    return join(absoluteDir(process.env['LOCALAPPDATA']) ?? join(homedir(), 'AppData', 'Local'), 'setupscore', 'Cache');
   if (process.platform === 'darwin') return join(homedir(), 'Library', 'Caches', 'setupscore');
-  return join(absoluteDir(process.env.XDG_CACHE_HOME) ?? join(homedir(), '.cache'), 'setupscore');
+  return join(absoluteDir(process.env['XDG_CACHE_HOME']) ?? join(homedir(), '.cache'), 'setupscore');
 }
 
 const runtimeDir = (): string => join(cacheDir(), 'sandbox-runtime', RUNTIME_VERSION);
@@ -75,9 +75,9 @@ export interface LoadOptions {
   /** Install into the cache when missing, and repair a damaged copy in the cache. */
   install: boolean;
   /** Progress messages ("Installing the sandbox runtime…"). */
-  onInstall?: (message: string) => void;
+  onInstall?: ((message: string) => void) | undefined;
   /** Stops a running install (Ctrl+C). */
-  signal?: AbortSignal;
+  signal?: AbortSignal | undefined;
 }
 
 const firstLine = (s: string): string =>
@@ -363,10 +363,10 @@ export interface ProgramResult {
 
 export interface ProgramOptions {
   timeoutMs: number;
-  cwd?: string;
-  env?: NodeJS.ProcessEnv;
+  cwd?: string | undefined;
+  env?: NodeJS.ProcessEnv | undefined;
   /** Stops the program and everything it started (Ctrl+C). */
-  signal?: AbortSignal;
+  signal?: AbortSignal | undefined;
 }
 
 const MAX_OUTPUT = 256 * 1024;

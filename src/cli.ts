@@ -24,10 +24,10 @@ function start(): void {
   }
 
   // FORCE_COLOR=0 (or false) means "no colours", but the colour library treats any FORCE_COLOR as "on".
-  const force = process.env.FORCE_COLOR;
+  const force = process.env['FORCE_COLOR'];
   if (force === '0' || force === 'false') {
-    delete process.env.FORCE_COLOR;
-    process.env.NO_COLOR = '1';
+    delete process.env['FORCE_COLOR'];
+    process.env['NO_COLOR'] = '1';
   }
 
   import('./core/lifecycle.js')

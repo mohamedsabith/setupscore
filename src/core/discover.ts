@@ -127,7 +127,7 @@ function loadsAtStart(rel: string, kind: FileKind, fm: SetupFile['frontmatter'])
       return rel === 'CLAUDE.local.md';
     case 'rule': {
       if (!rel.startsWith('.claude/rules/')) return false;
-      const paths = fm?.data?.paths;
+      const paths = fm?.data?.['paths'];
       return paths === undefined || paths === null || paths === '';
     }
     default:

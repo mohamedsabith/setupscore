@@ -146,7 +146,7 @@ interface Script {
   /** True when the script is the program itself, not an argument to an interpreter. */
   direct: boolean;
   /** The program before the script, such as "python3", when there is one. */
-  interpreter?: string;
+  interpreter?: string | undefined;
 }
 
 // "$CLAUDE_PROJECT_DIR", "${CLAUDE_PROJECT_DIR}", optionally in double quotes, then a path.
@@ -160,10 +160,10 @@ const MAX_COMMAND = 4000;
 
 /** The scripts a command hook runs through ${CLAUDE_PROJECT_DIR}. Anything we cannot resolve is left out. */
 function scriptsOf(h: Record<string, unknown>): Script[] {
-  const command = typeof h.command === 'string' ? h.command : '';
+  const command = typeof h['command'] === 'string' ? h['command'] : '';
   if (command.length > MAX_COMMAND) return [];
   const out: Script[] = [];
-  if (Array.isArray(h.args)) {
+  if (Array.isArray(h['args'])) {
     // Exec form: `command` is the program, each `args` element one argument.
     const whole = (s: string) => {
       const m = PLACEHOLDER.exec(s);
@@ -176,7 +176,7 @@ function scriptsOf(h: Record<string, unknown>): Script[] {
         .split(/[\\/]/)
         .pop()!
         .replace(/\.exe$/i, '');
-      const first: unknown = h.args[0];
+      const first: unknown = h['args'][0];
       // Only the script an interpreter runs: other arguments may be output files.
       if (INTERPRETERS.has(program) && typeof first === 'string' && whole(first)) {
         out.push({ path: whole(first)!, direct: false, interpreter: program });
@@ -221,7 +221,7 @@ export const brokenHook: Rule = {
       const { value } = parseJson(f);
       if (!isObject(value) || !('hooks' in value)) continue; // invalid JSON is reported by invalid-config
       const add: Add = (i) => issues.push({ rule: 'broken-hook', severity: 'warning', file: f.path, ...i });
-      const hooks = value.hooks;
+      const hooks = value['hooks'];
       const hooksLine = lineOf(f, '"hooks"');
       if (!isObject(hooks)) {
         add({
@@ -260,11 +260,13 @@ export const brokenHook: Rule = {
             add({ line, message: `${event} has an entry that is not an object, so it doesn't run.` });
             continue;
           }
-          if (!Array.isArray(group.hooks)) {
+          if (!Array.isArray(group['hooks'])) {
             const flat = 'type' in group || 'command' in group;
             add({
               line:
-                flat && typeof group.command === 'string' ? (lineOf(f, JSON.stringify(group.command)) ?? line) : line,
+                flat && typeof group['command'] === 'string'
+                  ? (lineOf(f, JSON.stringify(group['command'])) ?? line)
+                  : line,
               message: flat
                 ? `A ${event} hook is written directly in the list, without the "hooks" wrapper, so it doesn't run.`
                 : `A ${event} matcher group has no "hooks" list, so it runs nothing.`,
@@ -274,8 +276,8 @@ export const brokenHook: Rule = {
             });
             continue;
           }
-          checkMatcher(group.matcher, event, line, add);
-          for (const h of group.hooks) checkHandler(f, h, event, line, add, base, scripts);
+          checkMatcher(group['matcher'], event, line, add);
+          for (const h of group['hooks']) checkHandler(f, h, event, line, add, base, scripts);
         }
       }
     }
@@ -347,16 +349,18 @@ function checkHandler(
   groupLine: number | undefined,
   add: Add,
   base: string,
-  scripts: { f: SetupFile; rel: string; script: Script; line?: number; event: string }[],
+  scripts: { f: SetupFile; rel: string; script: Script; line?: number | undefined; event: string }[],
 ): void {
   if (!isObject(h)) {
     add({ line: groupLine, message: `A ${event} hook is not an object, so it doesn't run.` });
     return;
   }
-  const main = [h.command, h.url, h.prompt, h.tool].find((v): v is string => typeof v === 'string' && v !== '');
+  const main = [h['command'], h['url'], h['prompt'], h['tool']].find(
+    (v): v is string => typeof v === 'string' && v !== '',
+  );
   const line = (main !== undefined ? lineOf(f, JSON.stringify(main)) : undefined) ?? groupLine;
   const what = main !== undefined ? ` ${quote(main, 50)}` : '';
-  if (h.type === undefined) {
+  if (h['type'] === undefined) {
     add({
       line,
       message: `The ${event} hook${what} has no "type", which every hook needs.`,
@@ -364,9 +368,9 @@ function checkHandler(
     });
     return;
   }
-  if (typeof h.type !== 'string' || !TYPES.includes(h.type)) {
+  if (typeof h['type'] !== 'string' || !TYPES.includes(h['type'])) {
     // eslint-disable-next-line @typescript-eslint/no-base-to-string -- "type" in the user's settings can be any JSON value
-    const t = String(h.type);
+    const t = String(h['type']);
     const near = TYPES.find((x) => x === t.toLowerCase()) ?? closest(t, TYPES, 0.6);
     if (near) {
       add({
@@ -377,26 +381,26 @@ function checkHandler(
     }
     return;
   }
-  for (const field of REQUIRED[h.type]!) {
+  for (const field of REQUIRED[h['type']]!) {
     if (typeof h[field] !== 'string' || h[field].trim() === '') {
-      add({ line, message: `The ${event} ${h.type} hook has no "${field}", so it can't run.` });
+      add({ line, message: `The ${event} ${h['type']} hook has no "${field}", so it can't run.` });
     }
   }
-  if ('timeout' in h && !(typeof h.timeout === 'number' && Number.isFinite(h.timeout) && h.timeout > 0)) {
+  if ('timeout' in h && !(typeof h['timeout'] === 'number' && Number.isFinite(h['timeout']) && h['timeout'] > 0)) {
     add({
       line,
-      message: `The ${event} hook${what} has "timeout": ${clip(JSON.stringify(h.timeout) ?? String(h.timeout), 20)}. It must be a number of seconds above 0.`,
+      message: `The ${event} hook${what} has "timeout": ${clip(JSON.stringify(h['timeout']) ?? String(h['timeout']), 20)}. It must be a number of seconds above 0.`,
       hint: 'For example "timeout": 30.',
     });
   }
-  if (typeof h.if === 'string' && h.if.trim() !== '' && !TOOL_EVENTS.has(event)) {
+  if (typeof h['if'] === 'string' && h['if'].trim() !== '' && !TOOL_EVENTS.has(event)) {
     add({
       line,
       message: `The ${event} hook${what} has "if", which Claude Code only checks on tool events, so this hook never runs.`,
       hint: 'Remove "if", or move the hook to PreToolUse or PostToolUse.',
     });
   }
-  if (h.type === 'command') {
+  if (h['type'] === 'command') {
     for (const script of scriptsOf(h)) {
       const rel = posix.normalize((base ? `${base}/` : '') + script.path.slice(1)).replace(/\/$/, '');
       if (rel.startsWith('..') || rel === '.' || SKIP_DIRS.has(rel.split('/')[0]!)) continue;

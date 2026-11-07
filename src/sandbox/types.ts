@@ -17,12 +17,12 @@ export interface ExecOptions {
   timeoutMs: number;
   policy: Policy;
   /** Extra environment variables. The base environment is already filtered (see env.ts). */
-  env?: Record<string, string>;
+  env?: Record<string, string> | undefined;
   /** Stops the command (whole process tree) when aborted. */
-  signal?: AbortSignal;
+  signal?: AbortSignal | undefined;
   /** Also write all of stdout / stderr to these files, from outside the sandbox. */
-  stdoutFile?: string;
-  stderrFile?: string;
+  stdoutFile?: string | undefined;
+  stderrFile?: string | undefined;
 }
 
 export interface ExecResult {
@@ -48,7 +48,7 @@ export interface Check {
   /** Shown after the name: a version, or what is wrong. */
   detail: string;
   /** How to fix it. */
-  fix?: string;
+  fix?: string | undefined;
   /** Required checks make doctor fail; optional ones only warn. */
   required: boolean;
 }

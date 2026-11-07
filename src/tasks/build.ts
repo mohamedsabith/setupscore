@@ -57,14 +57,14 @@ export interface BuildOptions {
   sandbox: Sandbox;
   /** Stop after this many valid tasks. */
   limit: number;
-  since?: string;
+  since?: string | undefined;
   /** Per test run. */
   timeoutMs: number;
   installTimeoutMs: number;
   /** Extra domains the install step may reach. */
-  domains?: string[];
-  overrides?: PmOverrides;
-  onProgress?: (p: Progress) => void;
+  domains?: string[] | undefined;
+  overrides?: PmOverrides | undefined;
+  onProgress?: ((p: Progress) => void) | undefined;
   /** Stop between commits and end running commands (Ctrl+C). */
   signal?: AbortSignal;
 }

@@ -222,7 +222,7 @@ export const lineAt = (text: string, offset: number): number => {
 };
 
 interface PackageFacts {
-  name?: string;
+  name?: string | undefined;
   scripts: Record<string, string>;
   /** Package managers named by "packageManager" and "devEngines.packageManager". */
   declaredPms: PmName[];
@@ -242,16 +242,16 @@ export function packageOf(abs: string): PackageFacts | null {
       if (r && 'text' in r) {
         const pkg = JSON.parse(r.text.replace(/^\uFEFF/, '')) as unknown;
         const scripts = Object.create(null) as Record<string, string>;
-        if (isObject(pkg) && isObject(pkg.scripts)) {
-          for (const [k, v] of Object.entries(pkg.scripts)) if (typeof v === 'string') scripts[k] = v;
+        if (isObject(pkg) && isObject(pkg['scripts'])) {
+          for (const [k, v] of Object.entries(pkg['scripts'])) if (typeof v === 'string') scripts[k] = v;
         }
-        const dev = isObject(pkg) && isObject(pkg.devEngines) ? pkg.devEngines.packageManager : undefined;
+        const dev = isObject(pkg) && isObject(pkg['devEngines']) ? pkg['devEngines']['packageManager'] : undefined;
         const declared = [
-          pmFromField(isObject(pkg) ? pkg.packageManager : undefined),
-          ...(Array.isArray(dev) ? dev : [dev]).map((d) => pmFromField(isObject(d) ? d.name : undefined)),
+          pmFromField(isObject(pkg) ? pkg['packageManager'] : undefined),
+          ...(Array.isArray(dev) ? dev : [dev]).map((d) => pmFromField(isObject(d) ? d['name'] : undefined)),
         ].filter((n): n is PmName => n !== undefined);
         out = {
-          name: isObject(pkg) && typeof pkg.name === 'string' ? pkg.name : undefined,
+          name: isObject(pkg) && typeof pkg['name'] === 'string' ? pkg['name'] : undefined,
           scripts,
           declaredPms: [...new Set(declared)],
         };

@@ -48,7 +48,7 @@ export interface RunOptionsRecord {
   maxTurns: number;
   attemptBudgetUsd: number;
   agentTimeoutMin: number;
-  model?: string;
+  model?: string | undefined;
   concurrency: number;
   sandbox: string;
 }
@@ -57,25 +57,25 @@ export interface RunRecord {
   schemaVersion: typeof RUN_SCHEMA_VERSION;
   id: string;
   createdAt: string;
-  finishedAt?: string;
+  finishedAt?: string | undefined;
   /** running, completed, stopped (budget or Ctrl+C), failed (could not continue). */
   status: 'running' | 'completed' | 'stopped' | 'failed';
-  stopReason?: string;
+  stopReason?: string | undefined;
   head: string | null;
-  tool: { version: string; claudeCode?: string };
+  tool: { version: string; claudeCode?: string | undefined };
   options: RunOptionsRecord;
   tasks: Task[];
   setups: SetupRecord[];
   /** Set by "setupscore watch": the run this one is compared with. */
-  comparedTo?: string;
+  comparedTo?: string | undefined;
   /** The model Claude Code reported using (it can differ from options.model, for example for an alias or a retired id). */
-  modelUsed?: string;
+  modelUsed?: string | undefined;
 }
 
 export interface CheckResults {
   /** Did the hidden tests pass after the agent's change? null when they could not run. */
   testsPassed: boolean | null;
-  testOutput?: string;
+  testOutput?: string | undefined;
   /** Instructions from the setup that the agent's change broke. */
   ruleViolations: { rule: string; token: string; file: string }[];
   filesChanged: string[];
@@ -84,7 +84,7 @@ export interface CheckResults {
   /** The agent changed setup files (CLAUDE.md, .claude/). */
   touchedSetup: boolean;
   /** Commands or paths that looked for the answer outside the task. The attempt then counts as failed. */
-  lookedOutside?: string[];
+  lookedOutside?: string[] | undefined;
 }
 
 export interface Attempt {
@@ -94,10 +94,10 @@ export interface Attempt {
   setup: string;
   repeat: number;
   status: AttemptStatus;
-  failureKind?: FailureKind;
-  reason?: string;
-  metrics?: AgentMetrics;
-  checks?: CheckResults;
+  failureKind?: FailureKind | undefined;
+  reason?: string | undefined;
+  metrics?: AgentMetrics | undefined;
+  checks?: CheckResults | undefined;
   startedAt: string;
   finishedAt: string;
   ms: number;
@@ -142,70 +142,70 @@ function readMetrics(v: unknown): AgentMetrics | undefined {
   if (!isObj(v)) return undefined;
   return {
     ...emptyMetrics(),
-    modelsUsed: texts(v.modelsUsed),
-    resultCount: count(v.resultCount),
-    ranTests: flag(v.ranTests),
-    apiRetriesAtEnd: count(v.apiRetriesAtEnd),
-    toolsRunningAtEnd: count(v.toolsRunningAtEnd),
-    finalErrorCode: optText(v.finalErrorCode),
+    modelsUsed: texts(v['modelsUsed']),
+    resultCount: count(v['resultCount']),
+    ranTests: flag(v['ranTests']),
+    apiRetriesAtEnd: count(v['apiRetriesAtEnd']),
+    toolsRunningAtEnd: count(v['toolsRunningAtEnd']),
+    finalErrorCode: optText(v['finalErrorCode']),
     apiErrorStatus:
-      typeof v.apiErrorStatus === 'number' && Number.isFinite(v.apiErrorStatus) ? v.apiErrorStatus : undefined,
-    apiErrorKind: optText(v.apiErrorKind),
-    lastEventKind: optText(v.lastEventKind) as AgentMetrics['lastEventKind'],
-    lastRetryError: optText(v.lastRetryError),
-    lastProgressAt: optText(v.lastProgressAt),
-    outcome: (OUTCOMES.has(v.outcome as string) ? v.outcome : 'no_result') as AgentMetrics['outcome'],
-    resultSubtype: optText(v.resultSubtype),
-    isError: flag(v.isError),
-    result: optText(v.result),
-    costUsd: finiteCost(v.costUsd),
-    turns: count(v.turns),
-    durationMs: count(v.durationMs),
-    inputTokens: count(v.inputTokens),
-    outputTokens: count(v.outputTokens),
-    cacheReadTokens: count(v.cacheReadTokens),
-    cacheWriteTokens: count(v.cacheWriteTokens),
-    toolCalls: numberMap(v.toolCalls),
-    bashCommands: texts(v.bashCommands),
-    failedCommands: texts(v.failedCommands),
-    filesEdited: texts(v.filesEdited),
-    pathsRead: texts(v.pathsRead),
-    textWritten: texts(v.textWritten),
-    skillsUsed: texts(v.skillsUsed),
-    subagentsUsed: texts(v.subagentsUsed),
-    mcpServers: Array.isArray(v.mcpServers)
-      ? v.mcpServers.filter(isObj).map((s) => ({ name: text(s.name, '?'), status: text(s.status, '?') }))
+      typeof v['apiErrorStatus'] === 'number' && Number.isFinite(v['apiErrorStatus']) ? v['apiErrorStatus'] : undefined,
+    apiErrorKind: optText(v['apiErrorKind']),
+    lastEventKind: optText(v['lastEventKind']) as AgentMetrics['lastEventKind'],
+    lastRetryError: optText(v['lastRetryError']),
+    lastProgressAt: optText(v['lastProgressAt']),
+    outcome: (OUTCOMES.has(v['outcome'] as string) ? v['outcome'] : 'no_result') as AgentMetrics['outcome'],
+    resultSubtype: optText(v['resultSubtype']),
+    isError: flag(v['isError']),
+    result: optText(v['result']),
+    costUsd: finiteCost(v['costUsd']),
+    turns: count(v['turns']),
+    durationMs: count(v['durationMs']),
+    inputTokens: count(v['inputTokens']),
+    outputTokens: count(v['outputTokens']),
+    cacheReadTokens: count(v['cacheReadTokens']),
+    cacheWriteTokens: count(v['cacheWriteTokens']),
+    toolCalls: numberMap(v['toolCalls']),
+    bashCommands: texts(v['bashCommands']),
+    failedCommands: texts(v['failedCommands']),
+    filesEdited: texts(v['filesEdited']),
+    pathsRead: texts(v['pathsRead']),
+    textWritten: texts(v['textWritten']),
+    skillsUsed: texts(v['skillsUsed']),
+    subagentsUsed: texts(v['subagentsUsed']),
+    mcpServers: Array.isArray(v['mcpServers'])
+      ? v['mcpServers'].filter(isObj).map((s) => ({ name: text(s['name'], '?'), status: text(s['status'], '?') }))
       : [],
-    errorCodes: texts(v.errorCodes),
-    apiRetries: count(v.apiRetries),
-    model: optText(v.model),
-    apiKeySource: optText(v.apiKeySource),
-    sessionId: optText(v.sessionId),
-    claudeCodeVersion: optText(v.claudeCodeVersion),
-    skillsAvailable: texts(v.skillsAvailable),
-    memoryPaths: texts(v.memoryPaths),
-    terminalReason: optText(v.terminalReason),
-    parsedLines: count(v.parsedLines),
-    badLines: count(v.badLines),
+    errorCodes: texts(v['errorCodes']),
+    apiRetries: count(v['apiRetries']),
+    model: optText(v['model']),
+    apiKeySource: optText(v['apiKeySource']),
+    sessionId: optText(v['sessionId']),
+    claudeCodeVersion: optText(v['claudeCodeVersion']),
+    skillsAvailable: texts(v['skillsAvailable']),
+    memoryPaths: texts(v['memoryPaths']),
+    terminalReason: optText(v['terminalReason']),
+    parsedLines: count(v['parsedLines']),
+    badLines: count(v['badLines']),
   };
 }
 
 function readChecks(v: unknown): CheckResults | undefined {
   if (!isObj(v)) return undefined;
   const out: CheckResults = {
-    testsPassed: typeof v.testsPassed === 'boolean' ? v.testsPassed : null,
-    testOutput: typeof v.testOutput === 'string' ? capOutput(v.testOutput) : undefined,
-    ruleViolations: Array.isArray(v.ruleViolations)
-      ? v.ruleViolations
+    testsPassed: typeof v['testsPassed'] === 'boolean' ? v['testsPassed'] : null,
+    testOutput: typeof v['testOutput'] === 'string' ? capOutput(v['testOutput']) : undefined,
+    ruleViolations: Array.isArray(v['ruleViolations'])
+      ? v['ruleViolations']
           .filter(isObj)
-          .map((r) => ({ rule: text(r.rule), token: text(r.token), file: text(r.file) }))
+          .map((r) => ({ rule: text(r['rule']), token: text(r['token']), file: text(r['file']) }))
           .filter((r) => r.token)
       : [],
-    filesChanged: texts(v.filesChanged),
-    ranTests: flag(v.ranTests),
-    touchedSetup: flag(v.touchedSetup),
+    filesChanged: texts(v['filesChanged']),
+    ranTests: flag(v['ranTests']),
+    touchedSetup: flag(v['touchedSetup']),
   };
-  if (v.lookedOutside !== undefined) out.lookedOutside = texts(v.lookedOutside);
+  if (v['lookedOutside'] !== undefined) out.lookedOutside = texts(v['lookedOutside']);
   return out;
 }
 
@@ -241,129 +241,136 @@ export function parseAttempt(line: string): Attempt | null {
   }
   if (!isObj(a)) return null;
   if (
-    typeof a.key !== 'string' ||
-    !a.key ||
-    typeof a.taskId !== 'string' ||
-    typeof a.setup !== 'string' ||
-    !STATUSES.has(a.status as string)
+    typeof a['key'] !== 'string' ||
+    !a['key'] ||
+    typeof a['taskId'] !== 'string' ||
+    typeof a['setup'] !== 'string' ||
+    !STATUSES.has(a['status'] as string)
   )
     return null;
   return {
-    key: a.key,
-    taskId: a.taskId,
-    setup: a.setup,
-    repeat: typeof a.repeat === 'number' && Number.isInteger(a.repeat) && a.repeat > 0 ? a.repeat : 1,
-    status: a.status as AttemptStatus,
-    failureKind: a.failureKind === 'task' || a.failureKind === 'infra' ? a.failureKind : undefined,
-    reason: capReason(optText(a.reason)),
-    metrics: readMetrics(a.metrics),
-    checks: readChecks(a.checks),
-    startedAt: text(a.startedAt),
-    finishedAt: text(a.finishedAt),
-    ms: count(a.ms),
-    retries: count(a.retries),
+    key: a['key'],
+    taskId: a['taskId'],
+    setup: a['setup'],
+    repeat: typeof a['repeat'] === 'number' && Number.isInteger(a['repeat']) && a['repeat'] > 0 ? a['repeat'] : 1,
+    status: a['status'] as AttemptStatus,
+    failureKind: a['failureKind'] === 'task' || a['failureKind'] === 'infra' ? a['failureKind'] : undefined,
+    reason: capReason(optText(a['reason'])),
+    metrics: readMetrics(a['metrics']),
+    checks: readChecks(a['checks']),
+    startedAt: text(a['startedAt']),
+    finishedAt: text(a['finishedAt']),
+    ms: count(a['ms']),
+    retries: count(a['retries']),
   };
 }
 
 /** Check and clean a run.json; throws a plain message for anything that cannot be used. */
 function readRunRecord(data: unknown): RunRecord {
   if (!isObj(data)) throw new Error('run.json is empty');
-  if (data.schemaVersion !== RUN_SCHEMA_VERSION) throw new SchemaMismatch(data.schemaVersion);
-  if (!Array.isArray(data.tasks) || !Array.isArray(data.setups) || !isObj(data.options))
+  if (data['schemaVersion'] !== RUN_SCHEMA_VERSION) throw new SchemaMismatch(data['schemaVersion']);
+  if (!Array.isArray(data['tasks']) || !Array.isArray(data['setups']) || !isObj(data['options']))
     throw new Error('it has no tasks, setups or options');
-  const o: Obj = { ...data.options };
+  const o: Obj = { ...data['options'] };
   for (const k of ['repeat', 'concurrency', 'agentTimeoutMin', 'maxTurns', 'budgetUsd', 'attemptBudgetUsd'])
     o[k] = asNumber(o[k]);
   const positive = (x: unknown) => typeof x === 'number' && Number.isFinite(x) && x > 0;
   if (
-    !positive(o.repeat) ||
-    !positive(o.concurrency) ||
-    !positive(o.agentTimeoutMin) ||
-    !positive(o.maxTurns) ||
-    !positive(o.budgetUsd) ||
-    !positive(o.attemptBudgetUsd)
+    !positive(o['repeat']) ||
+    !positive(o['concurrency']) ||
+    !positive(o['agentTimeoutMin']) ||
+    !positive(o['maxTurns']) ||
+    !positive(o['budgetUsd']) ||
+    !positive(o['attemptBudgetUsd'])
   ) {
     throw new Error('its options are incomplete');
   }
-  if ((o.repeat as number) > 1000 || !Number.isInteger(o.repeat))
+  if ((o['repeat'] as number) > 1000 || !Number.isInteger(o['repeat']))
     throw new Error('its repeat count is not a whole number up to 1000');
   const ids = new Set<string>();
-  const tasks: Task[] = data.tasks.map((t: unknown) => {
+  const tasks: Task[] = data['tasks'].map((t: unknown) => {
     if (
       !isObj(t) ||
-      typeof t.id !== 'string' ||
-      !t.id ||
-      typeof t.hash !== 'string' ||
-      typeof t.parent !== 'string' ||
-      !Array.isArray(t.testFiles)
+      typeof t['id'] !== 'string' ||
+      !t['id'] ||
+      typeof t['hash'] !== 'string' ||
+      typeof t['parent'] !== 'string' ||
+      !Array.isArray(t['testFiles'])
     )
       throw new Error('a task is incomplete');
-    if (ids.has(t.id)) throw new Error(`task ${t.id} is listed twice`);
-    ids.add(t.id);
+    if (ids.has(t['id'])) throw new Error(`task ${t['id']} is listed twice`);
+    ids.add(t['id']);
     return {
-      id: t.id,
-      hash: t.hash,
-      parent: t.parent,
-      title: text(t.title, t.id),
-      date: text(t.date),
-      prompt: text(t.prompt),
-      testFiles: texts(t.testFiles),
-      sourceFiles: texts(t.sourceFiles),
-      newTests: texts(t.newTests),
-      beforeMs: count(t.beforeMs),
-      afterMs: count(t.afterMs),
-      ...(typeof t.testCommand === 'string' && t.testCommand ? { testCommand: t.testCommand } : {}),
+      id: t['id'],
+      hash: t['hash'],
+      parent: t['parent'],
+      title: text(t['title'], t['id']),
+      date: text(t['date']),
+      prompt: text(t['prompt']),
+      testFiles: texts(t['testFiles']),
+      sourceFiles: texts(t['sourceFiles']),
+      newTests: texts(t['newTests']),
+      beforeMs: count(t['beforeMs']),
+      afterMs: count(t['afterMs']),
+      ...(typeof t['testCommand'] === 'string' && t['testCommand'] ? { testCommand: t['testCommand'] } : {}),
     };
   });
   const labels = new Set<string>();
-  const setups: SetupRecord[] = data.setups.map((s: unknown) => {
-    if (!isObj(s) || typeof s.label !== 'string' || !s.label || typeof s.source !== 'string' || !isObj(s.files))
+  const setups: SetupRecord[] = data['setups'].map((s: unknown) => {
+    if (
+      !isObj(s) ||
+      typeof s['label'] !== 'string' ||
+      !s['label'] ||
+      typeof s['source'] !== 'string' ||
+      !isObj(s['files'])
+    )
       throw new Error('a setup is incomplete');
-    if (labels.has(s.label)) throw new Error(`setup ${s.label} is listed twice`);
-    labels.add(s.label);
+    if (labels.has(s['label'])) throw new Error(`setup ${s['label']} is listed twice`);
+    labels.add(s['label']);
     const files: Record<string, string> = {};
-    for (const [p, body] of Object.entries(s.files)) if (typeof body === 'string') files[p] = body;
-    const health = typeof s.health === 'number' && Number.isFinite(s.health) ? Math.min(10, Math.max(0, s.health)) : 0;
-    const executable = texts(s.executable).filter((f) => f in files);
+    for (const [p, body] of Object.entries(s['files'])) if (typeof body === 'string') files[p] = body;
+    const health =
+      typeof s['health'] === 'number' && Number.isFinite(s['health']) ? Math.min(10, Math.max(0, s['health'])) : 0;
+    const executable = texts(s['executable']).filter((f) => f in files);
     return {
-      label: s.label,
-      source: s.source,
+      label: s['label'],
+      source: s['source'],
       files,
       ...(executable.length ? { executable } : {}),
       health,
-      startupTokens: count(s.startupTokens),
-      lintErrors: count(s.lintErrors),
-      lintWarnings: count(s.lintWarnings),
+      startupTokens: count(s['startupTokens']),
+      lintErrors: count(s['lintErrors']),
+      lintWarnings: count(s['lintWarnings']),
     };
   });
   const statuses = new Set(['running', 'completed', 'stopped', 'failed']);
-  const tool = isObj(data.tool) ? data.tool : {};
+  const tool = isObj(data['tool']) ? data['tool'] : {};
   return {
     schemaVersion: RUN_SCHEMA_VERSION,
-    id: text(data.id),
-    createdAt: text(data.createdAt),
-    finishedAt: optText(data.finishedAt),
-    status: (statuses.has(data.status as string) ? data.status : 'stopped') as RunRecord['status'],
-    stopReason: optText(data.stopReason),
-    head: optText(data.head) ?? null,
+    id: text(data['id']),
+    createdAt: text(data['createdAt']),
+    finishedAt: optText(data['finishedAt']),
+    status: (statuses.has(data['status'] as string) ? data['status'] : 'stopped') as RunRecord['status'],
+    stopReason: optText(data['stopReason']),
+    head: optText(data['head']) ?? null,
     tool: {
-      version: text(tool.version, '?'),
-      ...(typeof tool.claudeCode === 'string' ? { claudeCode: tool.claudeCode } : {}),
+      version: text(tool['version'], '?'),
+      ...(typeof tool['claudeCode'] === 'string' ? { claudeCode: tool['claudeCode'] } : {}),
     },
     options: {
-      repeat: o.repeat as number,
-      budgetUsd: o.budgetUsd as number,
-      maxTurns: o.maxTurns as number,
-      attemptBudgetUsd: o.attemptBudgetUsd as number,
-      agentTimeoutMin: o.agentTimeoutMin as number,
-      model: optText(o.model),
-      concurrency: o.concurrency as number,
-      sandbox: text(o.sandbox, 'auto'),
+      repeat: o['repeat'] as number,
+      budgetUsd: o['budgetUsd'] as number,
+      maxTurns: o['maxTurns'] as number,
+      attemptBudgetUsd: o['attemptBudgetUsd'] as number,
+      agentTimeoutMin: o['agentTimeoutMin'] as number,
+      model: optText(o['model']),
+      concurrency: o['concurrency'] as number,
+      sandbox: text(o['sandbox'], 'auto'),
     },
     tasks,
     setups,
-    comparedTo: optText(data.comparedTo),
-    ...(typeof data.modelUsed === 'string' ? { modelUsed: data.modelUsed } : {}),
+    comparedTo: optText(data['comparedTo']),
+    ...(typeof data['modelUsed'] === 'string' ? { modelUsed: data['modelUsed'] } : {}),
   };
 }
 

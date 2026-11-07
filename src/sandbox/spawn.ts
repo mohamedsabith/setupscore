@@ -13,9 +13,9 @@ const MAX_OUTPUT = 1024 * 1024; // keep the last 1 MB of each stream
  */
 export interface OutputFiles {
   /** Also write the whole of stdout here (from setupscore's side, so the command cannot change it). */
-  stdoutFile?: string;
+  stdoutFile?: string | undefined;
   /** Also write the whole of stderr here. */
-  stderrFile?: string;
+  stderrFile?: string | undefined;
 }
 
 export function runShell(

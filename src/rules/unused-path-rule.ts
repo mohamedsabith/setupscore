@@ -92,7 +92,7 @@ export const unusedPathRule: Rule = {
       return false;
     };
     for (const f of ctx.files.filter((f) => f.kind === 'rule')) {
-      const patterns = toPatterns(f.frontmatter?.data?.paths);
+      const patterns = toPatterns(f.frontmatter?.data?.['paths']);
       if (patterns.length === 0 || patterns.some((p) => p.length > MAX_PATTERN)) continue;
       // Folders we do not walk (node_modules, dist, ...) cannot be checked.
       if (patterns.some((p) => SKIP_DIRS.has(p.replace(/^\/+/, '').split('/')[0]!))) continue;

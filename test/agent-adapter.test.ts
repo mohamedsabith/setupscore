@@ -137,7 +137,7 @@ describe('failure classes from real transcripts', () => {
       message: 'the agent ran out of time',
     });
     // Killed after a tool result: the model's next answer was due. Long silence -> the API stalled.
-    const waiting = upTo((e) => e.type === 'user' && JSON.stringify(e).includes('updated successfully'));
+    const waiting = upTo((e) => e['type'] === 'user' && JSON.stringify(e).includes('updated successfully'));
     expect(waiting).toMatchObject({ lastEventKind: 'tool_result', toolsRunningAtEnd: 0 });
     const last = Date.parse(waiting.lastProgressAt!);
     expect(classify(waiting, { timedOut: true, exit: null, endedAt: last + 10 * 60_000 })).toMatchObject({
@@ -294,7 +294,7 @@ describe('metrics from real transcripts', () => {
     }
     const skill = parse('skill-missing');
     expect(skill.skillsUsed).toEqual([]);
-    expect(skill.toolCalls.Skill).toBe(1);
+    expect(skill.toolCalls['Skill']).toBe(1);
     const synthetic = parseTranscript(
       lines(
         {
@@ -437,7 +437,7 @@ describe('ranTests', () => {
     }));
     const capped = parseTranscript(lines(...many));
     expect(capped.bashCommands.length).toBe(200);
-    expect(capped.toolCalls.Bash).toBe(222);
+    expect(capped.toolCalls['Bash']).toBe(222);
     expect(ranTests(capped)).toBe(true);
     expect(ranTests({ bashCommands: ['npm test'] } as AgentMetrics)).toBe(true); // metrics saved before the flag existed
   });

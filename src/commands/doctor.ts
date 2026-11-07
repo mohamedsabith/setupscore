@@ -55,13 +55,13 @@ function tool(cmd: string, args: string[], cwd?: string, timeoutMs = toolTimeout
 
 export interface DoctorOptions {
   /** Path to Claude Code, as --claude-bin. */
-  claudeBin?: string;
+  claudeBin?: string | undefined;
   /** Called with each check as soon as it is known, in the order they are shown. */
-  onCheck?: (check: Check) => void;
+  onCheck?: ((check: Check) => void) | undefined;
   /** Time limit for each tool's answer (tests use a short one). */
   toolTimeoutMs?: number;
   /** tasks.test / tasks.install from setupscore.yml, so a custom test command counts. */
-  overrides?: PmOverrides;
+  overrides?: PmOverrides | undefined;
 }
 
 export interface GitRepoProblem {

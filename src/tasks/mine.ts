@@ -37,7 +37,7 @@ export interface FindOptions {
   /** Stop after this many candidates. */
   max: number;
   /** Only commits after this date (anything git accepts: 2026-01-01, "3 months ago"). */
-  since?: string;
+  since?: string | undefined;
   /** How many commits to look through at most (default: 1,000, or 20,000 with `since`). */
   scan?: number;
   /** Refuse a folder that is not a JavaScript or TypeScript project (no package.json). */

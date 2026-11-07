@@ -29,7 +29,7 @@ export class GitError extends Error {
 
   constructor(
     message: string,
-    o: { kind: GitErrorKind; fixes?: string[]; code?: string; exitCode?: number; gitMessage?: string },
+    o: { kind: GitErrorKind; fixes?: string[]; code?: string; exitCode?: number | undefined; gitMessage?: string },
   ) {
     super(message);
     this.name = 'GitError';
@@ -46,7 +46,7 @@ const MAX_OUTPUT = 256 * 1024 * 1024;
 
 /** Time limit for one git command: SETUPSCORE_GIT_TIMEOUT_MS, or 10 minutes. */
 export function gitTimeoutMs(): number {
-  const n = Number(process.env.SETUPSCORE_GIT_TIMEOUT_MS);
+  const n = Number(process.env['SETUPSCORE_GIT_TIMEOUT_MS']);
   return Number.isFinite(n) && n > 0 ? n : DEFAULT_TIMEOUT_MS;
 }
 
@@ -87,7 +87,13 @@ const firstLine = (stderr: string) =>
 export function explainGitFailure(
   cwd: string,
   args: string[],
-  o: { stderr?: string; code?: string; exitCode?: number; timedOut?: boolean; timeoutMs?: number },
+  o: {
+    stderr?: string | undefined;
+    code?: string | undefined;
+    exitCode?: number | undefined;
+    timedOut?: boolean | undefined;
+    timeoutMs?: number | undefined;
+  },
 ): GitError {
   const stderr = o.stderr ?? '';
   const line = firstLine(stderr);

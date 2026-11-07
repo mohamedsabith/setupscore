@@ -6,7 +6,7 @@ export interface Fix {
   file: string;
   line: number;
   /** 1-based column where `from` starts. Without it, the first occurrence on the line is replaced. */
-  column?: number;
+  column?: number | undefined;
   from: string;
   to: string;
 }
@@ -16,13 +16,13 @@ export interface Issue {
   severity: Severity;
   /** Path relative to the checked folder, always with forward slashes. */
   file: string;
-  line?: number;
+  line?: number | undefined;
   column?: number;
   message: string;
   /** A short "how to fix it" note. */
   hint?: string;
   /** Present when `--fix` can repair this safely. */
-  fix?: Fix;
+  fix?: Fix | undefined;
 }
 
 export type FileKind =
@@ -49,7 +49,7 @@ export interface Line {
 
 export interface Frontmatter {
   data: Record<string, unknown> | null;
-  error?: string;
+  error?: string | undefined;
   /** 1-based line number of the closing `---`. */
   endLine: number;
 }
@@ -58,17 +58,17 @@ export interface SetupFile {
   /** Relative to the checked folder, forward slashes. */
   path: string;
   /** Where the file really is when it is reached through a symbolic link inside the project. */
-  realPath?: string;
+  realPath?: string | undefined;
   abs: string;
   kind: FileKind;
   text: string;
   lines: Line[];
-  frontmatter?: Frontmatter;
+  frontmatter?: Frontmatter | undefined;
   /** True when Claude Code loads this file into every session at start-up. */
   loadsAtStart: boolean;
   /** For `import` files: the file that imported it and the hop count. */
-  importedBy?: string;
-  importDepth?: number;
+  importedBy?: string | undefined;
+  importDepth?: number | undefined;
 }
 
 /** One `@path` import written in an instruction file. */

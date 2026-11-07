@@ -18,10 +18,10 @@ const pinned = (spec: string): boolean => {
 /** Every string value in a server's command, args, env, url and headers, with where it came from. */
 function strings(server: Record<string, unknown>): { where: string; value: string }[] {
   const out: { where: string; value: string }[] = [];
-  if (typeof server.command === 'string') out.push({ where: 'command', value: server.command });
-  if (typeof server.url === 'string') out.push({ where: 'url', value: server.url });
-  if (Array.isArray(server.args))
-    server.args.forEach((a) => typeof a === 'string' && out.push({ where: 'args', value: a }));
+  if (typeof server['command'] === 'string') out.push({ where: 'command', value: server['command'] });
+  if (typeof server['url'] === 'string') out.push({ where: 'url', value: server['url'] });
+  if (Array.isArray(server['args']))
+    server['args'].forEach((a) => typeof a === 'string' && out.push({ where: 'args', value: a }));
   for (const key of ['env', 'headers'] as const) {
     const block = server[key];
     if (isObject(block))
@@ -44,7 +44,7 @@ export const mcpConfig: Rule = {
       const add = (message: string, hint: string, line?: number) =>
         issues.push({ rule: 'mcp-config', severity: 'warning', file: f.path, line, message, hint });
 
-      if (!isObject(value) || !isObject(value.mcpServers)) {
+      if (!isObject(value) || !isObject(value['mcpServers'])) {
         add(
           'No "mcpServers" object, so Claude Code finds no servers here.',
           'Use { "mcpServers": { "name": { "command": "…", "args": [] } } }.',
@@ -52,7 +52,7 @@ export const mcpConfig: Rule = {
         );
         continue;
       }
-      for (const [name, server] of Object.entries(value.mcpServers)) {
+      for (const [name, server] of Object.entries(value['mcpServers'])) {
         if (!isObject(server)) continue;
         checkServer(f, name, server, add);
       }
@@ -77,8 +77,8 @@ function checkServer(
 ): void {
   const line = lineOf(f, JSON.stringify(name));
   const label = `Server "${clip(name, 40)}"`;
-  const args = Array.isArray(server.args) ? server.args.filter((a): a is string => typeof a === 'string') : [];
-  let command = typeof server.command === 'string' ? commandName(server.command) : '';
+  const args = Array.isArray(server['args']) ? server['args'].filter((a): a is string => typeof a === 'string') : [];
+  let command = typeof server['command'] === 'string' ? commandName(server['command']) : '';
   let rest = args;
   // Windows style: "command": "cmd", "args": ["/c", "npx", ...], also with /d /s before /c.
   const viaCmd = command === 'cmd';
@@ -143,11 +143,11 @@ function checkServer(
       );
     }
   }
-  if (typeof server.url === 'string' && /^http:\/\//i.test(server.url) && !LOCAL_HOST.test(server.url)) {
+  if (typeof server['url'] === 'string' && /^http:\/\//i.test(server['url']) && !LOCAL_HOST.test(server['url'])) {
     add(
       `${label} uses plain http://, so requests and tokens travel unencrypted.`,
       'Use https://.',
-      lineOf(f, server.url) ?? line,
+      lineOf(f, server['url']) ?? line,
     );
   }
 }

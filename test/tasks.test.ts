@@ -181,7 +181,7 @@ describe('finding candidate commits', () => {
 describe('git commands', () => {
   it('turns git failures into plain-English errors with fixes', async () => {
     const notRepo = makeRepo({ 'a.txt': '' });
-    process.env.GIT_CEILING_DIRECTORIES = join(notRepo, '..');
+    process.env['GIT_CEILING_DIRECTORIES'] = join(notRepo, '..');
     try {
       await expect(git2(notRepo, ['rev-parse', '--show-toplevel'])).rejects.toMatchObject({
         name: 'GitError',
@@ -189,7 +189,7 @@ describe('git commands', () => {
         message: expect.stringMatching(/not a git repository/i),
       });
     } finally {
-      delete process.env.GIT_CEILING_DIRECTORIES;
+      delete process.env['GIT_CEILING_DIRECTORIES'];
     }
     await expect(git2(join(notRepo, 'missing'), ['status'])).rejects.toMatchObject({
       kind: 'folder-not-found',
@@ -200,8 +200,8 @@ describe('git commands', () => {
       kind: 'folder-not-found',
       message: expect.stringContaining('is a file'),
     });
-    const path = process.env.PATH;
-    process.env.PATH = notRepo;
+    const path = process.env['PATH'];
+    process.env['PATH'] = notRepo;
     try {
       await expect(git2(notRepo, ['status'])).rejects.toMatchObject({
         kind: 'missing-git',
@@ -209,7 +209,7 @@ describe('git commands', () => {
         message: expect.stringContaining('spawn git ENOENT'),
       });
     } finally {
-      process.env.PATH = path;
+      process.env['PATH'] = path;
     }
     const e = explainGitFailure('/repo', ['status'], {
       exitCode: 128,
@@ -298,11 +298,11 @@ describe('git commands', () => {
         .split('\n')
         .filter((l) => l.includes(`sleep ${marker}`));
       expect(left).toEqual([]);
-      process.env.SETUPSCORE_GIT_TIMEOUT_MS = '1234';
+      process.env['SETUPSCORE_GIT_TIMEOUT_MS'] = '1234';
       try {
         expect(gitTimeoutMs()).toBe(1234);
       } finally {
-        delete process.env.SETUPSCORE_GIT_TIMEOUT_MS;
+        delete process.env['SETUPSCORE_GIT_TIMEOUT_MS'];
       }
       expect(gitTimeoutMs()).toBe(600_000);
     },
@@ -687,15 +687,15 @@ describe('package managers', () => {
 
 describe('sandbox safety settings', () => {
   it('passes only safe environment variables', () => {
-    process.env.SETUPSCORE_TEST_SECRET = 'x';
-    process.env.AWS_SECRET_ACCESS_KEY = 'y';
+    process.env['SETUPSCORE_TEST_SECRET'] = 'x';
+    process.env['AWS_SECRET_ACCESS_KEY'] = 'y';
     const env = safeEnv();
-    expect(env.PATH).toBe(process.env.PATH);
-    expect(env.SETUPSCORE_TEST_SECRET).toBeUndefined();
-    expect(env.AWS_SECRET_ACCESS_KEY).toBeUndefined();
-    expect(env.CI).toBe('1');
-    delete process.env.SETUPSCORE_TEST_SECRET;
-    delete process.env.AWS_SECRET_ACCESS_KEY;
+    expect(env['PATH']).toBe(process.env['PATH']);
+    expect(env['SETUPSCORE_TEST_SECRET']).toBeUndefined();
+    expect(env['AWS_SECRET_ACCESS_KEY']).toBeUndefined();
+    expect(env['CI']).toBe('1');
+    delete process.env['SETUPSCORE_TEST_SECRET'];
+    delete process.env['AWS_SECRET_ACCESS_KEY'];
   });
 
   it("hides the user's real .env files but not templates", () => {
@@ -707,14 +707,14 @@ describe('sandbox safety settings', () => {
   });
 
   it('refuses --sandbox none outside CI unless --yes is given', async () => {
-    const old = process.env.CI;
-    delete process.env.CI;
+    const old = process.env['CI'];
+    delete process.env['CI'];
     try {
       await expect(openSandbox({ mode: 'none', cwd: '.' })).rejects.toBeInstanceOf(EnvironmentError);
       const box = await openSandbox({ mode: 'none', cwd: '.', yes: true });
       expect(box.kind).toBe('none');
     } finally {
-      if (old !== undefined) process.env.CI = old;
+      if (old !== undefined) process.env['CI'] = old;
     }
   });
 });

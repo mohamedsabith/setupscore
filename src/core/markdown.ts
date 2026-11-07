@@ -9,7 +9,10 @@ import type { Frontmatter, Line } from './types.js';
 export const MAX_LINE = 10_000;
 
 /** Split text into lines (LF, CRLF or old Mac CR) and mark fenced code blocks and YAML frontmatter. */
-export function toLines(text: string, withFrontmatter: boolean): { lines: Line[]; frontmatter?: Frontmatter } {
+export function toLines(
+  text: string,
+  withFrontmatter: boolean,
+): { lines: Line[]; frontmatter?: Frontmatter | undefined } {
   const raw = text.replace(/^\uFEFF/, '').split(/\r\n|\r|\n/);
   const lines: Line[] = [];
   let fmEnd = 0;

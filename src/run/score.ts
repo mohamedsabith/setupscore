@@ -46,13 +46,13 @@ export interface SetupScore {
   liftPoints?: number;
   infraErrors: number;
   /** The most common reason among the attempts that could not run. */
-  infraReason?: string;
+  infraReason?: string | undefined;
 }
 
 export interface RunScore {
   setups: SetupScore[];
   verdict: string;
-  winner?: string;
+  winner?: string | undefined;
   /** Per task: label -> passed/attempts. */
   tasks: { id: string; title: string; results: Record<string, { passed: number; attempts: number }> }[];
   complete: boolean;

@@ -23,9 +23,9 @@ export const riskyPermission: Rule = {
     const issues: Issue[] = [];
     for (const f of ctx.files.filter((f) => f.kind === 'settings' || f.kind === 'settings-local')) {
       const { value } = parseJson(f);
-      if (!isObject(value) || !isObject(value.permissions)) continue;
+      if (!isObject(value) || !isObject(value['permissions'])) continue;
       const who = f.kind === 'settings' ? 'everyone who uses this repo' : 'you';
-      const allow = Array.isArray(value.permissions.allow) ? value.permissions.allow : [];
+      const allow = Array.isArray(value['permissions']['allow']) ? value['permissions']['allow'] : [];
 
       for (const entry of allow) {
         if (typeof entry !== 'string') continue;
@@ -67,7 +67,7 @@ export const riskyPermission: Rule = {
         }
       }
 
-      if (value.permissions.defaultMode === 'bypassPermissions') {
+      if (value['permissions']['defaultMode'] === 'bypassPermissions') {
         issues.push({
           rule: 'risky-permission',
           severity: 'warning',

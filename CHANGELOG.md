@@ -9,6 +9,10 @@ All notable changes to this project are documented here. The project follows [Se
 - New rule `wrong-package-manager` (warning): your instructions say "use pnpm" or `yarn add x`, but the project's lockfile or `packageManager` says npm (or any other mix). Claude tends to follow the instructions over the lockfile, runs the wrong tool and can leave a second lockfile. It only reports when every lockfile and `packageManager` agree, follows `cd` in code blocks, and leaves alone tools named for contrast ("pnpm, NOT npm"), global installs, `npx`, CI and Docker lines, and install lines for the package's own users. On 114 public repositories it found 2 problems, both real. Each finding lowers the health score by 0.5, and `--strict` fails on it. Turn it off with `rules: { wrong-package-manager: off }` in `setupscore.yml`. See [docs/rules.md](docs/rules.md#wrong-package-manager).
 - The library also exports the types `FixFailure`, `Frontmatter`, `Line`, `MisnamedFile` and `SkippedFile`. Its functions already used them, so TypeScript users can now name them.
 
+### Changed
+
+- The library's types now say that some optional properties can hold `undefined`, as they already could at runtime: `Issue.fix`, `Issue.line`, `Fix.column`, `FixFailure.code`, `Frontmatter.error`, `SetupFile.frontmatter`, `.importDepth`, `.importedBy` and `.realPath`, the `tasks`, `sandbox` and `agent` settings in `Config`, and `fixed[].column` in `JsonReport`. Nothing changes unless your project uses TypeScript's `exactOptionalPropertyTypes`, which now sees these types correctly.
+
 ### Fixed
 
 - Hints that show a folder to paste into a shell (`setupscore tasks ...`) now quote it with `'...'` when it contains `$`, `` ` ``, `!` or a control character. Inside `"..."` the shell changed those, so the pasted command used a different folder. Found by the new property-based tests.
@@ -19,6 +23,7 @@ All notable changes to this project are documented here. The project follows [Se
 - Commit messages are checked with commitlint in a Husky commit-msg hook.
 - Removed code that nothing used.
 - Fixed all 255 lint findings that were put aside in `eslint-suppressions.json`, and deleted that file. Regular expressions were only rewritten where the new one matches exactly the same text (checked on generated input for every changed expression).
+- TypeScript is stricter: `exactOptionalPropertyTypes` and `noPropertyAccessFromIndexSignature` are on. The built JavaScript is the same as before.
 
 ## 1.0.4 - 2026-11-07
 

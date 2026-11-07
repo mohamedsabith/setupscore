@@ -83,7 +83,7 @@ async function startSlowRun(root: string, extra: string[] = []) {
     string,
     string
   >;
-  delete env.CI;
+  delete env['CI'];
   const child = spawn(
     process.execPath,
     [
@@ -162,7 +162,7 @@ describe.runIf(linux)('nothing the agent starts outlives its command (M5, F18, F
     const r = await runShell(
       `setsid sh -c 'while true; do echo x >> ${hb}; sleep 0.1; done' > /dev/null 2>&1 & echo started`,
       dir,
-      { PATH: process.env.PATH! },
+      { PATH: process.env['PATH']! },
       20_000,
     );
     expect(r.stdout).toContain('started');
@@ -205,7 +205,7 @@ describe.runIf(linux)('nothing the agent starts outlives its command (M5, F18, F
     const r = await runShell(
       `${JSON.stringify(process.execPath)} -e "process.stdout.write('a'.repeat(3*1024*1024)+'END')"`,
       dir,
-      { PATH: process.env.PATH! },
+      { PATH: process.env['PATH']! },
       60_000,
       undefined,
       { stdoutFile: file },
@@ -264,14 +264,14 @@ describe('workspaces', () => {
     const home = mkdtempSync(join(tmpdir(), 'setupscore-home-'));
     // Forward slashes: git reads a backslash in its config as an escape.
     writeFileSync(join(home, '.gitconfig'), `[core]\n\thooksPath = ${hookDir.replaceAll('\\', '/')}\n`);
-    const saved = process.env.HOME;
-    process.env.HOME = home;
+    const saved = process.env['HOME'];
+    process.env['HOME'] = home;
     try {
       const ws = await Workspace.create(root);
       await ws.checkout(ws.head!);
       ws.close();
     } finally {
-      process.env.HOME = saved;
+      process.env['HOME'] = saved;
     }
     expect(existsSync(mark)).toBe(false);
   });
@@ -281,14 +281,14 @@ describe.runIf(linux)(
   'temp folders the sandbox cannot use are reported before the run (linux-env F1, F26, E36)',
   () => {
     it('TMPDIR under /dev (bubblewrap mounts its own /dev)', () => {
-      const saved = process.env.TMPDIR;
-      process.env.TMPDIR = '/dev/shm';
+      const saved = process.env['TMPDIR'];
+      process.env['TMPDIR'] = '/dev/shm';
       try {
         expect(tempFolderProblem({ sandboxed: true })?.message).toMatch(/under \/dev/);
         expect(tempFolderProblem({ sandboxed: false })).toBeNull();
       } finally {
-        if (saved === undefined) delete process.env.TMPDIR;
-        else process.env.TMPDIR = saved;
+        if (saved === undefined) delete process.env['TMPDIR'];
+        else process.env['TMPDIR'] = saved;
       }
     });
 
@@ -298,13 +298,13 @@ describe.runIf(linux)(
         const mnt = mkdtempSync(join(tmpdir(), 'setupscore-noexec-'));
         const mounted = spawnSync('mount', ['-t', 'tmpfs', '-o', 'noexec,size=16m', 'tmpfs', mnt]).status === 0;
         if (!mounted) return; // not allowed here (container without CAP_SYS_ADMIN)
-        const saved = process.env.TMPDIR;
-        process.env.TMPDIR = mnt;
+        const saved = process.env['TMPDIR'];
+        process.env['TMPDIR'] = mnt;
         try {
           expect(tempFolderProblem({ sandboxed: false })?.message).toMatch(/mounted noexec/);
         } finally {
-          if (saved === undefined) delete process.env.TMPDIR;
-          else process.env.TMPDIR = saved;
+          if (saved === undefined) delete process.env['TMPDIR'];
+          else process.env['TMPDIR'] = saved;
           spawnSync('umount', [mnt]);
           rmSync(mnt, { recursive: true, force: true });
         }

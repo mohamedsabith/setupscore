@@ -15,7 +15,7 @@ export interface FixFailure {
   file: string;
   /** Plain-English reason. */
   reason: string;
-  code?: string;
+  code?: string | undefined;
 }
 
 function reasonOf(err: NodeJS.ErrnoException): string {

@@ -14,11 +14,11 @@ export interface Config {
   rules: Record<string, RuleSetting>;
   ignore: string[];
   /** Custom commands for `setupscore tasks`. */
-  tasks?: { test?: string; install?: string };
+  tasks?: { test?: string | undefined; install?: string | undefined } | undefined;
   /** Extra domains the sandbox may reach while installing dependencies. */
-  sandbox?: { domains?: string[] };
+  sandbox?: { domains?: string[] | undefined } | undefined;
   /** How to start Claude Code for `setupscore run`. */
-  agent?: { bin?: string; model?: string };
+  agent?: { bin?: string | undefined; model?: string | undefined } | undefined;
 }
 
 export class ConfigError extends Error {

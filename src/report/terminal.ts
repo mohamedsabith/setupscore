@@ -5,14 +5,15 @@ import type { FileKind, Issue } from '../core/types.js';
 import { RULES } from '../rules/index.js';
 import { VERSION } from '../version.js';
 
-const useUnicode = process.platform !== 'win32' || !!process.env.WT_SESSION || process.env.TERM_PROGRAM === 'vscode';
+const useUnicode =
+  process.platform !== 'win32' || !!process.env['WT_SESSION'] || process.env['TERM_PROGRAM'] === 'vscode';
 const SYM = useUnicode
   ? { error: '✖', warning: '⚠', ok: '✔', arrow: '→', dot: '·' }
   : { error: 'x', warning: '!', ok: 'v', arrow: '->', dot: '-' };
 
 export interface TerminalOptions {
-  quiet?: boolean;
-  cost?: boolean;
+  quiet?: boolean | undefined;
+  cost?: boolean | undefined;
   fixed?: Applied[];
   /** The command the user typed, used in the "run with --fix" tip. */
   command?: string;

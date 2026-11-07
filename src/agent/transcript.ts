@@ -30,10 +30,10 @@ type LastEventKind =
 export interface AgentMetrics {
   /** Outcome of the main session (its first result event; later ones are follow-ups, see parseTranscript). */
   outcome: AgentOutcome;
-  resultSubtype?: string;
+  resultSubtype?: string | undefined;
   isError: boolean;
   /** The final text, or the error text. */
-  result?: string;
+  result?: string | undefined;
   /** Total cost in USD: total_cost_usd of the last result event (Claude Code reports it for the whole process). */
   costUsd: number;
   /**
@@ -69,42 +69,42 @@ export interface AgentMetrics {
   errorCodes: string[];
   apiRetries: number;
   /** The model Claude Code said it would use (init event). */
-  model?: string;
+  model?: string | undefined;
   /** Models that answered, main agent and subagents (the result's modelUsage). */
   modelsUsed: string[];
-  apiKeySource?: string;
-  sessionId?: string;
-  claudeCodeVersion?: string;
+  apiKeySource?: string | undefined;
+  sessionId?: string | undefined;
+  claudeCodeVersion?: string | undefined;
   /** Skills Claude Code could see at start (from the init event). */
   skillsAvailable: string[];
   /** Claude Code's auto-memory folder for the session (init memory_paths), not the CLAUDE.md files it loaded. */
   memoryPaths: string[];
   /** Why the main session ended, when Claude Code says (completed, api_error, max_turns, prompt_too_long...). */
-  terminalReason?: string;
+  terminalReason?: string | undefined;
   /**
    * The API error that ended the main session: the error code of Claude Code's final "API Error"
    * message (server_error, rate_limit, authentication_failed, billing_error, model_not_found,
    * invalid_request, unknown...). Errors Claude Code recovered from are not here.
    */
-  finalErrorCode?: string;
+  finalErrorCode?: string | undefined;
   /** HTTP status of that final API error (result api_error_status), when Claude Code reports one. */
-  apiErrorStatus?: number;
+  apiErrorStatus?: number | undefined;
   /** Claude Code's class of that final API error (result api_error, e.g. connection_failed). */
-  apiErrorKind?: string;
+  apiErrorKind?: string | undefined;
   /** How many result events there were: more than one when a background subagent outlived the main answer. */
   resultCount: number;
   /** Did any shell command (main agent or subagent) run the project's tests? Checked on whole commands, before the 300-character cut and the 200-command cap. */
   ranTests: boolean;
   /** The last meaningful event (see LastEventKind). Undefined for an empty transcript. */
-  lastEventKind?: LastEventKind;
+  lastEventKind?: LastEventKind | undefined;
   /** API retries since the last progress: Claude Code was still waiting on the API when the transcript ended. */
   apiRetriesAtEnd: number;
   /** Error code of the last of those retries (overloaded, rate_limit, server_error...). */
-  lastRetryError?: string;
+  lastRetryError?: string | undefined;
   /** Tool calls (subagents not included) that had no result yet when the transcript ended: a command was still running. */
   toolsRunningAtEnd: number;
   /** Timestamp (ISO 8601) of the last assistant message or tool result: the agent's last progress. */
-  lastProgressAt?: string;
+  lastProgressAt?: string | undefined;
   parsedLines: number;
   badLines: number;
 }
@@ -123,7 +123,7 @@ const obj = (v: unknown): Record<string, unknown> | undefined =>
 const text = (v: unknown): string => {
   if (typeof v === 'string') return v;
   if (typeof v === 'number' || typeof v === 'boolean') return String(v);
-  const message = str(obj(v)?.message);
+  const message = str(obj(v)?.['message']);
   if (message !== undefined) return message;
   try {
     return JSON.stringify(v) ?? '';
@@ -170,22 +170,22 @@ interface ResultEvent {
   followUp: boolean;
   subtype: string;
   isError: boolean;
-  result?: string;
+  result?: string | undefined;
   cost: number;
   turns: number;
   durationMs: number;
-  sessionId?: string;
-  terminalReason?: string;
-  apiErrorStatus?: number;
-  apiErrorKind?: string;
-  finalErrorCode?: string;
+  sessionId?: string | undefined;
+  terminalReason?: string | undefined;
+  apiErrorStatus?: number | undefined;
+  apiErrorKind?: string | undefined;
+  finalErrorCode?: string | undefined;
   usage: Record<string, unknown>;
   modelUsage: Record<string, Record<string, unknown>>;
 }
 
 /** A tool call that only counts if Claude Code does not report it as failed. */
 interface Pending {
-  id?: string;
+  id?: string | undefined;
   value: string;
 }
 
@@ -214,39 +214,39 @@ export function parseTranscript(input: string): AgentMetrics {
     m.lastEventKind = kind;
     m.apiRetriesAtEnd = 0;
     m.lastRetryError = undefined;
-    const at = str(ev.timestamp);
+    const at = str(ev['timestamp']);
     if (at && !Number.isNaN(Date.parse(at))) m.lastProgressAt = at;
   };
 
   const onLine = (ev: Record<string, unknown>) => {
-    const type = str(ev.type);
+    const type = str(ev['type']);
     // Messages of a subagent carry the id of the Agent call that started it.
-    const main = !ev.parent_tool_use_id;
+    const main = !ev['parent_tool_use_id'];
 
     if (type === 'system') {
-      if (ev.subtype === 'init') {
+      if (ev['subtype'] === 'init') {
         m.lastEventKind ??= 'init';
-        m.model = str(ev.model) ?? m.model;
-        m.apiKeySource = str(ev.apiKeySource) ?? m.apiKeySource;
-        m.sessionId = str(ev.session_id) ?? m.sessionId;
-        m.claudeCodeVersion = str(ev.claude_code_version) ?? m.claudeCodeVersion;
+        m.model = str(ev['model']) ?? m.model;
+        m.apiKeySource = str(ev['apiKeySource']) ?? m.apiKeySource;
+        m.sessionId = str(ev['session_id']) ?? m.sessionId;
+        m.claudeCodeVersion = str(ev['claude_code_version']) ?? m.claudeCodeVersion;
         const names = (v: unknown) =>
-          Array.isArray(v) ? v.map((x) => str(x) ?? str(obj(x)?.name)).filter((x): x is string => !!x) : [];
-        m.skillsAvailable = names(ev.skills);
-        m.memoryPaths = names(ev.memory_paths).length
-          ? names(ev.memory_paths)
-          : Object.values(obj(ev.memory_paths) ?? {}).flatMap((v) => names(Array.isArray(v) ? v : [v]));
-        if (Array.isArray(ev.mcp_servers)) {
-          m.mcpServers = ev.mcp_servers
+          Array.isArray(v) ? v.map((x) => str(x) ?? str(obj(x)?.['name'])).filter((x): x is string => !!x) : [];
+        m.skillsAvailable = names(ev['skills']);
+        m.memoryPaths = names(ev['memory_paths']).length
+          ? names(ev['memory_paths'])
+          : Object.values(obj(ev['memory_paths']) ?? {}).flatMap((v) => names(Array.isArray(v) ? v : [v]));
+        if (Array.isArray(ev['mcp_servers'])) {
+          m.mcpServers = ev['mcp_servers']
             .map((s) => obj(s))
             .filter((s): s is Record<string, unknown> => !!s)
-            .map((s) => ({ name: str(s.name) ?? '?', status: str(s.status) ?? '?' }));
+            .map((s) => ({ name: str(s['name']) ?? '?', status: str(s['status']) ?? '?' }));
         }
-      } else if (ev.subtype === 'api_retry') {
+      } else if (ev['subtype'] === 'api_retry') {
         m.apiRetries++;
         m.apiRetriesAtEnd++;
         m.lastEventKind = 'api_retry';
-        const code = str(ev.error) ?? str(obj(ev.error)?.type);
+        const code = str(ev['error']) ?? str(obj(ev['error'])?.['type']);
         m.lastRetryError = code;
         if (code) errors.add(code);
       }
@@ -255,53 +255,54 @@ export function parseTranscript(input: string): AgentMetrics {
 
     if (type === 'rate_limit_event') {
       // "allowed" and "allowed_warning" are notices about the subscription's limits, not errors.
-      const status = str(obj(ev.rate_limit_info)?.status) ?? str(ev.status);
+      const status = str(obj(ev['rate_limit_info'])?.['status']) ?? str(ev['status']);
       if (!status?.startsWith('allowed')) errors.add('rate_limit');
       return;
     }
 
     if (type === 'assistant') {
-      const code = str(ev.error) ?? str(obj(ev.error)?.type);
+      const code = str(ev['error']) ?? str(obj(ev['error'])?.['type']);
       if (code) errors.add(code);
       // Claude Code gave up on an API request and says so in a synthetic message. A later
       // normal message means the session went on, so that error did not end it.
-      const apiError = ev.is_api_error_message === true || (!!code && str(obj(ev.message)?.model) === '<synthetic>');
+      const apiError =
+        ev['is_api_error_message'] === true || (!!code && str(obj(ev['message'])?.['model']) === '<synthetic>');
       if (main) finalError = apiError ? (code ?? 'unknown') : undefined;
-      const content = obj(ev.message)?.content;
+      const content = obj(ev['message'])?.['content'];
       let asked = false;
       for (const block of Array.isArray(content) ? content : []) {
         const b = obj(block);
-        if (!b || b.type !== 'tool_use') continue;
+        if (!b || b['type'] !== 'tool_use') continue;
         asked = true;
-        const name = str(b.name) ?? 'unknown';
+        const name = str(b['name']) ?? 'unknown';
         calls.set(name, (calls.get(name) ?? 0) + 1);
-        const input = obj(b.input) ?? {};
-        const id = str(b.id);
+        const input = obj(b['input']) ?? {};
+        const id = str(b['id']);
         if (id && !AGENT_TOOLS.has(name)) running.add(id);
         if (name === 'Bash') {
-          const cmd = str(input.command);
+          const cmd = str(input['command']);
           if (!cmd) continue;
           if (!m.ranTests && runsTests(cmd)) m.ranTests = true;
           if (m.bashCommands.length < MAX_COMMANDS) m.bashCommands.push(cmd.slice(0, 300));
           if (id) bashById.set(id, cmd.slice(0, 300));
         } else if (EDIT_TOOLS.has(name)) {
-          const p = str(input.file_path) ?? str(input.notebook_path) ?? str(input.path);
+          const p = str(input['file_path']) ?? str(input['notebook_path']) ?? str(input['path']);
           if (p) edits.push({ id, value: p });
-          const more = Array.isArray(input.edits) ? input.edits.map((e) => str(obj(e)?.new_string)) : [];
-          for (const t of [str(input.content), str(input.new_string), str(input.new_source), ...more]) {
+          const more = Array.isArray(input['edits']) ? input['edits'].map((e) => str(obj(e)?.['new_string'])) : [];
+          for (const t of [str(input['content']), str(input['new_string']), str(input['new_source']), ...more]) {
             if (t && written < MAX_WRITTEN) {
               m.textWritten.push(t.slice(0, MAX_WRITTEN - written));
               written += t.length;
             }
           }
         } else if (name === 'Skill') {
-          const s = str(input.skill) ?? str(input.command) ?? str(input.name);
+          const s = str(input['skill']) ?? str(input['command']) ?? str(input['name']);
           if (s) skills.push({ id, value: s.replace(/^\//, '') });
         } else if (AGENT_TOOLS.has(name)) {
           // Without subagent_type Claude Code starts its general-purpose subagent.
-          agents.push({ id, value: str(input.subagent_type) || str(input.agent) || 'general-purpose' });
+          agents.push({ id, value: str(input['subagent_type']) || str(input['agent']) || 'general-purpose' });
         } else {
-          const p = str(input.file_path) ?? str(input.path) ?? str(input.notebook_path);
+          const p = str(input['file_path']) ?? str(input['path']) ?? str(input['notebook_path']);
           if (p && m.pathsRead.length < MAX_COMMANDS) m.pathsRead.push(p.slice(0, 300));
         }
       }
@@ -310,16 +311,16 @@ export function parseTranscript(input: string): AgentMetrics {
     }
 
     if (type === 'user') {
-      const content = obj(ev.message)?.content;
+      const content = obj(ev['message'])?.['content'];
       if (!Array.isArray(content)) return;
       let answered = false;
       for (const block of content) {
         const b = obj(block);
-        if (!b || b.type !== 'tool_result') continue;
+        if (!b || b['type'] !== 'tool_result') continue;
         answered = true;
-        const id = str(b.tool_use_id) ?? '';
+        const id = str(b['tool_use_id']) ?? '';
         running.delete(id);
-        if (b.is_error !== true) continue;
+        if (b['is_error'] !== true) continue;
         failedIds.add(id);
         const cmd = bashById.get(id);
         if (cmd && m.failedCommands.length < MAX_COMMANDS) m.failedCommands.push(cmd);
@@ -329,27 +330,28 @@ export function parseTranscript(input: string): AgentMetrics {
     }
 
     if (type === 'result') {
-      const u = obj(ev.usage) ?? {};
+      const u = obj(ev['usage']) ?? {};
       const mu = Object.create(null) as Record<string, Record<string, unknown>>;
-      for (const [model, usage] of Object.entries(obj(ev.modelUsage) ?? {})) {
+      for (const [model, usage] of Object.entries(obj(ev['modelUsage']) ?? {})) {
         const v = obj(usage);
         if (v) mu[model] = v;
       }
-      const status = ev.api_error_status;
+      const status = ev['api_error_status'];
       results.push({
-        followUp: !!obj(ev.origin),
-        subtype: str(ev.subtype) ?? 'unknown',
-        isError: ev.is_error === true,
+        followUp: !!obj(ev['origin']),
+        subtype: str(ev['subtype']) ?? 'unknown',
+        isError: ev['is_error'] === true,
         result: (
-          str(ev.result) ?? (Array.isArray(ev.errors) ? ev.errors.map(text).filter(Boolean).join('; ') : undefined)
+          str(ev['result']) ??
+          (Array.isArray(ev['errors']) ? ev['errors'].map(text).filter(Boolean).join('; ') : undefined)
         )?.slice(0, MAX_RESULT),
-        cost: Math.max(0, num(ev.total_cost_usd)), // never negative: it feeds the budget
-        turns: Math.max(0, num(ev.num_turns)),
-        durationMs: Math.max(0, num(ev.duration_ms)),
-        sessionId: str(ev.session_id),
-        terminalReason: str(ev.terminal_reason),
+        cost: Math.max(0, num(ev['total_cost_usd'])), // never negative: it feeds the budget
+        turns: Math.max(0, num(ev['num_turns'])),
+        durationMs: Math.max(0, num(ev['duration_ms'])),
+        sessionId: str(ev['session_id']),
+        terminalReason: str(ev['terminal_reason']),
         apiErrorStatus: typeof status === 'number' && Number.isInteger(status) ? status : undefined,
-        apiErrorKind: str(ev.api_error),
+        apiErrorKind: str(ev['api_error']),
         finalErrorCode: finalError,
         usage: u,
         modelUsage: mu,

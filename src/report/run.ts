@@ -34,7 +34,7 @@ export function renderRunTerminal(
   run: RunRecord,
   score: RunScore,
   suggestions: Suggestion[],
-  paths: { html?: string } = {},
+  paths: { html?: string | undefined } = {},
 ): string {
   const out: string[] = [];
   out.push(`${pc.bold('setupscore run')} ${pc.dim(`${run.id} · ${headline(run)} · ${money(totalCost(score))} spent`)}`);

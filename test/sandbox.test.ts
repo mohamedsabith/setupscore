@@ -126,10 +126,10 @@ test('evil', async () => {
       'Add evil test',
     );
 
-    const oldHome = process.env.HOME;
-    const oldKey = process.env.ANTHROPIC_API_KEY;
-    process.env.HOME = fakeHome; // so the fake ~/.ssh counts as a secret location
-    process.env.ANTHROPIC_API_KEY = 'sk-ant-should-never-reach-the-sandbox';
+    const oldHome = process.env['HOME'];
+    const oldKey = process.env['ANTHROPIC_API_KEY'];
+    process.env['HOME'] = fakeHome; // so the fake ~/.ssh counts as a secret location
+    process.env['ANTHROPIC_API_KEY'] = 'sk-ant-should-never-reach-the-sandbox';
     const ws = await Workspace.create(root);
     const sandbox = await OsSandbox.open(rt!);
     try {
@@ -154,9 +154,9 @@ test('evil', async () => {
       expect(readFileSync(join(ws.gitDir, 'config'), 'utf8')).not.toContain('fsmonitor');
       expect(readFileSync(join(root, '.git', 'config'), 'utf8')).not.toContain('fsmonitor');
     } finally {
-      process.env.HOME = oldHome;
-      if (oldKey === undefined) delete process.env.ANTHROPIC_API_KEY;
-      else process.env.ANTHROPIC_API_KEY = oldKey;
+      process.env['HOME'] = oldHome;
+      if (oldKey === undefined) delete process.env['ANTHROPIC_API_KEY'];
+      else process.env['ANTHROPIC_API_KEY'] = oldKey;
       await sandbox.close();
       ws.close();
     }
@@ -237,42 +237,42 @@ describe('sandbox start-up without the sandbox', () => {
   });
 
   it('resolves a relative SETUPSCORE_CACHE_DIR and ignores an empty or relative XDG_CACHE_HOME (R15-R18)', () => {
-    const old = { s: process.env.SETUPSCORE_CACHE_DIR, x: process.env.XDG_CACHE_HOME };
+    const old = { s: process.env['SETUPSCORE_CACHE_DIR'], x: process.env['XDG_CACHE_HOME'] };
     try {
-      process.env.SETUPSCORE_CACHE_DIR = 'rc';
+      process.env['SETUPSCORE_CACHE_DIR'] = 'rc';
       expect(cacheDir()).toBe(join(process.cwd(), 'rc'));
-      delete process.env.SETUPSCORE_CACHE_DIR;
+      delete process.env['SETUPSCORE_CACHE_DIR'];
       if (process.platform === 'linux') {
         for (const v of ['', 'relcache']) {
-          process.env.XDG_CACHE_HOME = v;
+          process.env['XDG_CACHE_HOME'] = v;
           expect(cacheDir()).toMatch(/[\\/]\.cache[\\/]setupscore$/);
         }
       }
     } finally {
-      if (old.s === undefined) delete process.env.SETUPSCORE_CACHE_DIR;
-      else process.env.SETUPSCORE_CACHE_DIR = old.s;
-      if (old.x === undefined) delete process.env.XDG_CACHE_HOME;
-      else process.env.XDG_CACHE_HOME = old.x;
+      if (old.s === undefined) delete process.env['SETUPSCORE_CACHE_DIR'];
+      else process.env['SETUPSCORE_CACHE_DIR'] = old.s;
+      if (old.x === undefined) delete process.env['XDG_CACHE_HOME'];
+      else process.env['XDG_CACHE_HOME'] = old.x;
     }
   });
 
   it('passes CLAUDE_CODE_GIT_BASH_PATH through to commands (W4)', () => {
-    const old = process.env.CLAUDE_CODE_GIT_BASH_PATH;
-    process.env.CLAUDE_CODE_GIT_BASH_PATH = 'D:\\Tools\\Git\\bin\\bash.exe';
+    const old = process.env['CLAUDE_CODE_GIT_BASH_PATH'];
+    process.env['CLAUDE_CODE_GIT_BASH_PATH'] = 'D:\\Tools\\Git\\bin\\bash.exe';
     try {
-      expect(safeEnv().CLAUDE_CODE_GIT_BASH_PATH).toBe('D:\\Tools\\Git\\bin\\bash.exe');
+      expect(safeEnv()['CLAUDE_CODE_GIT_BASH_PATH']).toBe('D:\\Tools\\Git\\bin\\bash.exe');
     } finally {
-      if (old === undefined) delete process.env.CLAUDE_CODE_GIT_BASH_PATH;
-      else process.env.CLAUDE_CODE_GIT_BASH_PATH = old;
+      if (old === undefined) delete process.env['CLAUDE_CODE_GIT_BASH_PATH'];
+      else process.env['CLAUDE_CODE_GIT_BASH_PATH'] = old;
     }
   });
 
   it('refuses native Windows with a WSL2 message before loading or downloading the runtime (W5)', async () => {
     const platform = Object.getOwnPropertyDescriptor(process, 'platform')!;
-    const oldCache = process.env.SETUPSCORE_CACHE_DIR;
+    const oldCache = process.env['SETUPSCORE_CACHE_DIR'];
     const cache = mkdtempSync(join(tmpdir(), 'setupscore-cache-'));
     Object.defineProperty(process, 'platform', { value: 'win32' });
-    process.env.SETUPSCORE_CACHE_DIR = cache;
+    process.env['SETUPSCORE_CACHE_DIR'] = cache;
     try {
       await expect(openSandbox({ mode: 'auto', cwd: '.' })).rejects.toThrow(/native Windows/);
       await expect(openSandbox({ mode: 'os', cwd: '.' })).rejects.toThrow(/native Windows/);
@@ -280,8 +280,8 @@ describe('sandbox start-up without the sandbox', () => {
       expect(readdirSync(cache)).toEqual([]);
     } finally {
       Object.defineProperty(process, 'platform', platform);
-      if (oldCache === undefined) delete process.env.SETUPSCORE_CACHE_DIR;
-      else process.env.SETUPSCORE_CACHE_DIR = oldCache;
+      if (oldCache === undefined) delete process.env['SETUPSCORE_CACHE_DIR'];
+      else process.env['SETUPSCORE_CACHE_DIR'] = oldCache;
       rmSync(cache, { recursive: true, force: true });
     }
   });
@@ -292,12 +292,12 @@ describe('sandbox start-up without the sandbox', () => {
       writeFileSync(join(bin, name), '#!/bin/sh\n');
       chmodSync(join(bin, name), 0o755);
     }
-    const old = process.env.PATH;
-    process.env.PATH = bin;
+    const old = process.env['PATH'];
+    process.env['PATH'] = bin;
     try {
       expect(missingSandboxTools()).toEqual(['ripgrep (rg) not found']);
     } finally {
-      process.env.PATH = old;
+      process.env['PATH'] = old;
       rmSync(bin, { recursive: true, force: true });
     }
     expect(sandboxHint()).toMatch(/apt-get install bubblewrap socat ripgrep/);
@@ -331,7 +331,7 @@ function installedCopy(npmBody: (prefixVar: string) => string) {
     ...process.env,
     NO_COLOR: '1',
     SETUPSCORE_CACHE_DIR: cache,
-    PATH: `${join(root, 'bin')}:${process.env.PATH}`,
+    PATH: `${join(root, 'bin')}:${process.env['PATH']}`,
   };
   return { root, cli: join(root, 'pkg', 'dist', 'cli.js'), cache, rtDir, env };
 }
@@ -396,15 +396,15 @@ describe.runIf(available && process.platform !== 'win32')('sandbox runtime in th
 
   it('reports a missing or read-only TMPDIR as a failed check, not a crash (E32, E34)', async () => {
     const rt = await loadRuntime({ cwd: process.cwd(), install: false });
-    const old = process.env.TMPDIR;
-    process.env.TMPDIR = join(tmpdir(), 'setupscore-no-such-tmp', 'x');
+    const old = process.env['TMPDIR'];
+    process.env['TMPDIR'] = join(tmpdir(), 'setupscore-no-such-tmp', 'x');
     try {
       const probe = await probeOsSandbox(rt!);
       expect(probe).toMatchObject({ ok: false, detail: expect.stringContaining('cannot create a temporary folder') });
       expect(probe.fix).toContain('TMPDIR');
     } finally {
-      if (old === undefined) delete process.env.TMPDIR;
-      else process.env.TMPDIR = old;
+      if (old === undefined) delete process.env['TMPDIR'];
+      else process.env['TMPDIR'] = old;
     }
   });
 

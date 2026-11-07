@@ -30,8 +30,8 @@ export interface Pm {
 
 export interface PmOverrides {
   /** Custom test command. `{files}` is replaced by the test files; otherwise they are appended. */
-  test?: string;
-  install?: string;
+  test?: string | undefined;
+  install?: string | undefined;
 }
 
 /** `nodeLinker: pnp` in .yarnrc.yml. A line-start pattern that can't run across blank lines (linear time). */
@@ -242,11 +242,11 @@ export function detectPm(dir: string, overrides: PmOverrides = {}): Pm | { error
     (!hasDeps ? null : installRoot === '.' ? command : `cd ${shellQuote(installRoot)} && ${command}`);
 
   const runScript = { npm: 'npm test --silent', pnpm: 'pnpm test', yarn: 'yarn test', bun: 'bun run test' }[name];
-  const script = typeof pkg.scripts?.test === 'string' ? pkg.scripts.test : undefined;
+  const script = typeof pkg.scripts?.['test'] === 'string' ? pkg.scripts['test'] : undefined;
   // npm, pnpm, Yarn 1 and Bun run "pretest" before "test"; Yarn 2+ does not. "posttest" is left
   // out on purpose: like the checks after the runner (lint, coverage reports), it is not the tests.
   const pretest =
-    typeof pkg.scripts?.pretest === 'string' && !(name === 'yarn' && berry)
+    typeof pkg.scripts?.['pretest'] === 'string' && !(name === 'yarn' && berry)
       ? { npm: 'npm run pretest --silent', pnpm: 'pnpm run pretest', yarn: 'yarn run pretest', bun: 'bun run pretest' }[
           name
         ]

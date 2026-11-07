@@ -23,7 +23,7 @@ export interface JsonReport {
   };
   files: FileReport[];
   issues: (Omit<Issue, 'fix'> & { fixable: boolean })[];
-  fixed: { rule: string; file: string; line: number; column?: number; from: string; to: string }[];
+  fixed: { rule: string; file: string; line: number; column?: number | undefined; from: string; to: string }[];
   /** Rules that crashed and were skipped. Empty when every rule ran. */
   ruleErrors: { rule: string; message: string }[];
 }

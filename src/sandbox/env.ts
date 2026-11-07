@@ -222,7 +222,7 @@ export function commandPaths(
     const sep = win ? ';' : delimiter;
     const exts =
       win && !/\.[^.\\/]+$/.test(first)
-        ? ['', ...(env.PATHEXT ?? env.Pathext ?? '.COM;.EXE;.BAT;.CMD').split(';').filter(Boolean)]
+        ? ['', ...(env['PATHEXT'] ?? env['Pathext'] ?? '.COM;.EXE;.BAT;.CMD').split(';').filter(Boolean)]
         : [''];
     for (const dir of (env[pathKey] ?? '').split(sep)) {
       if (!dir) continue;

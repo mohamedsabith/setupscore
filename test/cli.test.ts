@@ -310,7 +310,7 @@ describe('setupscore CLI', () => {
     expect(noGit.err).toContain('Git is not installed');
     const bin = shims({ git: `echo "fatal: detected dubious ownership in repository at '${root}'" >&2; exit 128` });
     const dubious = run(['tasks', root, '--sandbox', 'none', '--yes'], undefined, {
-      PATH: `${bin}:${process.env.PATH}`,
+      PATH: `${bin}:${process.env['PATH']}`,
     });
     expect(dubious.code).toBe(3);
     expect(dubious.err).toContain('dubious ownership');
@@ -511,11 +511,11 @@ describe('doctor (F17, F10, W6)', () => {
     async () => {
       const root = makeRepo({ 'package.json': JSON.stringify({ scripts: { test: 'node --test' } }) });
       const bin = shims({
-        git: `if [ "$1" = "--version" ]; then exec sleep 30; fi; PATH='${process.env.PATH}' exec git "$@"`,
+        git: `if [ "$1" = "--version" ]; then exec sleep 30; fi; PATH='${process.env['PATH']}' exec git "$@"`,
         npm: 'echo "npm ERR! cb() never called" >&2; exit 1',
       });
-      const oldPath = process.env.PATH;
-      process.env.PATH = `${bin}:${oldPath}`;
+      const oldPath = process.env['PATH'];
+      process.env['PATH'] = `${bin}:${oldPath}`;
       try {
         const checks = await runDoctor(root, () => {}, { toolTimeoutMs: 1_000, claudeBin: '/nonexistent/claude' });
         const get = (n: string) => checks.find((c) => c.name === n)!;
@@ -528,20 +528,20 @@ describe('doctor (F17, F10, W6)', () => {
         expect(get('Package manager').detail).toContain('npm failed (exit code 1): npm ERR! cb() never called');
         expect(JSON.stringify(checks)).not.toMatch(/exit null|not found \(this project/);
       } finally {
-        process.env.PATH = oldPath;
+        process.env['PATH'] = oldPath;
       }
 
       const dub = shims({
         git: `if [ "$1" = "--version" ]; then echo "git version 2.99.0"; exit 0; fi; echo "fatal: detected dubious ownership in repository at '/srv/x'" >&2; exit 128`,
       });
-      process.env.PATH = `${dub}:${oldPath}`;
+      process.env['PATH'] = `${dub}:${oldPath}`;
       try {
         const checks = await runDoctor(root, () => {}, { toolTimeoutMs: 5_000, claudeBin: '/nonexistent/claude' });
         const repo = checks.find((c) => c.name === 'Git repository')!;
         expect(repo.detail).toContain('dubious ownership');
         expect(repo.fix).toContain("git config --global --add safe.directory '/srv/x'");
       } finally {
-        process.env.PATH = oldPath;
+        process.env['PATH'] = oldPath;
       }
     },
   );
@@ -602,18 +602,18 @@ describe('start-up and git reasons', () => {
       'package.json': JSON.stringify({ name: 'x', packageManager: 'pnpm@10.0.0', scripts: { test: 'node --test' } }),
     });
     initGit(root);
-    const oldPath = process.env.PATH;
+    const oldPath = process.env['PATH'];
     // A PATH with git and node, but no pnpm.
     const bin = shims({ git: `PATH='${oldPath}' exec git "$@"` });
     symlinkSync(process.execPath, join(bin, 'node'));
-    process.env.PATH = bin;
+    process.env['PATH'] = bin;
     try {
       const checks = await runDoctor(root, () => {}, { claudeBin: '/nonexistent/claude' });
       const pm = checks.find((c) => c.name === 'Package manager')!;
       expect(pm).toMatchObject({ ok: false, required: false });
       expect(pm.detail).toContain('no dependencies to install');
     } finally {
-      process.env.PATH = oldPath;
+      process.env['PATH'] = oldPath;
     }
   });
 });

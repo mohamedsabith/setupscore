@@ -44,7 +44,7 @@ import { trimEndWhile } from '../core/text.js';
 
 export interface RunFlags {
   tasks?: string;
-  limit?: number;
+  limit?: number | undefined;
   setupA: string;
   setupB?: string;
   baseline?: boolean;
@@ -56,13 +56,13 @@ export interface RunFlags {
   model?: string;
   concurrency: number;
   resume?: string;
-  yes?: boolean;
-  json?: boolean;
-  failUnder?: number;
-  claudeBin?: string;
+  yes?: boolean | undefined;
+  json?: boolean | undefined;
+  failUnder?: number | undefined;
+  claudeBin?: string | undefined;
   sandbox: SandboxMode;
   /** Options given on the command line (not defaults), to tell what a resume should change. */
-  explicit?: Set<string>;
+  explicit?: Set<string> | undefined;
 }
 
 export type { Log } from './report.js';
@@ -369,7 +369,7 @@ export async function startRun(o: StartOptions): Promise<RunResult> {
     throw new EnvironmentError(
       `setupscore's cache folder ${cacheDir()} cannot be used (${(err as NodeJS.ErrnoException).code ?? (err as Error).message}).`,
       [
-        process.env.SETUPSCORE_CACHE_DIR
+        process.env['SETUPSCORE_CACHE_DIR']
           ? 'Point SETUPSCORE_CACHE_DIR at a folder you can write to, or unset it.'
           : 'Check that you can write to it, or set SETUPSCORE_CACHE_DIR to another folder.',
       ],
@@ -681,7 +681,7 @@ export async function startRun(o: StartOptions): Promise<RunResult> {
       s.writeFile('report.md', md);
       // For CI (the GitHub Action): a copy of this run's Markdown summary at a path the caller chose,
       // so it never posts an older run's report.
-      if (process.env.SETUPSCORE_REPORT_FILE) writeFileAtomic(process.env.SETUPSCORE_REPORT_FILE, redact(md));
+      if (process.env['SETUPSCORE_REPORT_FILE']) writeFileAtomic(process.env['SETUPSCORE_REPORT_FILE'], redact(md));
       s.writeFile('results.json', `${JSON.stringify(runJson(run, score, attempts, suggestions), null, 2)}\n`);
     } else if (existsSync(join(s.dir, 'report.html'))) {
       htmlPath = displayPath(join(s.dir, 'report.html'));

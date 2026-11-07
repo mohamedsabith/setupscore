@@ -62,8 +62,8 @@ export interface RunnerOptions {
   claudeBin: string;
   /** Ctrl+C. */
   signal: AbortSignal;
-  overrides?: PmOverrides;
-  domains?: string[];
+  overrides?: PmOverrides | undefined;
+  domains?: string[] | undefined;
   testTimeoutMs?: number;
   installTimeoutMs?: number;
   onEvent?: (e: RunEvent) => void;
@@ -71,8 +71,8 @@ export interface RunnerOptions {
 
 export interface RunOutcome {
   status: 'completed' | 'stopped' | 'failed';
-  reason?: string;
-  fix?: string;
+  reason?: string | undefined;
+  fix?: string | undefined;
   spentUsd: number;
   attempts: Attempt[];
 }
@@ -129,7 +129,7 @@ const tail = (text: string, lines = 40) =>
     .join('\n');
 
 interface Worker {
-  ws?: Workspace;
+  ws?: Workspace | undefined;
   installedHash: string | null;
   n: number;
 }
@@ -312,7 +312,7 @@ export async function executeRun(o: RunnerOptions): Promise<RunOutcome> {
 }
 
 /** Remember the model Claude Code really used, and say so once when it is not the one asked for. */
-function checkModel(o: RunnerOptions, a: Attempt, state: { warned: Set<string>; stored?: string }): void {
+function checkModel(o: RunnerOptions, a: Attempt, state: { warned: Set<string>; stored?: string | undefined }): void {
   const m = a.metrics;
   if (!m) return;
   const used = (m.model && m.model !== '<synthetic>' ? m.model : m.modelsUsed?.[0])?.trim();
@@ -374,9 +374,9 @@ async function runWithRetries(
     earlierCost > 0
       ? { ...a, metrics: { ...(a.metrics ?? emptyMetrics()), costUsd: (a.metrics?.costUsd ?? 0) + earlierCost } }
       : a;
-  const envBase = Number(process.env.SETUPSCORE_RETRY_BASE_MS);
+  const envBase = Number(process.env['SETUPSCORE_RETRY_BASE_MS']);
   const base =
-    Number.isFinite(envBase) && envBase >= 0 && process.env.SETUPSCORE_RETRY_BASE_MS !== '' ? envBase : 5_000; // shorter in tests
+    Number.isFinite(envBase) && envBase >= 0 && process.env['SETUPSCORE_RETRY_BASE_MS'] !== '' ? envBase : 5_000; // shorter in tests
   for (let tryNo = 0; tryNo <= MAX_RETRIES; tryNo++) {
     let r: { attempt: Attempt; retry?: string };
     try {

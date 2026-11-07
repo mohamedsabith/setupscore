@@ -21,9 +21,9 @@ export const agentFrontmatter: Rule = {
         );
         continue;
       }
-      if (typeof data.name !== 'string' || !data.name.trim())
+      if (typeof data['name'] !== 'string' || !data['name'].trim())
         add('No name.', 'Add  name: code-reviewer  (lowercase and hyphens).');
-      const desc = data.description;
+      const desc = data['description'];
       if (typeof desc !== 'string' || !desc.trim())
         add(
           'No description, so Claude does not know when to use this subagent.',

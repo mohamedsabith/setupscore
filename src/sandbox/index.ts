@@ -22,7 +22,7 @@ class NoSandbox implements Sandbox {
   async close() {}
 }
 
-const isCI = (): boolean => !!process.env.CI && process.env.CI !== 'false' && process.env.CI !== '0';
+const isCI = (): boolean => !!process.env['CI'] && process.env['CI'] !== 'false' && process.env['CI'] !== '0';
 
 const NONE_MESSAGE = "--sandbox none runs the project's install scripts and tests directly on this machine.";
 const NONE_FIXES = [
@@ -55,7 +55,7 @@ export interface OpenOptions {
   mode: SandboxMode;
   cwd: string;
   /** Allows --sandbox none outside CI. */
-  yes?: boolean;
+  yes?: boolean | undefined;
   log?: (message: string) => void;
   /** Stops a runtime install (Ctrl+C). */
   signal?: AbortSignal;

@@ -57,21 +57,21 @@ export interface CheckRun extends CheckResult {
 // @public (undocumented)
 export interface Config {
     agent?: {
-        bin?: string;
-        model?: string;
-    };
+        bin?: string | undefined;
+        model?: string | undefined;
+    } | undefined;
     // (undocumented)
     ignore: string[];
     // (undocumented)
     rules: Record<string, RuleSetting>;
     sandbox?: {
-        domains?: string[];
-    };
+        domains?: string[] | undefined;
+    } | undefined;
     source?: string;
     tasks?: {
-        test?: string;
-        install?: string;
-    };
+        test?: string | undefined;
+        install?: string | undefined;
+    } | undefined;
 }
 
 // @public (undocumented)
@@ -123,7 +123,7 @@ export interface FileReport {
 
 // @public
 export interface Fix {
-    column?: number;
+    column?: number | undefined;
     // (undocumented)
     file: string;
     // (undocumented)
@@ -137,7 +137,7 @@ export interface Fix {
 // @public
 export interface FixFailure {
     // (undocumented)
-    code?: string;
+    code?: string | undefined;
     // (undocumented)
     file: string;
     reason: string;
@@ -149,7 +149,7 @@ export interface Frontmatter {
     data: Record<string, unknown> | null;
     endLine: number;
     // (undocumented)
-    error?: string;
+    error?: string | undefined;
 }
 
 // @public
@@ -171,10 +171,10 @@ export interface Issue {
     // (undocumented)
     column?: number;
     file: string;
-    fix?: Fix;
+    fix?: Fix | undefined;
     hint?: string;
     // (undocumented)
-    line?: number;
+    line?: number | undefined;
     // (undocumented)
     message: string;
     // (undocumented)
@@ -197,7 +197,7 @@ export interface JsonReport {
         rule: string;
         file: string;
         line: number;
-        column?: number;
+        column?: number | undefined;
         from: string;
         to: string;
     }[];
@@ -276,17 +276,17 @@ export interface SetupFile {
     // (undocumented)
     abs: string;
     // (undocumented)
-    frontmatter?: Frontmatter;
+    frontmatter?: Frontmatter | undefined;
     // (undocumented)
-    importDepth?: number;
-    importedBy?: string;
+    importDepth?: number | undefined;
+    importedBy?: string | undefined;
     // (undocumented)
     kind: FileKind;
     // (undocumented)
     lines: Line[];
     loadsAtStart: boolean;
     path: string;
-    realPath?: string;
+    realPath?: string | undefined;
     // (undocumented)
     text: string;
 }
