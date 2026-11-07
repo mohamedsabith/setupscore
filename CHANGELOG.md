@@ -2,6 +2,25 @@
 
 All notable changes to this project are documented here. The project follows [Semantic Versioning](https://semver.org/). The command line, exit codes, `setupscore.yml` and the JSON output (`schemaVersion`) are the public API.
 
+## 1.0.1 - 2026-11-07
+
+### Fixed
+
+- `unused-path-rule` matches `paths:` patterns the way Claude Code does. A pattern without a slash (`*.md`, `*.test.ts`, `Dockerfile`, `package.json`) matches files at any depth under the rule's base folder, and a pattern that starts with a slash (`/*.md`, `/src/*.ts`) matches only from the base folder. Before, `*.md` matched only files at the top, and every pattern that started with a slash counted as matching nothing, so rules that do load were reported as "never loads". This fix only removes wrong warnings; it never adds new ones.
+- `unused-path-rule` skips a pattern such as `/node_modules/**` that starts with a slash and a folder setupscore doesn't read, the same way it already skipped `node_modules/**`.
+
+### Changed
+
+- The README is rewritten in plain English for everyone: what setupscore does, why you need it, install in 3 steps, how to read the output, measuring with `setupscore run`, using it on GitHub, common problems and an FAQ. The banner, demo GIF and screenshot stay.
+- Every command, option and setting moved from the README to the new `docs/reference.md`: the rules table, files it reads, `--fix`, `--cost`, `setupscore tasks`, `setupscore.yml`, CI and the GitHub Action, exit codes, the JSON output and the library API. It is included in the npm package.
+- The FAQ explains when setupscore checks `AGENTS.md`: when `CLAUDE.md` imports it (`@AGENTS.md`) or is a link to it. Claude Code 2.1.277 and newer also reads `AGENTS.md` on its own when a project has no `CLAUDE.md`; setupscore doesn't check that case yet.
+- `docs/reference.md` says the GitHub Action's `version` input defaults to `1` (the newest 1.x), as `action.yml` does.
+- `docs/run.md` links to `docs/reference.md` for how tasks are built.
+
+### Added
+
+- For contributors: `npm run corpus` (`scripts/corpus-diff.mjs`) runs `setupscore check --json` on public repositories (`scripts/corpus-repos.txt`, or `--repos <file>`) with a released version (`--base`) and with your build, and prints every finding that was added or removed. `CONTRIBUTING.md` explains it, and says that a new rule goes in the rules table in `docs/reference.md`.
+
 ## 1.0.0 - 2026-11-06
 
 First release.
