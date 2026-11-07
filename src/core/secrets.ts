@@ -46,7 +46,7 @@ const FILE_PATH =
   /^[\w.@~-]*(?:\/[\w.@~-]+)*\.(?:json|ya?ml|toml|txt|pem|key|crt|cer|p12|pfx|env|ini|cfg|conf|ts|js|mjs|cjs|py|rb|go|md|sh)$/i;
 
 /** Placeholder text inside a value that otherwise looks real: AKIAIOSFODNN7EXAMPLE, sk-ant-xxxxxxxx… */
-const PLACEHOLDER_INSIDE = /EXAMPLE|x{5,}|X{5,}|\.{3}|…|0{8,}|<[^>]*>|\$\{|\{\{/;
+const PLACEHOLDER_INSIDE = /EXAMPLE|x{5,}|X{5,}|\.{3}|…|0{8,}|<[^<>]*>|\$\{|\{\{/;
 
 /** The well-known signature of the example JWT on jwt.io. */
 const JWT_IO_EXAMPLE = 'SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c';

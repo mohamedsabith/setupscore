@@ -39,6 +39,7 @@ import { cacheDir } from '../sandbox/runtime.js';
 import { VERSION } from '../version.js';
 import { failUnder } from './report.js';
 import { TASKS_SCHEMA_VERSION } from './tasks.js';
+import { trimEndWhile } from '../core/text.js';
 
 export interface RunFlags {
   tasks?: string;
@@ -134,7 +135,7 @@ export function loadTasks(file: string): Task[] {
 }
 
 /** End a reason with exactly one full stop. */
-const sentence = (s: string | undefined) => `${(s ?? 'unknown reason').replace(/[.\s]+$/, '')}.`;
+const sentence = (s: string | undefined) => `${trimEndWhile(s ?? 'unknown reason', (c) => c === '.' || /\s/.test(c))}.`;
 
 /** Ask a yes/no question. Without a terminal (CI), the answer must come from --yes. */
 async function confirm(question: string, yes: boolean | undefined): Promise<boolean> {

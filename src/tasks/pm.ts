@@ -3,6 +3,7 @@ import { closeSync, constants, existsSync, fstatSync, openSync, readFileSync } f
 import { dirname, join, posix, relative, resolve, sep } from 'node:path';
 import picomatch from 'picomatch';
 import { parse as parseYaml } from 'yaml';
+import { trimEndWhile } from '../core/text.js';
 
 export type PmName = 'npm' | 'pnpm' | 'yarn' | 'bun';
 
@@ -43,6 +44,9 @@ const LOCKFILES: [string, PmName][] = [
   ['npm-shrinkwrap.json', 'npm'],
 ];
 const PM_NAMES: PmName[] = ['npm', 'pnpm', 'yarn', 'bun'];
+
+/** `nodeLinker: pnp` in .yarnrc.yml. A line-start pattern that can't run across blank lines (linear time). */
+const NODE_LINKER = /^[^\S\n\r\u2028\u2029]*nodeLinker\s*:\s*["']?([\w-]+)/m;
 
 /** Quote a file name for the shell. */
 export const shellQuote = (s: string): string =>
@@ -162,10 +166,12 @@ function findWorkspaceRoot(dir: string): { root: string; pkg: PackageJson | null
     const patterns = workspacePatterns(up, pkg);
     if (!patterns.length) continue;
     const rel = relative(up, self).split(sep).join('/');
-    const yes = patterns.filter((p) => !p.startsWith('!')).map((p) => p.replace(/^\.\//, '').replace(/\/+$/, ''));
+    const yes = patterns
+      .filter((p) => !p.startsWith('!'))
+      .map((p) => trimEndWhile(p.replace(/^\.\//, ''), (c) => c === '/'));
     const no = patterns
       .filter((p) => p.startsWith('!'))
-      .map((p) => p.slice(1).replace(/^\.\//, '').replace(/\/+$/, ''));
+      .map((p) => trimEndWhile(p.slice(1).replace(/^\.\//, ''), (c) => c === '/'));
     if (!yes.length) continue;
     if (picomatch.isMatch(rel, yes, { dot: true }) && !(no.length && picomatch.isMatch(rel, no, { dot: true })))
       return { root: up, pkg };
@@ -216,7 +222,7 @@ export function detectPm(dir: string, overrides: PmOverrides = {}): Pm | { error
   const lockfile = found?.[0] ?? null;
   const yarnrc = name === 'yarn' ? readText(join(installDir, '.yarnrc.yml'), 1024 * 1024) : null;
   const berry = yarnrc !== null;
-  const linker = yarnrc?.match(/^\s*nodeLinker\s*:\s*["']?([\w-]+)/m)?.[1];
+  const linker = yarnrc?.match(NODE_LINKER)?.[1];
   const pnp = berry && (linker === undefined || linker === 'pnp');
 
   // A workspace root, or a package in one, always needs an install: it links the packages together.
@@ -684,21 +690,21 @@ export function runnerCommand(
 export function noTestsRan(output: string): boolean {
   const text = output.replace(/\x1b\[[0-9;]*m/g, '');
   const none =
-    /^\s*(?:#|ℹ)\s*tests 0\s*$/m.test(text) || // node --test (TAP and spec reporters)
+    /^[^\S\n\r\u2028\u2029]*(?:#|ℹ)\s*tests 0\s*$/m.test(text) || // node --test (TAP and spec reporters)
     /^1\.\.0\b/m.test(text) || // TAP plan with no tests
     /\bNo tests? (?:files? )?found\b/i.test(text) || // jest, vitest, mocha ("No test files found")
     /\bNo valid test files found\b/i.test(text) || // tap
     /couldn[’']?t find any files to test/i.test(text) || // ava
-    /^\s*Ran 0 tests\b/m.test(text) || // bun
+    /^[^\S\n\r\u2028\u2029]*Ran 0 tests\b/m.test(text) || // bun
     /\bhad no matches\b/.test(text) || // bun test with a filter
-    /^\s*Total:\s+0\s*$/m.test(text); // uvu
+    /^[^\S\n\r\u2028\u2029]*Total:\s+0\s*$/m.test(text); // uvu
   if (!none) return false;
   const some =
-    /^\s*(?:#|ℹ)\s*tests [1-9]/m.test(text) ||
-    /^\s*Tests?:?\s+.*\b[1-9]\d* (?:passed|failed|total)\b/m.test(text) ||
+    /^[^\S\n\r\u2028\u2029]*(?:#|ℹ)\s*tests [1-9]/m.test(text) ||
+    /^[^\S\n\r\u2028\u2029]*Tests?:?(?=(\s+))\1.*\b[1-9]\d* (?:passed|failed|total)\b/m.test(text) ||
     /\b[1-9]\d* (?:passing|failing|pass|fail|tests? (?:passed|failed))\b/.test(text) ||
-    /^\s*Ran [1-9]\d* tests?\b/m.test(text) ||
-    /^\s*Total:\s+[1-9]/m.test(text) ||
+    /^[^\S\n\r\u2028\u2029]*Ran [1-9]\d* tests?\b/m.test(text) ||
+    /^[^\S\n\r\u2028\u2029]*Total:\s+[1-9]/m.test(text) ||
     /# \{ total: [1-9]/.test(text);
   return !some;
 }

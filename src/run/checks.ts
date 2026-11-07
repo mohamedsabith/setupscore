@@ -5,6 +5,7 @@ import { isListItem, ruleText, toLines } from '../core/markdown.js';
 import { TEST_FILE } from '../tasks/mine.js';
 import { tryGit } from '../tasks/git.js';
 import { isSetupPath } from './setups.js';
+import { trimEndWhile } from '../core/text.js';
 
 /**
  * A checkable instruction from the setup: "never use console.log" -> the agent's new code must
@@ -33,7 +34,7 @@ export function forbiddenRules(files: Record<string, string>): ForbiddenRule[] {
     for (const line of toLines(text, true).lines) {
       if (line.inFence || line.inFrontmatter || line.text.length > MAX_RULE_LINE || !isListItem(line.text)) continue;
       for (const m of line.text.matchAll(NEGATIVE)) {
-        const raw = m[1]!.replace(/[.,;:]+$/, '');
+        const raw = trimEndWhile(m[1]!, (c) => '.,;:'.includes(c));
         const backticked = raw.startsWith('`');
         const token = raw.replace(/`/g, '').replace(/\(\)$/, '');
         // Decide "is this code?" on the words as written: fetch() is code, fetch is not.
@@ -146,7 +147,7 @@ export function lookedOutside(texts: string[], realProject: string): string[] {
       .replace(/\\+/g, '/')
       .replace(/\/{2,}/g, '/');
   const fold = (x: string) => norm(x).toLowerCase();
-  const top = fold(realProject).replace(/\/+$/, '');
+  const top = trimEndWhile(fold(realProject), (c) => c === '/');
   const tops = new Set<string>();
   const drive = /^([a-z]):(\/.+)$/.exec(top);
   if (drive) {

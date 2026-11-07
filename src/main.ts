@@ -499,10 +499,10 @@ function commanderMessage(err: CommanderError & { commandName?: string }): { tit
       };
     }
     case 'commander.invalidArgument': {
-      const m = first.match(/^option '([^']+)' argument '([\s\S]*)' is invalid\.\s*([\s\S]*)$/);
+      const m = first.match(/^option '([^']+)' argument '([\s\S]*)' is invalid\.([\s\S]*)$/);
       if (m)
         return {
-          title: `The value '${m[2]}' for ${longFlag(m[1]!)} is invalid. ${capitalize(m[3]!)}`,
+          title: `The value '${m[2]}' for ${longFlag(m[1]!)} is invalid. ${capitalize(m[3]!.trimStart())}`,
           fixes: [helpHint],
         };
       return { title: capitalize(first), fixes: [helpHint] };

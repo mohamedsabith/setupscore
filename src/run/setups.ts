@@ -18,6 +18,7 @@ import { kindOf } from '../core/discover.js';
 import { UsageError } from '../core/errors.js';
 import { walk } from '../core/walk.js';
 import { git, tryGit } from '../tasks/git.js';
+import { trimEndWhile } from '../core/text.js';
 
 /**
  * A "setup" is the set of files that tell Claude Code how to work in a repo: every CLAUDE.md,
@@ -247,7 +248,7 @@ export async function snapshotSetup(
 
   const top = (await tryGit(projectDir, ['rev-parse', '--show-toplevel']))?.trim() || null;
   const prefix = top
-    ? ((await tryGit(projectDir, ['rev-parse', '--show-prefix'])) ?? '').trim().replace(/\/+$/, '')
+    ? trimEndWhile(((await tryGit(projectDir, ['rev-parse', '--show-prefix'])) ?? '').trim(), (c) => c === '/')
     : '';
 
   if (source === 'working') {

@@ -419,7 +419,19 @@ export function missingTool(
  * would tilt a run with no instructions).
  */
 export function agentPrompt(prompt: string): string {
-  return prompt.replace(/,?\s*following the project instructions \(CLAUDE\.md\)/g, '');
+  // Same result as prompt.replace(/,?\s*following the project instructions \(CLAUDE\.md\)/g, ''),
+  // in linear time: remove each phrase with the spaces and the one comma right before it.
+  const phrase = 'following the project instructions (CLAUDE.md)';
+  let out = '';
+  let from = 0;
+  for (let at = prompt.indexOf(phrase); at !== -1; at = prompt.indexOf(phrase, at + phrase.length)) {
+    let start = at;
+    while (start > from && /\s/.test(prompt[start - 1]!)) start--;
+    if (start > from && prompt[start - 1] === ',') start--;
+    out += prompt.slice(from, start);
+    from = at + phrase.length;
+  }
+  return out + prompt.slice(from);
 }
 
 /** Install dependencies when they changed; reuse parked installs. Returns an error reason or null. */

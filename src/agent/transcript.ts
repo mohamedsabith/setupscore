@@ -441,6 +441,17 @@ export function parseTranscript(input: string): AgentMetrics {
 }
 
 /**
+ * A model name without a trailing "[...]" tag, as s.replace(/\[[^\]]*\]$/, '') gives, in linear
+ * time: the tag starts at the first "[" after the last "]" before the end.
+ */
+export function withoutTrailingTag(s: string): string {
+  if (!s.endsWith(']')) return s;
+  const body = s.slice(0, -1);
+  const open = body.indexOf('[', body.lastIndexOf(']') + 1);
+  return open === -1 ? s : s.slice(0, open);
+}
+
+/**
  * The model Claude Code really used, when it is not the one asked for with --model, so the run
  * can say so (Claude Code may silently replace a retired model). Aliases such as "sonnet" match
  * any model of that family; "default" and similar are never reported.
@@ -451,11 +462,7 @@ export function modelMismatch(
 ): string | undefined {
   const used = m.model && m.model !== '<synthetic>' ? m.model : m.modelsUsed[0];
   if (!requested || !used) return undefined;
-  const norm = (s: string) =>
-    s
-      .toLowerCase()
-      .replace(/\[[^\]]*\]$/, '')
-      .trim();
+  const norm = (s: string) => withoutTrailingTag(s.toLowerCase()).trim();
   const want = norm(requested);
   const got = norm(used);
   if (!want || want === got || got.includes(want) || want.includes(got)) return undefined;
@@ -735,7 +742,7 @@ function wordsRunTests(input: string[], depth: number): boolean {
       continue;
     }
     if (['bash', 'sh', 'zsh', 'dash', 'ksh'].includes(name)) {
-      const flag = rest.findIndex((w) => /^-[a-z]*c[a-z]*$/.test(w));
+      const flag = rest.findIndex((w) => /^-[a-z]+$/.test(w) && w.includes('c'));
       return flag !== -1 && !!rest[flag + 1] && commandRunsTests(rest[flag + 1]!, depth + 1);
     }
     if (name === 'eval') return commandRunsTests(rest.join(' '), depth + 1);

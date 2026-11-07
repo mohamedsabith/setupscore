@@ -117,15 +117,15 @@ Open a normal issue, or report it to the right project, for these:
 - `command: run` runs the pull request's own setup, including its hooks, skills and MCP servers, inside the sandbox, **with your API key in the sandbox's environment**. Only use it on branches from people you would trust with that key.
 - GitHub gives no secrets to pull requests from forks, so `run` stops there before it installs anything. Never use `pull_request_target` to run `command: run` on code from a fork: that gives the fork your secrets.
 - Use a separate API key with a spending limit for CI.
-- Pin the Action to a full commit SHA if your organization requires it, for example `mohamedsabith/setupscore@<sha> # v1.2.0`. Release tags such as `v1.2.0` can't be moved (see below).
+- Pin the Action to a full commit SHA if your organization requires it, for example `mohamedsabith/setupscore@<sha> # v1.0.4`. The release workflow never moves version tags such as `v1.0.4`; it only moves the major tag `v1`. A commit SHA can never change, so it is the safest pin.
 
 ### How this repository protects its own workflows
 
-- Every workflow starts with read-only permissions. Write permissions are given per job, only where needed.
+- There is one workflow, Release. It starts only when a maintainer pushes a version tag such as `v1.0.4`. Pull requests start no workflow, so code from a pull request never runs with secrets or write permissions.
+- The workflow starts with read-only permissions. Only its publish job gets `contents: write` (to create the GitHub release and move `v1`) and `id-token: write` (for npm provenance).
 - Every third-party action is pinned to a full commit SHA.
-- A pull request from an outside contributor never starts a workflow that has secrets or write permissions. CI runs it with read-only permissions and no secrets. The labeler runs on `pull_request_target`, but it never checks out or runs pull-request code.
-- The Claude workflow, which has secrets and can push branches, only starts when someone with write access mentions `@claude`. So a maintainer decides when it may look at a pull request.
-- Only the Release workflow can publish. It runs on `main`, uses npm trusted publishing (OIDC), and keeps no long-lived npm token. The release commit and tags are pushed by a GitHub App that only the rulesets let through.
+- Every release is published with npm provenance, so you can check that it was built from this repository by that workflow (`npm audit signatures`).
+- The first releases were published with a short-lived npm token stored as a repository secret. We are moving to npm trusted publishing (OIDC); after that, no npm token exists anywhere.
 
 ## Safe harbor
 
