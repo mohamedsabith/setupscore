@@ -12,8 +12,6 @@ export interface Applied {
     rule: string;
 }
 
-// Warning: (ae-forgotten-export) The symbol "FixFailure" needs to be exported by the entry point index.d.ts
-//
 // @public
 export function applyFixes(root: string, issues: Issue[], failures?: FixFailure[]): Applied[];
 
@@ -96,13 +94,11 @@ export interface Context {
     imports: ImportRef[];
     // (undocumented)
     isDir(rel: string): boolean;
-    // Warning: (ae-forgotten-export) The symbol "MisnamedFile" needs to be exported by the entry point index.d.ts
     misnamed?: MisnamedFile[];
     renames(): Map<string, string>;
     repoFiles(): string[];
     // (undocumented)
     root: string;
-    // Warning: (ae-forgotten-export) The symbol "SkippedFile" needs to be exported by the entry point index.d.ts
     skipped?: SkippedFile[];
     unreadableDirs?: string[];
 }
@@ -136,6 +132,24 @@ export interface Fix {
     line: number;
     // (undocumented)
     to: string;
+}
+
+// @public
+export interface FixFailure {
+    // (undocumented)
+    code?: string;
+    // (undocumented)
+    file: string;
+    reason: string;
+}
+
+// @public (undocumented)
+export interface Frontmatter {
+    // (undocumented)
+    data: Record<string, unknown> | null;
+    endLine: number;
+    // (undocumented)
+    error?: string;
 }
 
 // @public
@@ -218,7 +232,23 @@ export interface JsonReport {
 }
 
 // @public (undocumented)
+export interface Line {
+    inFence: boolean;
+    inFrontmatter: boolean;
+    n: number;
+    // (undocumented)
+    text: string;
+}
+
+// @public (undocumented)
 export function loadConfig(root: string, ruleIds: string[]): Config;
+
+// @public
+export interface MisnamedFile {
+    expected: string;
+    path: string;
+    reason?: 'case' | 'layout';
+}
 
 // @public (undocumented)
 export interface Rule {
@@ -245,8 +275,6 @@ export type RuleSetting = Severity | 'off';
 export interface SetupFile {
     // (undocumented)
     abs: string;
-    // Warning: (ae-forgotten-export) The symbol "Frontmatter" needs to be exported by the entry point index.d.ts
-    //
     // (undocumented)
     frontmatter?: Frontmatter;
     // (undocumented)
@@ -254,8 +282,6 @@ export interface SetupFile {
     importedBy?: string;
     // (undocumented)
     kind: FileKind;
-    // Warning: (ae-forgotten-export) The symbol "Line" needs to be exported by the entry point index.d.ts
-    //
     // (undocumented)
     lines: Line[];
     loadsAtStart: boolean;
@@ -267,6 +293,16 @@ export interface SetupFile {
 
 // @public (undocumented)
 export type Severity = 'error' | 'warning';
+
+// @public
+export interface SkippedFile {
+    detail: string;
+    // (undocumented)
+    kind: FileKind;
+    // (undocumented)
+    path: string;
+    problem: 'too-big' | 'unreadable' | 'not-utf8';
+}
 
 // @public (undocumented)
 export function toJson(run: CheckRun, fixed?: Applied[]): JsonReport;

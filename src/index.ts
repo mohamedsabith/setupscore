@@ -6,7 +6,7 @@
  *   console.log(result.errors, result.issues);
  */
 export { check, type CheckOptions, type CheckRun } from './core/check.js';
-export { applyFixes, type Applied } from './core/fix.js';
+export { applyFixes, type Applied, type FixFailure } from './core/fix.js';
 export { loadConfig, ConfigError, CONFIG_NAMES, type Config } from './core/config.js';
 export { estimateTokens } from './core/cost.js';
 export { RULES, RULE_IDS } from './rules/index.js';
@@ -18,10 +18,14 @@ export type {
   FileKind,
   FileReport,
   Fix,
+  Frontmatter,
   ImportRef,
   Issue,
+  Line,
+  MisnamedFile,
   Rule,
   RuleSetting,
   SetupFile,
   Severity,
+  SkippedFile,
 } from './core/types.js';

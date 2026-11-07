@@ -4,6 +4,10 @@ All notable changes to this project are documented here. The project follows [Se
 
 ## Unreleased
 
+### Added
+
+- The library also exports the types `FixFailure`, `Frontmatter`, `Line`, `MisnamedFile` and `SkippedFile`. Its functions already used them, so TypeScript users can now name them.
+
 ### Fixed
 
 - Hints that show a folder to paste into a shell (`setupscore tasks ...`) now quote it with `'...'` when it contains `$`, `` ` ``, `!` or a control character. Inside `"..."` the shell changed those, so the pasted command used a different folder. Found by the new property-based tests.
