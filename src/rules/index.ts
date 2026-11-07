@@ -1,6 +1,7 @@
 import type { Rule } from '../core/types.js';
 import { agentFrontmatter } from './agent-frontmatter.js';
 import { agentsMdNotLoaded } from './agents-md-not-loaded.js';
+import { brokenHook } from './broken-hook.js';
 import { brokenImport } from './broken-import.js';
 import { brokenReference } from './broken-reference.js';
 import { contradiction } from './contradiction.js';
@@ -24,6 +25,7 @@ export const RULES: readonly Rule[] = [
   brokenReference,
   brokenImport,
   missingScript,
+  brokenHook,
   invalidConfig,
   secret,
   misnamedFile,

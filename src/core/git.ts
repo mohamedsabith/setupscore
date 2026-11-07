@@ -49,6 +49,22 @@ export function gitTracked(root: string, pathspec: string): Set<string> | null {
 }
 
 /**
+ * The git index mode ("100644", "100755", "120000") of each tracked path, relative to `root`.
+ * Untracked paths are missing from the map. Null without git.
+ */
+export function gitModes(root: string, paths: string[]): Map<string, string> | null {
+  if (paths.length === 0) return new Map();
+  const out = run(root, ['ls-files', '-s', '-z', '--', ...paths]);
+  if (out === null) return null;
+  const modes = new Map<string, string>();
+  for (const entry of out.split('\0')) {
+    const tab = entry.indexOf('\t');
+    if (tab > 0) modes.set(entry.slice(tab + 1), entry.slice(0, entry.indexOf(' ')));
+  }
+  return modes;
+}
+
+/**
  * Files renamed in git history, as old path -> newest path, relative to `root`.
  * Follows chains (a -> b -> c gives a -> c). Returns an empty map without git.
  */

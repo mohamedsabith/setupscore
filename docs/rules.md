@@ -64,6 +64,32 @@ Your instructions tell Claude to run a `package.json` script that doesn't exist:
 
 setupscore uses the nearest `package.json` (a `package.json` saved with a byte order mark is fine). In a monorepo, commands with `--filter`, `-w` or `--workspace` are left alone, and so is a script from another package when the line names that package ("`pnpm run migrate` in the api package"). A root `CLAUDE.md` may also list the scripts of workspace packages, but `npm test` always means the nearest package, and a nested `CLAUDE.md` is checked against its own package. Prose like "npm run with the --silent flag" is not a script call.
 
+## broken-hook
+
+**Level:** warning
+
+A hook in `.claude/settings.json` or `.claude/settings.local.json` that can never run as written. Every check follows the [hooks reference](https://code.claude.com/docs/en/hooks) (Claude Code 2.1.319):
+
+- **Wrong shape:** `"hooks"` is not an object of events, an event is not a list, or a handler is written straight into the list without the `{ "matcher": ..., "hooks": [ ... ] }` wrapper.
+- **Event name:** the wrong letter case (`pretooluse`) or a close typo (`PreToolUs`) of one of the 33 documented events. A name far from every known event is left alone, because it may be newer than setupscore.
+- **Matcher:** not a single string (a list or object can stop every hook in the file from loading); a regular expression that doesn't compile; `mcp__github` without `__.*`, which matches no tool; a built-in tool name in the wrong case (`bash`, `write`); or a matcher on an event that has none (`Stop`, `UserPromptSubmit`, ...), which is ignored so the hook runs every time.
+- **Handler:** no `type`, a misspelled one (`Command`), or a missing `command`, `url`, `server`, `tool` or `prompt`; a `timeout` that isn't a number of seconds above 0; `if` on an event that isn't a tool event, which means the hook never runs.
+- **Script under `${CLAUDE_PROJECT_DIR}`** (or `$CLAUDE_PROJECT_DIR`) that doesn't exist, or that the hook runs directly while git stores it as not executable (mode `100644`), so it fails with "Permission denied" on every clone.
+
+**Why it matters:** a broken hook fails quietly. Claude Code shows at most a one-line "hook error" and carries on, so a check you rely on (formatting, tests, blocking dangerous commands) silently does nothing. Worse, `python3` and `sh` exit with code 2 when the script is missing, which Claude Code treats as "block": every matching tool call is refused.
+
+```json
+// Bad: the handler is written straight into the list, and the script is not executable in git
+{ "hooks": { "PreToolUse": [{ "type": "command", "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/guard.sh" }] } }
+
+// Good
+{ "hooks": { "PreToolUse": [{ "matcher": "Bash", "hooks": [{ "type": "command", "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/guard.sh" }] }] } }
+```
+
+**Fix:** follow the hint. For a script that isn't executable, run `git update-index --chmod=+x <path>` and commit.
+
+Not checked: scripts outside the project (`~/...`, absolute paths, `${CLAUDE_PLUGIN_ROOT}`), relative paths, paths with other variables or wildcards, scripts that `.gitignore` ignores (they may be generated), arguments that aren't the script an interpreter runs (for example `tee "$CLAUDE_PROJECT_DIR/log.txt"`), hooks in skill and agent frontmatter, and plugin `hooks/hooks.json`. Claude Code also accepts more than this rule knows, so unknown keys and unknown tool names are never reported.
+
 ## invalid-config
 
 **Level:** error

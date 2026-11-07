@@ -2,6 +2,19 @@
 
 All notable changes to this project are documented here. The project follows [Semantic Versioning](https://semver.org/). The command line, exit codes, `setupscore.yml` and the JSON output (`schemaVersion`) are the public API.
 
+## Unreleased
+
+### Added
+
+- New rule `broken-hook` (warning): a hook in `.claude/settings.json` or `.claude/settings.local.json` that can never run as written, following Claude Code's hooks reference. It reports:
+  - a wrong shape: `"hooks"` that isn't an object, an event that isn't a list, or a handler written without the `{ "matcher", "hooks": [...] }` wrapper;
+  - an event name in the wrong letter case or with a close typo (`pretooluse`, `PreToolUs`). Names far from every known event are left alone;
+  - a matcher that isn't one string, a regular expression that doesn't compile, `mcp__server` without `__.*`, a built-in tool name in the wrong case (`bash`), or a matcher on an event that has none;
+  - a handler with no or a misspelled `type`, a missing `command`, `url`, `server`, `tool` or `prompt`, a `timeout` that isn't a number of seconds above 0, or `if` on an event that isn't a tool event;
+  - a script under `${CLAUDE_PROJECT_DIR}` that doesn't exist (with a stronger warning for `python3` and `sh`, which exit with code 2, the "block" code), or that the hook runs directly while git stores it as not executable.
+
+  New warnings lower instruction health by 0.5 each and fail `--strict`; turn the rule off with `rules: { broken-hook: off }` in `setupscore.yml`.
+
 ## 1.0.2 - 2026-11-07
 
 ### Added

@@ -19,6 +19,7 @@ body:
         - broken-reference
         - broken-import
         - missing-script
+        - broken-hook
         - invalid-config
         - secret
         - misnamed-file
