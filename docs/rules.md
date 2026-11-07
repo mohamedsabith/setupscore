@@ -108,6 +108,32 @@ A setup file or folder whose name differs from what Claude Code looks for only i
 
 macOS AppleDouble files (`._name.md`, made when copying to exFAT or network drives) are ignored.
 
+## agents-md-not-loaded
+
+**Level:** warning
+
+An `AGENTS.md` (or `.claude/AGENTS.md`) that Claude Code never reads. Claude Code 2.1.277 and newer reads `AGENTS.md` on its own, but by default only when there is no `CLAUDE.md`, `.claude/CLAUDE.md` or `CLAUDE.local.md`. When there is one, Claude reads only the `CLAUDE.md` files. This rule reports:
+
+- an `AGENTS.md` next to a `CLAUDE.md`, `.claude/CLAUDE.md` or `CLAUDE.local.md` that doesn't import it,
+- an `AGENTS.md` in a subfolder, when the project root has a `CLAUDE.md` and the subfolder has no `CLAUDE.md` that imports it,
+- a `CLAUDE.md` whose only text is `AGENTS.md`: a link that git saved as a plain file (on Windows, or with `core.symlinks` off).
+
+**Why it matters:** everything in `AGENTS.md` is silently missing for Claude, while other tools (Codex, Cursor, Copilot) read it. A personal `CLAUDE.local.md` counts too, so adding one can switch `AGENTS.md` off for you alone.
+
+```markdown
+<!-- Bad: CLAUDE.md next to AGENTS.md -->
+- Run the tests with pnpm test.
+
+<!-- Good: CLAUDE.md imports AGENTS.md, then adds Claude-only lines -->
+@AGENTS.md
+
+- Run the tests with pnpm test.
+```
+
+**Fix:** add `@AGENTS.md` to the `CLAUDE.md` (from `.claude/CLAUDE.md` write `@../AGENTS.md`), or make `CLAUDE.md` a link to `AGENTS.md`. A `CLAUDE.md` that only says "read AGENTS.md" in words isn't enough: Claude reads it only if it decides to open the file. `--fix` repairs the plain-file link case.
+
+Not reported: an `AGENTS.md` with no `CLAUDE.md` (Claude reads it), one that a `CLAUDE.md` imports or links to, an `AGENTS.md` that is itself a link to `CLAUDE.md`, and an empty `AGENTS.md`. setupscore assumes Claude Code starts in the checked folder and uses its default **Project instructions** setting. It can't see files above that folder or your own Claude Code settings: with `claude-md-and-agents-md`, Claude reads both files and you can turn this rule off.
+
 ## risky-permission
 
 **Level:** warning

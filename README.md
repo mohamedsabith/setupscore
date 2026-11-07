@@ -192,7 +192,7 @@ Still stuck? [Open an issue](https://github.com/mohamedsabith/setupscore/issues)
 
 **What is "instruction health"?** A quick score from 0 to 10: 10, minus 1 for each error and 0.5 for each warning. Use it to track your setup over time.
 
-**Does it check `AGENTS.md`?** Yes, when Claude Code reads it through your `CLAUDE.md`: an `@AGENTS.md` import, or a `CLAUDE.md` that is a link to `AGENTS.md`. Claude Code 2.1.277 and newer also reads `AGENTS.md` on its own when the project has no `CLAUDE.md`; setupscore doesn't check that case yet. Codex and Cursor rules are planned.
+**Does it check `AGENTS.md`?** Yes, when Claude Code reads it through your `CLAUDE.md`: an `@AGENTS.md` import, or a `CLAUDE.md` that is a link to `AGENTS.md`. setupscore also warns when a `CLAUDE.md` stops Claude from reading your `AGENTS.md`: Claude Code 2.1.277 and newer reads `AGENTS.md` on its own, but only when the project has no `CLAUDE.md`. Codex and Cursor rules are planned.
 
 ## More documentation
 

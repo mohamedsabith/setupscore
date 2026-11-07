@@ -47,6 +47,7 @@ npx setupscore rules              # list every rule and why it matters
 | `invalid-config` | error | `settings.json` or `.mcp.json` that isn't valid JSON, or frontmatter that can't be read |
 | `secret` | error | API keys, tokens and passwords written into setup files |
 | `misnamed-file` | warning | `claude.md`, `.Claude/` or `skill.md`: wrong letter case, so Claude Code on Linux never loads it |
+| `agents-md-not-loaded` | warning | An `AGENTS.md` that Claude Code never reads, because a `CLAUDE.md` or `CLAUDE.local.md` doesn't import it |
 | `risky-permission` | warning | `"Bash"` allowed without limits, `rm`/`curl`/`git push` with no prompt, `bypassPermissions` |
 | `env-not-denied` | warning | A local `.env` file Claude is allowed to read |
 | `mcp-config` | warning | Unpinned `npx`/`uvx` MCP servers, `$VAR` that never expands, plain `http://` |

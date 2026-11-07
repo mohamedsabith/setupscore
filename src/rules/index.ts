@@ -1,5 +1,6 @@
 import type { Rule } from '../core/types.js';
 import { agentFrontmatter } from './agent-frontmatter.js';
+import { agentsMdNotLoaded } from './agents-md-not-loaded.js';
 import { brokenImport } from './broken-import.js';
 import { brokenReference } from './broken-reference.js';
 import { contradiction } from './contradiction.js';
@@ -26,6 +27,7 @@ export const RULES: readonly Rule[] = [
   invalidConfig,
   secret,
   misnamedFile,
+  agentsMdNotLoaded,
   // Security of the setup itself.
   riskyPermission,
   envNotDenied,

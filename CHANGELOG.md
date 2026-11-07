@@ -2,6 +2,17 @@
 
 All notable changes to this project are documented here. The project follows [Semantic Versioning](https://semver.org/). The command line, exit codes, `setupscore.yml` and the JSON output (`schemaVersion`) are the public API.
 
+## Unreleased
+
+### Added
+
+- New rule `agents-md-not-loaded` (warning). Claude Code 2.1.277 and newer reads `AGENTS.md` on its own, but by default only when there is no `CLAUDE.md`, `.claude/CLAUDE.md` or `CLAUDE.local.md`. The rule reports an `AGENTS.md` (or `.claude/AGENTS.md`) that Claude never reads:
+  - next to a `CLAUDE.md`, `.claude/CLAUDE.md` or `CLAUDE.local.md` that doesn't import it or link to it, including one that only mentions `AGENTS.md` in words or is empty;
+  - in a subfolder, when the project root has a `CLAUDE.md` and the subfolder has no `CLAUDE.md` that imports it (many such subfolders give one warning);
+  - when `CLAUDE.md` is a link that git saved as a plain file whose only text is `AGENTS.md` (Windows, or `core.symlinks` off). `--fix` turns that text into `@AGENTS.md`.
+
+  It doesn't report an `AGENTS.md` without a `CLAUDE.md`, one that is imported or linked (either way), an empty one, or `AGENTS.local.md`, `AGENTS.override.md` and files under `.agents/`, which Claude never reads. New warnings lower instruction health by 0.5 each and fail `--strict`; turn the rule off with `rules: { agents-md-not-loaded: off }` in `setupscore.yml`.
+
 ## 1.0.1 - 2026-11-07
 
 ### Fixed

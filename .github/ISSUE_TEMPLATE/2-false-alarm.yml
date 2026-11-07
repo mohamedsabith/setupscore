@@ -22,6 +22,7 @@ body:
         - invalid-config
         - secret
         - misnamed-file
+        - agents-md-not-loaded
         - risky-permission
         - env-not-denied
         - mcp-config
