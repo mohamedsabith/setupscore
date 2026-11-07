@@ -23,7 +23,11 @@ export const baseOf = (rel: string): string => posix.basename(rel);
 export function shellArg(s: string): string {
   const win = process.platform === 'win32';
   if ((win ? /^[\w@%+=:,./\\-][\w@%+=:,./\\~-]*$/ : /^[\w@%+=:,./-][\w@%+=:,./~-]*$/).test(s)) return s;
-  return win ? `"${s}"` : JSON.stringify(s);
+  if (win) return `"${s}"`;
+  // Inside "..." a shell still expands $, ` and ! (bash), and JSON escapes such as \n mean nothing to it.
+  // eslint-disable-next-line no-control-regex -- control characters are exactly what "..." cannot carry
+  if (/[$`!\u0000-\u001f]/.test(s)) return `'${s.replaceAll("'", `'\\''`)}'`;
+  return JSON.stringify(s);
 }
 
 /** A path to show the user: relative to the current folder when it is inside it, otherwise absolute. */

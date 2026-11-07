@@ -13,11 +13,10 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { beforeAll, describe, expect, it, vi } from 'vitest';
 import { findClaude, stripAnsi } from '../src/agent/claude.js';
-import { runDoctor } from '../src/commands/doctor.js';
+import { gitRepoProblem, runDoctor } from '../src/commands/doctor.js';
 import { NothingToDo } from '../src/core/errors.js';
 import { shellArg } from '../src/core/paths.js';
 import { closestCommand, handleError } from '../src/main.js';
-import { gitRepoProblem } from '../src/commands/doctor.js';
 import { git, initGit, makeRepo, writeFiles } from './helpers.js';
 
 const CLI = fileURLToPath(new URL('../dist/cli.js', import.meta.url));
@@ -225,6 +224,12 @@ describe('setupscore CLI', () => {
       expect(shellArg('a b')).toBe('"a b"');
       expect(shellArg('a\\b')).toBe('"a\\\\b"');
       expect(shellArg('')).toBe('""');
+      // Characters a shell changes inside "..." get '...' instead (found by test/properties.test.ts).
+      expect(shellArg('a$HOME')).toBe("'a$HOME'");
+      expect(shellArg('a`id`b')).toBe("'a`id`b'");
+      expect(shellArg('wow!')).toBe("'wow!'");
+      expect(shellArg("it's $x")).toBe("'it'\\''s $x'");
+      expect(shellArg('a\nb')).toBe("'a\nb'");
       Object.defineProperty(process, 'platform', { value: 'win32' });
       expect(shellArg('C:\\Users\\RUNNER~1\\x')).toBe('C:\\Users\\RUNNER~1\\x');
       expect(shellArg('C:\\My Projects\\x')).toBe('"C:\\My Projects\\x"');

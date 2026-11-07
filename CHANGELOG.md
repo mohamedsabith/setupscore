@@ -2,6 +2,12 @@
 
 All notable changes to this project are documented here. The project follows [Semantic Versioning](https://semver.org/). The command line, exit codes, `setupscore.yml` and the JSON output (`schemaVersion`) are the public API.
 
+## Unreleased
+
+### Fixed
+
+- Hints that show a folder to paste into a shell (`setupscore tasks ...`) now quote it with `'...'` when it contains `$`, `` ` ``, `!` or a control character. Inside `"..."` the shell changed those, so the pasted command used a different folder. Found by the new property-based tests.
+
 ## 1.0.4 - 2026-11-07
 
 ### Security
