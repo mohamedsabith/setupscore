@@ -118,7 +118,7 @@ export function readPackageJson(dir: string): PackageJson | { error: string } {
     const pkg = JSON.parse(r.data.toString('utf8').replace(/^﻿/, '')) as unknown;
     if (!pkg || typeof pkg !== 'object' || Array.isArray(pkg))
       return { error: 'package.json does not hold a JSON object' };
-    return pkg as PackageJson;
+    return pkg;
   } catch {
     return { error: 'package.json is not valid JSON' };
   }

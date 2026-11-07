@@ -116,7 +116,7 @@ export const brokenReference: Rule = {
           const path = backslashes ? ref.replaceAll('\\', '/') : ref;
 
           if (PLACEHOLDER.test(path) || LOCAL_ONLY.test(path)) continue;
-          if (EXAMPLE_BEFORE.test(l.text.slice(Math.max(0, m.index! - 100), m.index!))) continue;
+          if (EXAMPLE_BEFORE.test(l.text.slice(Math.max(0, m.index - 100), m.index))) continue;
           const relative = /^\.{1,2}\//.test(path);
           const first = normRel(path).split('/')[0]!;
           if (!relative && (GENERATED.has(first) || DOMAIN.test(first))) continue;
@@ -150,7 +150,7 @@ export const brokenReference: Rule = {
             if (backslashes) to = to.replaceAll('/', '\\');
             // A path written from the project root must stay inside it.
             if (s.safe && (relative || !to.startsWith('..')))
-              fix = { file: f.path, line: l.n, column: m.index! + 1, from: ref, to };
+              fix = { file: f.path, line: l.n, column: m.index + 1, from: ref, to };
           } else {
             hint = 'Update the path, or delete the line if the file is gone for good.';
           }
@@ -161,7 +161,7 @@ export const brokenReference: Rule = {
               severity: 'error',
               file: f.path,
               line: l.n,
-              column: m.index! + 1,
+              column: m.index + 1,
               message: `"${ref}" does not exist, so Claude cannot follow this.`,
               hint,
               fix,

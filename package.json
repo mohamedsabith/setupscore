@@ -56,6 +56,12 @@
     "test:watch": "vitest",
     "check:self": "node dist/cli.js check examples/bakery-api",
     "corpus": "npm run build && node scripts/corpus-diff.mjs",
+    "lint": "eslint . --max-warnings 0",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "test:fast": "vitest run test/core.test.ts test/rules.test.ts test/agents-md.test.ts test/broken-hook.test.ts test/redos.test.ts",
+    "coverage": "npm run build && vitest run --coverage",
+    "check-all": "npm run format:check && npm run lint && npm run typecheck && npm test",
     "prepublishOnly": "npm run typecheck && npm test"
   },
   "dependencies": {
@@ -67,11 +73,20 @@
   },
   "devDependencies": {
     "@anthropic-ai/sandbox-runtime": "0.0.81",
+    "@eslint-community/eslint-plugin-eslint-comments": "^4.8.1",
+    "@eslint/js": "^10.0.1",
     "@types/node": "^22.19.0",
     "@types/picomatch": "^4.0.3",
+    "@vitest/coverage-v8": "^5.1.0",
+    "@vitest/eslint-plugin": "^1.6.28",
+    "eslint": "^10.14.0",
+    "eslint-plugin-n": "^18.5.0",
+    "eslint-plugin-regexp": "^3.3.3",
+    "globals": "^17.14.0",
     "prettier": "3.9.10",
     "tsup": "^9.0.0",
     "typescript": "~6.0.3",
+    "typescript-eslint": "~8.72.1",
     "vitest": "^5.1.0"
   },
   "publishConfig": {

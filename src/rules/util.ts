@@ -252,7 +252,7 @@ export const scriptsOf = (abs: string): Record<string, string> | null => package
 
 export const clearCaches = (): void => pkgCache.clear();
 
-// eslint-disable-next-line no-control-regex
+// eslint-disable-next-line no-control-regex -- matching control characters is the point: they are removed
 const CONTROL = /[\u0000-\u001f\u007f-\u009f‪-‮⁦-⁩]/g;
 
 /**

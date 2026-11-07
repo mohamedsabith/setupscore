@@ -7,3 +7,10 @@ CHANGELOG.md
 # Inputs that must stay exactly as they are: the example is broken on purpose, fixtures are test data.
 examples/
 test/fixtures/
+
+# Local research and reports (not committed).
+research_notes/
+reports/
+
+# Written by ESLint (npx eslint . --prune-suppressions).
+eslint-suppressions.json

@@ -44,7 +44,7 @@ function cli(args: string[], env: Record<string, string | undefined> = {}) {
   for (const k of Object.keys(merged)) if (merged[k] === undefined) delete merged[k];
   const r = spawnSync(process.execPath, [CLI, ...args], {
     encoding: 'utf8',
-    env: merged as NodeJS.ProcessEnv,
+    env: merged,
     timeout: 400_000,
   });
   return { code: r.status, out: r.stdout, err: r.stderr };

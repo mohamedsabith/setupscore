@@ -409,8 +409,8 @@ export function runProgram(command: string, args: string[] | 'shell', o: Program
       const next = buf + chunk.toString('utf8');
       return next.length > MAX_OUTPUT ? next.slice(-MAX_OUTPUT) : next;
     };
-    child.stdout!.on('data', (c: Buffer) => (stdout = keep(stdout, c)));
-    child.stderr!.on('data', (c: Buffer) => (stderr = keep(stderr, c)));
+    child.stdout.on('data', (c: Buffer) => (stdout = keep(stdout, c)));
+    child.stderr.on('data', (c: Buffer) => (stderr = keep(stderr, c)));
     let timedOut = false;
     let done = false;
     let grace: NodeJS.Timeout | undefined;
@@ -432,7 +432,7 @@ export function runProgram(command: string, args: string[] | 'shell', o: Program
     }, o.timeoutMs);
     if (o.signal?.aborted) onAbort();
     o.signal?.addEventListener('abort', onAbort, { once: true });
-    child.on('error', (err) => finish(null, err as NodeJS.ErrnoException));
+    child.on('error', (err) => finish(null, err));
     child.on('exit', (code) => {
       killTree(child.pid); // anything it left running in the background
       grace = setTimeout(() => finish(code), 1_000);

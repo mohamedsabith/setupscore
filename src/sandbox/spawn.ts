@@ -71,12 +71,12 @@ export function runShell(
     // After the command has exited, output still arriving (the last of a big transcript) keeps
     // the wait going; only a silent pipe held open by a leftover process ends it.
     let rearm = () => {};
-    child.stdout!.on('data', (c: Buffer) => {
+    child.stdout.on('data', (c: Buffer) => {
       out.add(c);
       sinks[0]?.write(c);
       rearm();
     });
-    child.stderr!.on('data', (c: Buffer) => {
+    child.stderr.on('data', (c: Buffer) => {
       err.add(c);
       sinks[1]?.write(c);
       rearm();

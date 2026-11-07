@@ -26,7 +26,7 @@ const CLI = fileURLToPath(new URL('../dist/cli.js', import.meta.url));
 function run(args: string[], cwd?: string, env: Record<string, string | undefined> = {}) {
   const merged: Record<string, string | undefined> = { ...process.env, NO_COLOR: '1', ...env };
   for (const k of Object.keys(merged)) if (merged[k] === undefined) delete merged[k];
-  const r = spawnSync(process.execPath, [CLI, ...args], { cwd, encoding: 'utf8', env: merged as NodeJS.ProcessEnv });
+  const r = spawnSync(process.execPath, [CLI, ...args], { cwd, encoding: 'utf8', env: merged });
   return { code: r.status, out: r.stdout, err: r.stderr };
 }
 

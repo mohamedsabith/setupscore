@@ -42,15 +42,15 @@ Check your machine with `node dist/cli.js doctor`.
 
 **Scripts.**
 
-| Command             | What it does                                                                                  |
-| ------------------- | --------------------------------------------------------------------------------------------- |
-| `npm run build`     | Bundle `src/` into `dist/` with tsup                                                          |
-| `npm test`          | Build, then run every test                                                                    |
-| `npm run test:fast` | Only the core and rule unit tests. Takes seconds. Use it while you work                       |
-| `npm run lint`      | ESLint with type information (typescript-eslint strict). `npm run lint:fix` fixes what it can |
-| `npm run format`    | Format every file with Prettier. `npm run format:check` only checks                           |
-| `npm run typecheck` | `tsc --noEmit`                                                                                |
-| `npm run check-all` | All checks, like CI: format, lint, types, unused code (knip), tests, package checks           |
+| Command | What it does |
+| --- | --- |
+| `npm run build` | Bundle `src/` into `dist/` with tsup |
+| `npm test` | Build, then run every test |
+| `npm run test:fast` | Only the core and rule unit tests. Takes seconds. Use it while you work |
+| `npm run lint` | ESLint with type information (typescript-eslint strict), regex safety (ReDoS) and Node checks. Fails on any warning. There is no `lint:fix`: an automatic regex fix can change what a rule matches, so fix each finding by hand and check it with the tests and `npm run corpus` |
+| `npm run format` | Format every file with Prettier. `npm run format:check` only checks |
+| `npm run typecheck` | `tsc --noEmit` |
+| `npm run check-all` | All checks, like CI: format, lint, types, unused code (knip), tests, package checks |
 
 **Editor.** VS Code picks up the settings in `.vscode/`: format on save with Prettier, and ESLint fixes. Other editors read `.editorconfig`.
 

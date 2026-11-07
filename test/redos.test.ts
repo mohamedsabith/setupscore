@@ -1,3 +1,4 @@
+/* eslint-disable regexp/no-super-linear-backtracking, regexp/no-super-linear-move -- this file keeps the slow regexes of 1.0.3 on purpose: they are the reference the new, fast code must match */
 import { describe, expect, it } from 'vitest';
 import { withoutTrailingTag } from '../src/agent/transcript.js';
 import { check } from '../src/core/check.js';
@@ -79,6 +80,12 @@ describe('isPlaceholder: <[^<>]*> instead of <[^>]*>', () => {
   it('still treats <placeholders> as placeholders and real-looking values as real', () => {
     for (const v of ['<your-api-key>', 'sk-<KEY>', 'a<b<c>', '<<x>']) expect(isPlaceholder(v), v).toBe(true);
     for (const v of ['hunter2-correct-horse', 'a<b', 'a>b<c']) expect(isPlaceholder(v), v).toBe(false);
+  });
+
+  it('treats a prefix followed by one letter in mixed case as a placeholder (the "i" flag lint wrongly calls useless)', () => {
+    expect(isPlaceholder('ghp_xXxXxXxXxXxXxXxXxXxX')).toBe(true);
+    expect(isPlaceholder('sk-ant-aAaAaAaAaAaAaAaA')).toBe(true);
+    expect(isPlaceholder('ghp_xYxYxYxYxYxYxYxY')).toBe(false);
   });
 
   it('is fast on 1,000,000 "<" characters without a ">"', () => {

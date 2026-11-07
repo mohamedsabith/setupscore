@@ -186,11 +186,11 @@ function scriptsOf(h: Record<string, unknown>): Script[] {
   }
   // Shell form: find each placeholder path; the word before it says how it is run.
   for (const m of command.matchAll(new RegExp(PLACEHOLDER.source, 'g'))) {
-    const after = command.slice(m.index! + m[0].length);
+    const after = command.slice(m.index + m[0].length);
     if (UNRESOLVED.test(after)) continue;
     // Only the simple command the path is in: "a && b" runs b on its own.
     const before = command
-      .slice(0, m.index!)
+      .slice(0, m.index)
       .split(/&&|\|\||[;|&]/)
       .pop()!;
     // Leading VAR=value assignments do not change which program runs.
@@ -375,7 +375,7 @@ function checkHandler(
     return;
   }
   for (const field of REQUIRED[h.type]!) {
-    if (typeof h[field] !== 'string' || (h[field] as string).trim() === '') {
+    if (typeof h[field] !== 'string' || h[field].trim() === '') {
       add({ line, message: `The ${event} ${h.type} hook has no "${field}", so it can't run.` });
     }
   }

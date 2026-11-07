@@ -126,7 +126,7 @@ export function mdText(value: unknown): string {
   for (const m of text.matchAll(/`([^`]+)`/g)) {
     out += escMdPlain(text.slice(at, m.index));
     out += /[<>|\\]/.test(m[1]!) ? escMdPlain(m[0]) : m[0];
-    at = m.index! + m[0].length;
+    at = m.index + m[0].length;
   }
   return out + escMdPlain(text.slice(at));
 }

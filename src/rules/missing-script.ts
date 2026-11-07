@@ -118,9 +118,8 @@ export const missingScript: Rule = {
         if (l.inFrontmatter || l.text.length > MAX_LINE) continue;
         const otherPackage = OTHER_PACKAGE.test(l.text);
         const found: { pm: string; script: string; index: number; written: string }[] = [];
-        for (const m of l.text.matchAll(RUN)) found.push({ pm: m[1]!, script: m[2]!, index: m.index!, written: m[0] });
-        for (const m of l.text.matchAll(TEST))
-          found.push({ pm: m[1]!, script: 'test', index: m.index!, written: m[0] });
+        for (const m of l.text.matchAll(RUN)) found.push({ pm: m[1]!, script: m[2]!, index: m.index, written: m[0] });
+        for (const m of l.text.matchAll(TEST)) found.push({ pm: m[1]!, script: 'test', index: m.index, written: m[0] });
 
         for (const { script, index, written } of found) {
           if (Object.hasOwn(scripts, script) || otherPackage) continue;

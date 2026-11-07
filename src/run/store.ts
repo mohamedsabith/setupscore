@@ -558,8 +558,8 @@ export class RunStore {
     const planned = run
       ? new Set(
           run.tasks.flatMap((t) =>
-            run!.setups.flatMap((st) =>
-              Array.from({ length: run!.options.repeat }, (_, r) => attemptKey(t.id, st.label, r + 1)),
+            run.setups.flatMap((st) =>
+              Array.from({ length: run.options.repeat }, (_, r) => attemptKey(t.id, st.label, r + 1)),
             ),
           ),
         )

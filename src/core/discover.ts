@@ -175,7 +175,7 @@ export function findImports(f: SetupFile): { raw: string; line: number; column: 
       const raw = trimTrailing(m[2]!);
       const posix = raw.replaceAll('\\', '/');
       if (!raw || !FILE_LIKE.test(posix) || DOMAIN_LIKE.test(posix) || raw.includes('@')) continue;
-      out.push({ raw, line: l.n, column: m.index! + m[1]!.length + 1 });
+      out.push({ raw, line: l.n, column: m.index + m[1]!.length + 1 });
     }
   }
   return out;

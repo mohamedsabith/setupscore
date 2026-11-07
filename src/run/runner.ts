@@ -291,7 +291,7 @@ export async function executeRun(o: RunnerOptions): Promise<RunOutcome> {
   }
   const latest = new Map<string, Attempt>();
   for (const a of results) latest.set(a.key, a);
-  const final = stopReason as { status: RunOutcome['status']; reason: string; fix?: string } | null;
+  const final = stopReason;
   return {
     status: final?.status ?? 'completed',
     reason: final?.reason,

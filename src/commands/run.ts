@@ -1,5 +1,6 @@
 import { existsSync, lstatSync, mkdirSync, realpathSync } from 'node:fs';
 import { isAbsolute, join, relative } from 'node:path';
+// eslint-disable-next-line n/no-unsupported-features/node-builtins -- available in every supported Node (22.12+); only labeled experimental before 22.17
 import { createInterface } from 'node:readline/promises';
 import pc from 'picocolors';
 import { authStatus, endpointProblem, findClaude } from '../agent/claude.js';

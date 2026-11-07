@@ -1054,7 +1054,7 @@ describe('misnamed-file', () => {
     const found = (files: Record<string, string>) =>
       lint('misnamed-file', files).map((i) => [
         i.file,
-        i.message.match(/"([^"]+)", not/)?.[1] ?? i.message.match(/\(([^)]+)\)/)?.[1],
+        i.message.match(/"([^"]+)", not/)?.[1] ?? i.message.match(/\(([^()]+)\)/)?.[1],
       ]);
     // Two projects: on macOS and Windows .Claude/ and .claude/ would be the same folder.
     expect(found({ 'claude.md': '- rules', '.Claude/settings.json': '{}', '.Claude/rules/a.md': '- a' })).toEqual([

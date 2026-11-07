@@ -36,7 +36,7 @@ const order = (a: Issue, b: Issue) =>
   a.rule.localeCompare(b.rule);
 
 /** Control characters (terminal escape sequences) from files must never reach the terminal. */
-// eslint-disable-next-line no-control-regex
+// eslint-disable-next-line no-control-regex -- matching control characters is the point: they are removed
 const CONTROL = /[\u0000-\u0008\u000b-\u001f\u007f-\u009f‪-‮⁦-⁩]/g;
 
 /**
@@ -133,7 +133,7 @@ export function check(dir: string, options: CheckOptions = {}): CheckRun {
     }
     for (const i of found) {
       if (isDisabled(i)) continue;
-      const issue: Issue = { ...i, severity: setting as Severity, message: safeText(i.message) };
+      const issue: Issue = { ...i, severity: setting, message: safeText(i.message) };
       if (i.hint !== undefined) issue.hint = safeText(i.hint);
       issues.push(issue);
     }

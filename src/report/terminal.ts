@@ -21,8 +21,8 @@ export interface TerminalOptions {
 const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? '' : 's'}`;
 
 /** File names come from disk and may hold control characters (terminal escape sequences): never print them raw. */
-// eslint-disable-next-line no-control-regex
 const clean = (text: string): string =>
+  // eslint-disable-next-line no-control-regex -- matching control characters is the point: they are replaced
   text.replace(/[\u0000-\u001f\u007f-\u009f\u202a-\u202e\u2066-\u2069]/g, '\uFFFD');
 
 function issueLines(i: Issue, width: number): string[] {

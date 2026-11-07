@@ -62,6 +62,7 @@ export function isPlaceholder(value: string): boolean {
     /^(?:sk-ant-|sk-|gh[pousr]_|github_pat_|glpat-|xox[abposr]-|npm_|AKIA|ASIA|AIza|(?:sk|rk)_(?:live|test)_)/,
     '',
   );
+  // eslint-disable-next-line regexp/no-useless-flag -- not useless: with "i" the backreference also matches the other case ("xXxX")
   return body !== v && /^(.)\1+$/i.test(body);
 }
 
@@ -97,14 +98,14 @@ export function findSecrets(text: string): SecretMatch[] {
   for (const [re, what] of KNOWN) {
     for (const m of text.matchAll(re)) {
       if (what !== 'a private key' && isPlaceholder(m[0])) continue;
-      found.push({ what, value: m[0], index: m.index! });
-      taken.push([m.index!, m.index! + m[0].length]);
+      found.push({ what, value: m[0], index: m.index });
+      taken.push([m.index, m.index + m[0].length]);
     }
   }
   for (const m of text.matchAll(URL_PASSWORD)) {
     const user = m[1]!;
     const value = m[2]!;
-    const index = m.index! + m[0].indexOf(`:${value}@`) + 1;
+    const index = m.index + m[0].indexOf(`:${value}@`) + 1;
     if (value.length < 6 || value === user || isPlaceholder(value) || overlaps(index, index + value.length)) continue;
     if (/^(?:pass(?:word)?|secret|postgres|root|admin|guest|pw)$/i.test(value)) continue;
     found.push({ what: 'a password in a URL', value, index });
@@ -112,7 +113,7 @@ export function findSecrets(text: string): SecretMatch[] {
   }
   for (const m of text.matchAll(ASSIGNED)) {
     const value = m[3]!;
-    const index = m.index! + m[0].length - value.length;
+    const index = m.index + m[0].length - value.length;
     if (isPlaceholder(value) || overlaps(index, index + value.length)) continue;
     found.push({ what: describeName(m[2]!), value, index });
     taken.push([index, index + value.length]);

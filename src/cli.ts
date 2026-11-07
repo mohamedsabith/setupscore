@@ -19,7 +19,7 @@ function start(): void {
   // (a full disk), stop writing it but finish the work: a run must still save its results.
   for (const stream of [process.stdout, process.stderr]) {
     stream.on('error', () => {
-      stream.write = (() => true) as typeof stream.write;
+      stream.write = () => true;
     });
   }
 
