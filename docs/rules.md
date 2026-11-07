@@ -64,6 +64,22 @@ Your instructions tell Claude to run a `package.json` script that doesn't exist:
 
 setupscore uses the nearest `package.json` (a `package.json` saved with a byte order mark is fine). In a monorepo, commands with `--filter`, `-w` or `--workspace` are left alone, and so is a script from another package when the line names that package ("`pnpm run migrate` in the api package"). A root `CLAUDE.md` may also list the scripts of workspace packages, but `npm test` always means the nearest package, and a nested `CLAUDE.md` is checked against its own package. Prose like "npm run with the --silent flag" is not a script call.
 
+## wrong-package-manager
+
+**Level:** warning (new in the next release; tell us with a [false-alarm report](https://github.com/mohamedsabith/setupscore/issues/new?template=2-false-alarm.yml) if it is wrong)
+
+Your instructions use a different package manager than the project: "use pnpm" or `pnpm add zod` in a project with `package-lock.json`, or `npm install` in a project with `pnpm-lock.yaml`.
+
+**Why it matters:** Claude tends to follow the instructions over the project files. It runs the wrong tool, which can install other versions and leave a second lockfile.
+
+**What counts as proof.** The lockfiles (`package-lock.json` or `npm-shrinkwrap.json`, `pnpm-lock.yaml`, `yarn.lock`, `bun.lock` or `bun.lockb`) and the `packageManager` and `devEngines.packageManager` fields of `package.json`, in the nearest folder that has any of them. That is the instruction file's own folder or the closest folder above it, so a workspace package uses the workspace root, and a folder with its own lockfile uses that one. Files in `.claude/` belong to the folder that holds `.claude/`. setupscore only reports when every signal names the same tool. Two kinds of lockfile, or a lockfile that disagrees with `packageManager`, are left alone. A lockfile that `.gitignore` ignores doesn't count, because it only exists on one machine.
+
+**What counts as an instruction.** Commands that install or change dependencies (`install`, `i`, `add`, `ci`, `remove`, `rm`, `uninstall`, `un`), also inside code blocks, and plain claims such as "use yarn" or "package manager: pnpm". `npm run x` and `npm test` are not checked: many yarn, pnpm and Bun projects use them as plain script runners. "Use bun" is not checked either, because Bun is also a runtime. In skills, agents and commands, which are often copied from other projects, only the plain claims are checked.
+
+**What is left alone:** tools named for contrast ("pnpm, NOT npm", "instead of npm", "migrated from yarn"), global installs (`-g`), one-off runners (`npx`, `dlx`, `bunx`, `corepack`), commands for another package (`--filter`, `--workspace`, `--cwd`), lines about CI, Docker or production, install lines for the package's own users (`npm install <this package>`), and lines that list several tools ("works with npm, yarn and pnpm").
+
+There is no automatic fix: the instructions may be right and the lockfile wrong.
+
 ## broken-hook
 
 **Level:** warning

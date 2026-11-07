@@ -18,6 +18,7 @@ import { skillFrontmatter } from './skill-frontmatter.js';
 import { tooLong } from './too-long.js';
 import { unusedPathRule } from './unused-path-rule.js';
 import { vagueRule } from './vague-rule.js';
+import { wrongPackageManager } from './wrong-package-manager.js';
 
 /** Every rule, in the order they are listed by `setupscore rules`. */
 export const RULES: readonly Rule[] = [
@@ -25,6 +26,7 @@ export const RULES: readonly Rule[] = [
   brokenReference,
   brokenImport,
   missingScript,
+  wrongPackageManager,
   brokenHook,
   invalidConfig,
   secret,

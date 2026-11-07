@@ -138,7 +138,7 @@ export default defineConfig(
         { additionalTestBlockFunctions: ['posixOnly', 'it.runIf', 'it.skipIf'] },
       ],
       // ...and assert through helpers that call expect() themselves.
-      'vitest/expect-expect': ['error', { assertFunctionNames: ['expect', 'ok', 'allFailed'] }],
+      'vitest/expect-expect': ['error', { assertFunctionNames: ['expect', 'ok', 'allFailed', 'quiet'] }],
       // Tests read the CLI's JSON output (JSON.parse returns any) and build odd inputs on purpose.
       '@typescript-eslint/no-unsafe-assignment': 'off',
       '@typescript-eslint/no-unsafe-member-access': 'off',

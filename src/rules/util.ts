@@ -1,4 +1,5 @@
 import { isInstruction, readSetupText } from '../core/discover.js';
+import { pmFromField, type PmName } from '../core/lockfiles.js';
 import { MAX_LINE } from '../core/markdown.js';
 import { maskSecrets } from '../core/secrets.js';
 import type { Context, Line, SetupFile } from '../core/types.js';
@@ -220,15 +221,22 @@ export const lineAt = (text: string, offset: number): number => {
   return n;
 };
 
-const pkgCache = new Map<string, { name?: string; scripts: Record<string, string> } | null>();
+interface PackageFacts {
+  name?: string;
+  scripts: Record<string, string>;
+  /** Package managers named by "packageManager" and "devEngines.packageManager". */
+  declaredPms: PmName[];
+}
+
+const pkgCache = new Map<string, PackageFacts | null>();
 
 /**
  * The name and "scripts" of a package.json, or null if it cannot be read. A UTF-8 byte order
  * mark is accepted (npm accepts it too), and only string values count as scripts.
  */
-export function packageOf(abs: string): { name?: string; scripts: Record<string, string> } | null {
+export function packageOf(abs: string): PackageFacts | null {
   if (!pkgCache.has(abs)) {
-    let out: { name?: string; scripts: Record<string, string> } | null = null;
+    let out: PackageFacts | null = null;
     try {
       const r = readSetupText(abs, 4 * 1024 * 1024);
       if (r && 'text' in r) {
@@ -237,7 +245,16 @@ export function packageOf(abs: string): { name?: string; scripts: Record<string,
         if (isObject(pkg) && isObject(pkg.scripts)) {
           for (const [k, v] of Object.entries(pkg.scripts)) if (typeof v === 'string') scripts[k] = v;
         }
-        out = { name: isObject(pkg) && typeof pkg.name === 'string' ? pkg.name : undefined, scripts };
+        const dev = isObject(pkg) && isObject(pkg.devEngines) ? pkg.devEngines.packageManager : undefined;
+        const declared = [
+          pmFromField(isObject(pkg) ? pkg.packageManager : undefined),
+          ...(Array.isArray(dev) ? dev : [dev]).map((d) => pmFromField(isObject(d) ? d.name : undefined)),
+        ].filter((n): n is PmName => n !== undefined);
+        out = {
+          name: isObject(pkg) && typeof pkg.name === 'string' ? pkg.name : undefined,
+          scripts,
+          declaredPms: [...new Set(declared)],
+        };
       }
     } catch {
       out = null;

@@ -6,6 +6,7 @@ All notable changes to this project are documented here. The project follows [Se
 
 ### Added
 
+- New rule `wrong-package-manager` (warning): your instructions say "use pnpm" or `yarn add x`, but the project's lockfile or `packageManager` says npm (or any other mix). Claude tends to follow the instructions over the lockfile, runs the wrong tool and can leave a second lockfile. It only reports when every lockfile and `packageManager` agree, follows `cd` in code blocks, and leaves alone tools named for contrast ("pnpm, NOT npm"), global installs, `npx`, CI and Docker lines, and install lines for the package's own users. On 114 public repositories it found 2 problems, both real. Each finding lowers the health score by 0.5, and `--strict` fails on it. Turn it off with `rules: { wrong-package-manager: off }` in `setupscore.yml`. See [docs/rules.md](docs/rules.md#wrong-package-manager).
 - The library also exports the types `FixFailure`, `Frontmatter`, `Line`, `MisnamedFile` and `SkippedFile`. Its functions already used them, so TypeScript users can now name them.
 
 ### Fixed

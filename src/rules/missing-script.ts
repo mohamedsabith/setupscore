@@ -8,7 +8,7 @@ import { clip, instructionFiles, packageOf } from './util.js';
 const RUN = /\b(npm|pnpm|yarn|bun)\s+(?:run|run-script)\s+([A-Za-z0-9][\w:.\-/@]*[\w])/g;
 const TEST = /\b(npm|pnpm|yarn)\s+(?:test|t)\b(?![-:\w])/g;
 /** Flags that send the command to another package in a monorepo. */
-const OTHER_PACKAGE = /(?:^|\s)(?:-w|--workspace|--workspaces|--filter|-F|--prefix|-C|--cwd|--dir|workspace)\b/;
+export const OTHER_PACKAGE = /(?:^|\s)(?:-w|--workspace|--workspaces|--filter|-F|--prefix|-C|--cwd|--dir|workspace)\b/;
 /** "npm run with the --silent flag": English words after "npm run" are prose, not a script name. */
 const PROSE = new Set([
   'with',

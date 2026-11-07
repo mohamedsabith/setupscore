@@ -3,9 +3,8 @@ import { closeSync, constants, existsSync, fstatSync, openSync, readFileSync } f
 import { dirname, join, posix, relative, resolve, sep } from 'node:path';
 import picomatch from 'picomatch';
 import { parse as parseYaml } from 'yaml';
+import { LOCKFILES, pmFromField, type PmName } from '../core/lockfiles.js';
 import { trimEndWhile } from '../core/text.js';
-
-type PmName = 'npm' | 'pnpm' | 'yarn' | 'bun';
 
 export interface Pm {
   name: PmName;
@@ -34,16 +33,6 @@ export interface PmOverrides {
   test?: string;
   install?: string;
 }
-
-const LOCKFILES: [string, PmName][] = [
-  ['pnpm-lock.yaml', 'pnpm'],
-  ['bun.lock', 'bun'],
-  ['bun.lockb', 'bun'],
-  ['yarn.lock', 'yarn'],
-  ['package-lock.json', 'npm'],
-  ['npm-shrinkwrap.json', 'npm'],
-];
-const PM_NAMES: PmName[] = ['npm', 'pnpm', 'yarn', 'bun'];
 
 /** `nodeLinker: pnp` in .yarnrc.yml. A line-start pattern that can't run across blank lines (linear time). */
 const NODE_LINKER = /^[^\S\n\r\u2028\u2029]*nodeLinker\s*:\s*["']?([\w-]+)/m;
@@ -183,10 +172,7 @@ const depFields = (pkg: PackageJson | null) => [pkg?.dependencies, pkg?.devDepen
 const countDeps = (pkg: PackageJson | null) =>
   depFields(pkg).reduce((n, d) => n + (d && typeof d === 'object' ? Object.keys(d).length : 0), 0);
 const lockfileIn = (dir: string) => LOCKFILES.find(([file]) => isRegularFile(join(dir, file)));
-const declaredPm = (pkg: PackageJson | null): PmName | undefined => {
-  const name = typeof pkg?.packageManager === 'string' ? pkg.packageManager.split('@')[0] : undefined;
-  return PM_NAMES.find((n) => n === name);
-};
+const declaredPm = (pkg: PackageJson | null): PmName | undefined => pmFromField(pkg?.packageManager);
 
 /** Major version of a dependency: from package.json, else from the installed copy. */
 function majorOf(name: string, pkgs: (PackageJson | null)[], dirs: string[]): number | null {

@@ -44,6 +44,7 @@ npx setupscore rules              # list every rule and why it matters
 | `broken-reference` | error | A file path in your instructions that doesn't exist |
 | `broken-import` | error | An `@path` import in CLAUDE.md that points to a missing file |
 | `missing-script` | error | `npm run x` / `pnpm run x` / `npm test` where the script doesn't exist |
+| `wrong-package-manager` | warning | "Use pnpm" or `yarn add x` in a project whose lockfile or `packageManager` says npm (or any other mix) |
 | `broken-hook` | warning | A hook in `.claude/settings.json` that can never run: a wrong shape, a misspelled event, a matcher that matches nothing, or a missing or non-executable script |
 | `invalid-config` | error | `settings.json` or `.mcp.json` that isn't valid JSON, or frontmatter that can't be read |
 | `secret` | error | API keys, tokens and passwords written into setup files |
