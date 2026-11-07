@@ -2,6 +2,18 @@
 
 All notable changes to this project are documented here. The project follows [Semantic Versioning](https://semver.org/). The command line, exit codes, `setupscore.yml` and the JSON output (`schemaVersion`) are the public API.
 
+## 1.0.4 - 2026-11-07
+
+### Security
+
+- Fixed a slowdown (ReDoS) in `setupscore check`: one crafted line in a setup file, for example `password=a` followed by many `<` characters, made the secret check take time that grows with the square of the line length (11.8 seconds for 200,000 characters, minutes for a 2 MB file). A pull request could use it to stall a CI job that runs `check`. Now that line takes 0.1 seconds, and the largest file setupscore reads takes under 0.2 seconds.
+- Fixed 19 more regular expressions with the same kind of slowdown, found with eslint-plugin-regexp. They read the test output of the project (`tasks` and `run`), `.yarnrc.yml`, workspace patterns, task prompts, Claude's transcripts and some messages. Crafted test output of 1 MB could stall `tasks` or `run` for minutes.
+- Every fix gives exactly the same results as before. New tests compare the old and the new code on thousands of generated inputs, and on 111 public repositories the findings are the same as in 1.0.3.
+
+### Changed
+
+- `SECURITY.md` now describes only the protections this repository really has: one Release workflow that starts on version tags, no workflow for pull requests, and npm provenance on every release.
+
 ## 1.0.3 - 2026-11-07
 
 ### Added
