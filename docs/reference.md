@@ -268,7 +268,7 @@ jobs:
 | --- | --- | --- |
 | `command` | `check` | `check` (free, offline) or `run` (calls Claude Code and costs money) |
 | `args` |  | Extra arguments. Quotes work as in a shell (`--claude-bin "my agent"`); nothing is expanded |
-| `version` | `0` | setupscore version from npm: the newest `1.x`, or an exact version such as `1.0.0` |
+| `version` | `1` | setupscore version from npm: the newest `1.x`, or an exact version such as `1.0.0` |
 | `claude-code-version` | `latest` | Claude Code version to install for `run` |
 | `anthropic-api-key` |  | For `run`: a secret such as `${{ secrets.ANTHROPIC_API_KEY }}` |
 | `claude-code-oauth-token` |  | For `run`, instead of the key: a token from `claude setup-token` |
