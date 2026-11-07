@@ -56,6 +56,7 @@ export function tempFolderProblem(
     const script = join(probe, 'probe.sh');
     writeFileSync(script, '#!/bin/sh\nexit 0\n', { mode: 0o755 });
     const r = spawnSync(script, [], { stdio: 'ignore', timeout: 10_000 });
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion -- needed: tsc reports "no 'code' on Error" without it
     const code = (r.error as NodeJS.ErrnoException | undefined)?.code;
     if (code === 'EACCES' || code === 'EPERM') {
       return {
@@ -130,7 +131,7 @@ export class Workspace {
     const root = join(base, 'repo');
     const hooks = join(outer, 'no-hooks');
     const tmp = join(base, 'tmp');
-    let head: string | null = null;
+    let head: string | null;
     try {
       // Who owns this folder, so a later setupscore can remove it if this process is killed (kill -9).
       writeFileSync(join(outer, OWNER), `${process.pid}\n`);
@@ -179,7 +180,7 @@ export class Workspace {
     Workspace.swept = true;
     let names: string[];
     try {
-      names = readdirSync(dir).filter((n) => /^setupscore-ws-[\w]{6}$/.test(n));
+      names = readdirSync(dir).filter((n) => /^setupscore-ws-\w{6}$/.test(n));
     } catch {
       return;
     }

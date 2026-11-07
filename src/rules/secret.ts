@@ -2,12 +2,12 @@ import { findSecrets, isPlaceholder, mask } from '../core/secrets.js';
 import type { Context, Issue, Rule, SetupFile } from '../core/types.js';
 import { clip, isObject, lineOf, parseJson } from './util.js';
 
-const SECRET_KEY = /(key|token|secret|password|passwd|pwd|auth|credential|cookie|session)/i;
+const SECRET_KEY = /key|token|secret|password|passwd|pwd|auth|credential|cookie|session/i;
 
 /** True for a value in an env or headers block that is clearly not a literal secret. */
 function notASecret(v: string): boolean {
   // "${VAR}" is the right way; "$VAR" and "%VAR%" are variables written wrongly (mcp-config reports them), not secrets.
-  if (v.includes('${') || /^\$[A-Za-z_]/.test(v) || /%[A-Za-z_][A-Za-z0-9_]*%/.test(v)) return true;
+  if (v.includes('${') || /^\$[A-Z_]/i.test(v) || /%[A-Z_]\w*%/i.test(v)) return true;
   if (/^(?:true|false|none|null)$/i.test(v.trim())) return true;
   const bare = v.replace(/^(?:Bearer|Basic|Token)\s+/i, '').trim();
   if (bare.length < 8 || isPlaceholder(bare)) return true;

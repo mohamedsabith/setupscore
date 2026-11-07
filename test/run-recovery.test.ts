@@ -532,8 +532,11 @@ describe('a missing package manager stops the run once, with an install hint (li
 
 describe('gateways the sandbox cannot reach (real-claude F03, F18, A09)', () => {
   const env = (url: string) => ({ ANTHROPIC_BASE_URL: url });
-  const check = (url: string, platform: NodeJS.Platform = 'linux', resolve = async () => ['93.184.216.34']) =>
-    endpointProblem({ sandboxed: true, env: env(url), platform, resolve });
+  const check = (
+    url: string,
+    platform: NodeJS.Platform = 'linux',
+    resolve = () => Promise.resolve(['93.184.216.34']),
+  ) => endpointProblem({ sandboxed: true, env: env(url), platform, resolve });
   it('local, private and single-label hosts are refused before the run', async () => {
     expect((await check('http://127.0.0.1:9'))?.message).toMatch(/this machine/);
     expect((await check('http://localhost:4000'))?.message).toMatch(/localhost/);
@@ -542,11 +545,11 @@ describe('gateways the sandbox cannot reach (real-claude F03, F18, A09)', () => 
     expect((await check('http://192.168.1.5:8080'))?.message).toMatch(/private network/);
     expect((await check('http://169.254.169.254'))?.message).toMatch(/link-local/);
     expect((await check('http://litellm:4000'))?.message).toMatch(/single name/);
-    expect((await check('http://gw.internal', 'linux', async () => ['127.0.0.1']))?.message).toMatch(
+    expect((await check('http://gw.internal', 'linux', () => Promise.resolve(['127.0.0.1'])))?.message).toMatch(
       /resolves to 127\.0\.0\.1/,
     );
     expect(await check('https://gateway.example.com')).toBeNull();
-    expect(await check('http://gw.corp.example', 'linux', async () => ['10.0.0.8'])).toBeNull(); // through the proxy
+    expect(await check('http://gw.corp.example', 'linux', () => Promise.resolve(['10.0.0.8']))).toBeNull(); // through the proxy
     expect(await check('http://127.0.0.1:4000', 'darwin')).toBeNull(); // Seatbelt allows localhost
     expect(await endpointProblem({ sandboxed: false, env: env('http://127.0.0.1:9') })).toBeNull();
     expect((await endpointProblem({ sandboxed: false, env: env('not a url') }))?.message).toMatch(/not a usable URL/);

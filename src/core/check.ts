@@ -27,7 +27,7 @@ export interface CheckRun extends CheckResult {
 }
 
 /** CLAUDE.md files first (they matter most), then everything else by path. */
-const rank = (path: string) => (/(^|\/)CLAUDE(\.local)?\.md$/.test(path) ? 0 : 1);
+const rank = (path: string) => (/(?:^|\/)CLAUDE(?:\.local)?\.md$/.test(path) ? 0 : 1);
 const byPath = (a: string, b: string) => rank(a) - rank(b) || a.localeCompare(b);
 const order = (a: Issue, b: Issue) =>
   byPath(a.file, b.file) ||
@@ -36,7 +36,7 @@ const order = (a: Issue, b: Issue) =>
   a.rule.localeCompare(b.rule);
 
 /** Control characters (terminal escape sequences) from files must never reach the terminal. */
-// eslint-disable-next-line no-control-regex -- matching control characters is the point: they are removed
+
 const CONTROL = /[\u0000-\u0008\u000b-\u001f\u007f-\u009f\u202a-\u202e\u2066-\u2069]/g;
 
 /**
@@ -128,6 +128,7 @@ export function check(dir: string, options: CheckOptions = {}): CheckRun {
     try {
       found = rule.check(ctx);
     } catch (err) {
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-conversion -- a rule can throw anything, also a non-string message
       ruleErrors.push({ rule: rule.id, message: safeText(String((err as Error)?.message ?? err)).slice(0, 300) });
       continue;
     }

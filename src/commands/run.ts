@@ -151,8 +151,12 @@ async function confirm(question: string, yes: boolean | undefined): Promise<bool
   try {
     // Ctrl+C at the question means "no".
     const answer = await new Promise<string>((resolve) => {
-      rl.once('SIGINT', () => resolve('n'));
-      rl.question(`${question} ${pc.dim('[y/N]')} `).then(resolve, () => resolve('n'));
+      rl.once('SIGINT', () => {
+        resolve('n');
+      });
+      rl.question(`${question} ${pc.dim('[y/N]')} `).then(resolve, () => {
+        resolve('n');
+      });
     });
     return ['y', 'yes'].includes(answer.trim().toLowerCase());
   } finally {
@@ -177,7 +181,7 @@ async function measureSetups(dir: string, snapshots: SetupSnapshot[], config: Co
         // CLAUDE.md here and in the folders above (monorepo: "../CLAUDE.md"), and rules without paths:.
         .filter(
           ([p]) =>
-            /^(?:\.\.\/)*(\.claude\/)?CLAUDE\.md$/.test(p) ||
+            /^(?:\.\.\/)*(?:\.claude\/)?CLAUDE\.md$/.test(p) ||
             (/^\.claude\/rules\//.test(p) && !/^---[\s\S]*?\bpaths\s*:/m.test(s.files[p]!)),
         )
         .reduce((t, [, text]) => t + estimateTokens(text), 0);
@@ -305,7 +309,9 @@ const MAX_PLANNED_ATTEMPTS = 10_000;
  */
 export async function startRun(o: StartOptions): Promise<RunResult> {
   const { dir, flags, config } = o;
-  const log: Log = (m) => o.log(redact(m));
+  const log: Log = (m) => {
+    o.log(redact(m));
+  };
   enableGracefulStop();
   const top = (await tryGit(dir, ['rev-parse', '--show-toplevel']))?.trim();
   if (!top)
@@ -458,7 +464,9 @@ export async function startRun(o: StartOptions): Promise<RunResult> {
       }
     } else {
       // Setups first: a wrong --setup-b is reported before anything slow happens.
-      const warn = (m: string) => log(pc.yellow(m));
+      const warn = (m: string) => {
+        log(pc.yellow(m));
+      };
       const snapshots = o.reuse?.setups ?? [
         await snapshotSetup(dir, flags.setupA, 'A', warn),
         ...(flags.setupB ? [await snapshotSetup(dir, flags.setupB, 'B', warn)] : []),
@@ -634,7 +642,9 @@ export async function startRun(o: StartOptions): Promise<RunResult> {
         signal: shutdown.signal,
         overrides: config.tasks,
         domains: config.sandbox?.domains,
-        onEvent: (e) => printEvent(e, log, run.options.concurrency),
+        onEvent: (e) => {
+          printEvent(e, log, run.options.concurrency);
+        },
       });
       run = s.update({ status: outcome.status, stopReason: outcome.reason, finishedAt: new Date().toISOString() });
     } else if (run.status === 'running') {

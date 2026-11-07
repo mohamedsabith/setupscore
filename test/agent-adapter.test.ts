@@ -290,7 +290,7 @@ describe('metrics from real transcripts', () => {
     for (const name of ['write-refused', 'multiedit-refused', 'notebook-refused']) {
       const m = parse(name);
       expect(m.filesEdited).toEqual([]);
-      expect(m.pathsRead.some((p) => /\/(price\.js|nb\.ipynb)$/.test(p))).toBe(true); // still looked at for "looked outside"
+      expect(m.pathsRead.some((p) => /\/(?:price\.js|nb\.ipynb)$/.test(p))).toBe(true); // still looked at for "looked outside"
     }
     const skill = parse('skill-missing');
     expect(skill.skillsUsed).toEqual([]);
@@ -403,9 +403,14 @@ describe('ranTests', () => {
     '"npm test"',
     'cat test/fixtures/a.json',
   ];
-  for (const c of yes) it(`counts: ${c.slice(0, 60).replace(/\n/g, '\\n')}`, () => expect(runsTests(c)).toBe(true));
+  for (const c of yes)
+    it(`counts: ${c.slice(0, 60).replace(/\n/g, '\\n')}`, () => {
+      expect(runsTests(c)).toBe(true);
+    });
   for (const c of no)
-    it(`does not count: ${c.slice(0, 60).replace(/\n/g, '\\n')}`, () => expect(runsTests(c)).toBe(false));
+    it(`does not count: ${c.slice(0, 60).replace(/\n/g, '\\n')}`, () => {
+      expect(runsTests(c)).toBe(false);
+    });
 
   it('is not fooled by the 300-character cut or the 200-command cap', () => {
     const long = parseTranscript(
@@ -529,7 +534,10 @@ describe('parser robustness', () => {
       const paths: (string | number)[][] = [];
       const walk = (o: unknown, p: (string | number)[]) => {
         if (o && typeof o === 'object')
-          for (const k of Object.keys(o)) (paths.push([...p, k]), walk((o as Record<string, unknown>)[k], [...p, k]));
+          for (const k of Object.keys(o)) {
+            paths.push([...p, k]);
+            walk((o as Record<string, unknown>)[k], [...p, k]);
+          }
       };
       walk(clone, []);
       for (let n = 1 + Math.floor(rand() * 3); n > 0 && paths.length; n--) {

@@ -43,12 +43,12 @@ export interface SetupSnapshot {
 
 /** Personal or Claude Code's own working files: never part of a setup. */
 const PERSONAL =
-  /(^|\/)CLAUDE\.local\.md$|(^|\/)\.claude\/settings\.local\.json$|(^|\/)\.claude\/(?:worktrees|agent-memory-local)\//;
+  /(?:^|\/)CLAUDE\.local\.md$|(?:^|\/)\.claude\/settings\.local\.json$|(?:^|\/)\.claude\/(?:worktrees|agent-memory-local)\//;
 /** Installed packages and version control: their CLAUDE.md files belong to someone else. */
-const FOREIGN = /(^|\/)(?:node_modules[^/]*|\.git|\.hg|\.svn|\.setupscore|\.pnpm-store)\//;
-const IN_CLAUDE_DIR = /(^|\/)\.claude\//;
+const FOREIGN = /(?:^|\/)(?:node_modules[^/]*|\.git|\.hg|\.svn|\.setupscore|\.pnpm-store)\//;
+const IN_CLAUDE_DIR = /(?:^|\/)\.claude\//;
 /** Files an operating system leaves in folders: never instructions. */
-const OS_JUNK = /(^|\/)(?:\.DS_Store|\._[^/]*|Thumbs\.db|desktop\.ini)$/i;
+const OS_JUNK = /(?:^|\/)(?:\.DS_Store|\._[^/]*|Thumbs\.db|desktop\.ini)$/i;
 const MAX_SETUP_FILE = 512 * 1024;
 /** Folders never looked into when cleaning a checked-out commit (installed packages, version control). */
 const CLEAN_SKIP = /^(?:node_modules.*|\.git|\.hg|\.svn|\.setupscore|\.pnpm-store)$/;
@@ -61,7 +61,7 @@ export const isSetupPath = (rel: string): boolean =>
  * personal ones, and a .claude that is a link to a folder (the link is removed, never followed).
  */
 const isInstructionPath = (rel: string): boolean =>
-  !FOREIGN.test(rel) && (kindOf(rel) !== null || IN_CLAUDE_DIR.test(rel) || /(^|\/)\.claude$/.test(rel));
+  !FOREIGN.test(rel) && (kindOf(rel) !== null || IN_CLAUDE_DIR.test(rel) || /(?:^|\/)\.claude$/.test(rel));
 
 const toPosix = (p: string) => p.split(sep).join('/');
 const depth = (dir: string) => (dir ? dir.split('/').length : 0);
@@ -71,7 +71,7 @@ const depth = (dir: string) => (dir ? dir.split('/').length : 0);
  * Claude Code reads a folder's setup when it works in that folder or below it.
  */
 function ownerOf(rootRel: string): string {
-  const m = /(^|\/)\.claude\//.exec(rootRel);
+  const m = /(?:^|\/)\.claude\//.exec(rootRel);
   if (m) return rootRel.slice(0, m.index);
   const d = posix.dirname(rootRel);
   return d === '.' ? '' : d;
@@ -318,7 +318,7 @@ export async function snapshotSetup(
   }
   const at = `in ${source}`;
   // A link inside a .claude folder (or .claude itself) can point to a folder: .claude/skills -> ../agents/skills.
-  const inClaudeTree = (p: string) => /(^|\/)\.claude(?:\/|$)/.test(p) && keyFor(`${p}/x.md`, prefix) !== null;
+  const inClaudeTree = (p: string) => /(?:^|\/)\.claude(?:\/|$)/.test(p) && keyFor(`${p}/x.md`, prefix) !== null;
   // Link texts of every link that may matter, read in one git process (a .claude/ with many linked skills stays fast).
   const linkTexts = await blobs(top, [
     ...new Set(
@@ -439,16 +439,19 @@ function blobs(cwd: string, oids: string[]): Promise<Map<string, Buffer>> {
     child.on('error', reject);
     child.stdin.on('error', () => {}); // git exited early; the close handler reports it
     child.on('close', (code) => {
-      if (code !== 0) return reject(new Error(`git cat-file exited with code ${code}`));
+      if (code !== 0) {
+        reject(new Error(`git cat-file exited with code ${code}`));
+        return;
+      }
       const data = Buffer.concat(chunks);
       let pos = 0;
       for (const oid of oids) {
         const nl = data.indexOf(10, pos);
         if (nl < 0) break;
-        const m = /^([0-9a-f]+) (\w+) (\d+)$/.exec(data.subarray(pos, nl).toString('utf8'));
+        const m = /^[0-9a-f]+ \w+ (\d+)$/.exec(data.subarray(pos, nl).toString('utf8'));
         pos = nl + 1;
         if (!m) continue; // "<oid> missing"
-        const size = Number(m[3]);
+        const size = Number(m[1]);
         out.set(oid, data.subarray(pos, pos + size));
         pos += size + 1;
       }

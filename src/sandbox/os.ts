@@ -213,7 +213,7 @@ export async function probeOsSandbox(rt: Runtime): Promise<Check> {
     };
   } catch (err) {
     const e = err as NodeJS.ErrnoException;
-    if (e.code && e.path && /^(EROFS|EACCES|EPERM|ENOSPC|ENOENT)$/.test(e.code)) {
+    if (e.code && e.path && /^(?:EROFS|EACCES|EPERM|ENOSPC|ENOENT)$/.test(e.code)) {
       const why = {
         EROFS: 'read-only file system',
         EACCES: 'permission denied',

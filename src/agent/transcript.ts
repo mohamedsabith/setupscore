@@ -330,7 +330,7 @@ export function parseTranscript(input: string): AgentMetrics {
 
     if (type === 'result') {
       const u = obj(ev.usage) ?? {};
-      const mu: Record<string, Record<string, unknown>> = Object.create(null);
+      const mu = Object.create(null) as Record<string, Record<string, unknown>>;
       for (const [model, usage] of Object.entries(obj(ev.modelUsage) ?? {})) {
         const v = obj(usage);
         if (v) mu[model] = v;
@@ -605,7 +605,7 @@ function simpleCommands(src: string, depth = 0): string[][] {
       let s = '';
       while (j < n && src[j] !== '"') {
         if (src[j] === '\\' && j + 1 < n && '"\\$`\n'.includes(src[j + 1]!)) {
-          s += src[j + 1];
+          s += src[j + 1]!;
           j += 2;
         } else if (src.startsWith('$(', j)) {
           // A command substitution runs even inside double quotes: "$(npm test)".
@@ -618,7 +618,7 @@ function simpleCommands(src: string, depth = 0): string[][] {
           nested.push(src.slice(j + 2, k));
           s += src.slice(j, k + 1);
           j = k + 1;
-        } else s += src[j++];
+        } else s += src[j++]!;
       }
       word = (word ?? '') + s;
       i = j + 1;
@@ -637,7 +637,7 @@ function simpleCommands(src: string, depth = 0): string[][] {
     const saved = word;
     word = '';
     while (i < n && !' \t\r\n;&|()<>`'.includes(src[i]!)) {
-      if (!quoted()) word += src[i++];
+      if (!quoted()) word += src[i++]!;
     }
     const t: string = word;
     word = saved;
@@ -723,7 +723,7 @@ function wordsRunTests(input: string[], depth: number): boolean {
   let words = input;
   for (let guard = 0; guard < 32 && words.length; guard++) {
     const head = words[0]!;
-    if (SKIP_WORDS.has(head) || /^[A-Za-z_][A-Za-z0-9_]*=/.test(head)) {
+    if (SKIP_WORDS.has(head) || /^[A-Z_]\w*=/i.test(head)) {
       words = words.slice(1);
       continue;
     }

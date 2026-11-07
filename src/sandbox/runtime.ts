@@ -213,11 +213,11 @@ function cacheError(err: unknown, path: string): Error {
 export function npmReason(output: string): string {
   const lines = output
     .split('\n')
-    .map((l) => l.replace(/^npm (error|ERR!|warn|WARN|notice)\s?/, '').trim())
+    .map((l) => l.replace(/^npm (?:error|ERR!|warn|WARN|notice)\s?/, '').trim())
     .filter(Boolean);
   const code = output.match(/npm (?:error|ERR!) code (\S+)/)?.[1];
   const noise =
-    /^(code|syscall|errno|path|dest|signal|command|cwd)\b|complete log of this run|If you are behind a proxy|'proxy' config is set|npm help config|Log files were not written|rerun the command with|verbose|^A complete log|^\s*$|^Run `npm|^npm notice/i;
+    /^(?:code|syscall|errno|path|dest|signal|command|cwd)\b|complete log of this run|If you are behind a proxy|'proxy' config is set|npm help config|Log files were not written|rerun the command with|verbose|^A complete log|^\s*$|^Run `npm|^npm notice/i;
   const useful = lines.filter((l) => !noise.test(l));
   const detail =
     useful.find((l) =>
@@ -247,7 +247,9 @@ async function install(options: LoadOptions): Promise<void> {
     throw cacheError(err, parent);
   }
   const tmp = join(parent, `.${RUNTIME_VERSION}.installing-${process.pid}-${randomBytes(3).toString('hex')}`);
-  const removeTmp = () => rmSync(tmp, { recursive: true, force: true });
+  const removeTmp = () => {
+    rmSync(tmp, { recursive: true, force: true });
+  };
   const forget = onCleanup(removeTmp);
   try {
     try {
@@ -299,7 +301,7 @@ async function install(options: LoadOptions): Promise<void> {
       const npmMissing =
         r.error?.code === 'ENOENT' ||
         r.code === 127 ||
-        /'npm' is not recognized|npm: (command )?not found/.test(r.stderr);
+        /'npm' is not recognized|npm: (?:command )?not found/.test(r.stderr);
       if (npmMissing) {
         throw new EnvironmentError('Could not install the sandbox runtime: npm is not installed (or not on PATH).', [
           'npm comes with Node.js: install Node.js 22.12 or newer from https://nodejs.org, then open a new terminal.',
@@ -414,7 +416,9 @@ export function runProgram(command: string, args: string[] | 'shell', o: Program
     let timedOut = false;
     let done = false;
     let grace: NodeJS.Timeout | undefined;
-    const onAbort = () => killTree(child.pid);
+    const onAbort = () => {
+      killTree(child.pid);
+    };
     const finish = (code: number | null, error?: NodeJS.ErrnoException) => {
       if (done) return;
       done = true;
@@ -428,15 +432,23 @@ export function runProgram(command: string, args: string[] | 'shell', o: Program
       timedOut = true;
       killTree(child.pid);
       // Give the streams a moment, then stop waiting whatever happens.
-      grace = setTimeout(() => finish(null), 1_000);
+      grace = setTimeout(() => {
+        finish(null);
+      }, 1_000);
     }, o.timeoutMs);
     if (o.signal?.aborted) onAbort();
     o.signal?.addEventListener('abort', onAbort, { once: true });
-    child.on('error', (err) => finish(null, err));
+    child.on('error', (err) => {
+      finish(null, err);
+    });
     child.on('exit', (code) => {
       killTree(child.pid); // anything it left running in the background
-      grace = setTimeout(() => finish(code), 1_000);
+      grace = setTimeout(() => {
+        finish(code);
+      }, 1_000);
     });
-    child.on('close', (code) => finish(code));
+    child.on('close', (code) => {
+      finish(code);
+    });
   });
 }

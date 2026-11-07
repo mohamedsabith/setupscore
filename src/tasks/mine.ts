@@ -9,10 +9,10 @@ import { TEST_SUPPORT } from './testsetup.js';
 export const TEST_FILE = /(^|\/)__tests__\/.+\.[cm]?[jt]sx?$|\.(?:test|spec)\.[cm]?[jt]sx?$/;
 const SOURCE_FILE = /\.(?:[cm]?[jt]sx?|vue|svelte|astro)$/;
 const NOT_SOURCE =
-  /(^|\/)(?:docs?|examples?|\.github|\.claude|fixtures?(?:[-_.][\w.-]*)?|__fixtures__|__mocks__|__snapshots__)\//;
+  /(?:^|\/)(?:docs?|examples?|\.github|\.claude|fixtures?(?:[-_.][\w.-]*)?|__fixtures__|__mocks__|__snapshots__)\//;
 /** Type tests (tsd, vitest --typecheck) and test setup files belong to the tests, not to the change. */
 const TEST_ONLY_FILE =
-  /\.test-d\.[cm]?tsx?$|(^|\/)(?:vitest|jest)\.(?:setup|config)\.[cm]?[jt]sx?$|(^|\/)setup-?tests?\.[cm]?[jt]sx?$/i;
+  /\.test-d\.[cm]?tsx?$|(?:^|\/)(?:vitest|jest)\.(?:setup|config)\.[cm]?[jt]sx?$|(?:^|\/)setup-?tests?\.[cm]?[jt]sx?$/i;
 /**
  * Commits that only undo or redo another commit: the original commit is the task. Subjects that
  * git writes for merges are left out too (real merges have two parents and are skipped anyway);
@@ -210,8 +210,8 @@ export async function checkProjectFolder(projectDir: string): Promise<void> {
     .split('\0')
     .filter(
       (f) =>
-        /(^|\/)package\.json$/.test(f) &&
-        !/(^|\/)(?:node_modules|examples?|fixtures?|docs?|test|tests|__tests__)\//.test(f),
+        /(?:^|\/)package\.json$/.test(f) &&
+        !/(?:^|\/)(?:node_modules|examples?|fixtures?|docs?|test|tests|__tests__)\//.test(f),
     )
     .map((f) => dirname(f))
     .sort((a, b) => a.split('/').length - b.split('/').length || a.localeCompare(b));

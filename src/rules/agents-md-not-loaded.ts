@@ -12,7 +12,7 @@ import type { Context, Issue, Rule, SetupFile } from '../core/types.js';
 // We assume Claude is started in the checked folder: we can't see folders above it or the
 // user's "Project instructions" setting, which lives in their own settings.
 
-const AGENTS = /(^|\/)(\.claude\/)?AGENTS\.md$/;
+const AGENTS = /(?:^|\/)(?:\.claude\/)?AGENTS\.md$/;
 /** The three files that stop Claude from reading AGENTS.md, in the order we name them. */
 const BLOCKERS = ['CLAUDE.md', '.claude/CLAUDE.md', 'CLAUDE.local.md'];
 
@@ -64,7 +64,7 @@ export const agentsMdNotLoaded: Rule = {
 
     const agentsFiles = ctx
       .repoFiles()
-      .filter((p) => AGENTS.test(p) && !/(^|\/)\.agents\//.test(p)) // Claude never reads .agents/
+      .filter((p) => AGENTS.test(p) && !/(?:^|\/)\.agents\//.test(p)) // Claude never reads .agents/
       .filter((p) => !covered(p) && hasText(join(ctx.root, p)));
     const rootBlockers = blockersIn('');
     const issues: Issue[] = [];

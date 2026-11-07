@@ -234,7 +234,7 @@ describe('files that cannot be read (B18, F17)', () => {
     try {
       const issues = issuesOf(root, 'invalid-config');
       expect(issues.map((i) => i.file).sort()).toEqual(['.claude', 'docs/rules.md', 'packages/api/CLAUDE.md']);
-      expect(issues.every((i) => /could not (read|open)/.test(i.message))).toBe(true);
+      expect(issues.every((i) => /could not (?:read|open)/.test(i.message))).toBe(true);
     } finally {
       fsHooks.denyRead = null;
       fsHooks.denyDir = null;

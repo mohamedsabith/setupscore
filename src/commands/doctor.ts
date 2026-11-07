@@ -95,7 +95,7 @@ export function gitRepoProblem(said: string, dir: string): GitRepoProblem {
       fixes: ['Run setupscore in a clone that has files:  git clone <this repository> <folder>'],
     };
   }
-  const extension = said.match(/unknown repository extension(?:s)? found:\s*(\S+)/i)?.[1];
+  const extension = said.match(/unknown repository extensions? found:\s*(\S+)/i)?.[1];
   if (extension || /repo version is \d+, but v\d+ is expected/i.test(said)) {
     return {
       kind: 'too-old',

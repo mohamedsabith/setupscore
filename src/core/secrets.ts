@@ -6,19 +6,19 @@ export interface SecretMatch {
 
 /** Well-known key formats. Each is specific enough to have very few false alarms. */
 const KNOWN: [RegExp, string][] = [
-  [/\bsk-ant-[A-Za-z0-9_-]{20,}/g, 'an Anthropic API key'],
-  [/\bsk-(?:proj-|svcacct-)?[A-Za-z0-9_-]{32,}/g, 'an OpenAI-style API key'],
+  [/\bsk-ant-[\w-]{20,}/g, 'an Anthropic API key'],
+  [/\bsk-[\w-]{32,}/g, 'an OpenAI-style API key'],
   [/\b(?:AKIA|ASIA)[0-9A-Z]{16}\b/g, 'an AWS access key'],
   [/\bgh[pousr]_[A-Za-z0-9]{36,}\b/g, 'a GitHub token'],
-  [/\bgithub_pat_[A-Za-z0-9_]{60,}\b/g, 'a GitHub token'],
-  [/\bglpat-[A-Za-z0-9_-]{20,}\b/g, 'a GitLab token'],
+  [/\bgithub_pat_\w{60,}\b/g, 'a GitHub token'],
+  [/\bglpat-[\w-]{20,}\b/g, 'a GitLab token'],
   [/\bxox[abposr]-[A-Za-z0-9-]{10,}/g, 'a Slack token'],
   [/\bhttps:\/\/hooks\.slack\.com\/services\/T[A-Za-z0-9]+\/B[A-Za-z0-9]+\/[A-Za-z0-9]{16,}/g, 'a Slack webhook URL'],
-  [/\bAIza[0-9A-Za-z_-]{35}\b/g, 'a Google API key'],
+  [/\bAIza[\w-]{35}\b/g, 'a Google API key'],
   [/\b(?:sk|rk)_(?:live|test)_[0-9A-Za-z]{20,}\b/g, 'a Stripe secret key'],
   [/\bnpm_[A-Za-z0-9]{36}\b/g, 'an npm token'],
-  [/\bSG\.[A-Za-z0-9_-]{22}\.[A-Za-z0-9_-]{43}\b/g, 'a SendGrid API key'],
-  [/\beyJ[A-Za-z0-9_-]{10,}\.eyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}/g, 'a JWT (a signed login token)'],
+  [/\bSG\.[\w-]{22}\.[\w-]{43}\b/g, 'a SendGrid API key'],
+  [/\beyJ[\w-]{10,}\.eyJ[\w-]{10,}\.[\w-]{10,}/g, 'a JWT (a signed login token)'],
   [/-----BEGIN (?:RSA |EC |OPENSSH |DSA |PGP |ENCRYPTED )?PRIVATE KEY(?: BLOCK)?-----/g, 'a private key'],
 ];
 
@@ -28,14 +28,14 @@ const KNOWN: [RegExp, string][] = [
  * The name must start a word (no letter, digit, `_` or `-` before it) so each name is read once.
  */
 const ASSIGNED =
-  /(?<![A-Za-z0-9_-])((?:[A-Za-z0-9]+[_-])*?(password|passwd|pwd|secret|client[_-]?secret|token|auth[_-]?token|access[_-]?token|refresh[_-]?token|api[_-]?key|apikey|access[_-]?key|secret[_-]?key|private[_-]?key))(?![A-Za-z0-9])["']?[ \t]*[:=][ \t]*["']?([^\s"'`,;)]{6,})/gi;
+  /(?<![\w-])(?:[A-Z0-9]+[_-])*?(password|passwd|pwd|secret|client[_-]?secret|token|auth[_-]?token|access[_-]?token|refresh[_-]?token|api[_-]?key|access[_-]?key|secret[_-]?key|private[_-]?key)["']?[ \t]*[:=][ \t]*["']?([^\s"'`,;)]{6,})/gi;
 
 /** A password in a URL: scheme://user:password@host */
 const URL_PASSWORD = /\b[a-z][a-z0-9+.-]{1,20}:\/\/([^\s:@/"'`<>]{1,100}):([^\s@/"'`<>]{1,200})@[\w.-]/gi;
 
 /** Values that are clearly placeholders, variables or code, not real secrets. */
 const NOT_A_SECRET =
-  /^(?:\$|%[A-Za-z_]|<|\{\{|\[|\*|•|x{3,}|\.{3}|…|your|my[_-]?|change[_-]?me|example|sample|dummy|fake|test|placeholder|redacted|secret$|password$|token$|none$|null$|undefined$|true$|false$|string$|number$|boolean$|bigint$|object$|any$|unknown$|required$|optional$|process\.env|os\.environ|os\.getenv|env\.|env\[|import\.meta|settings\.|config\.|secrets\.|vars\.|\.{0,2}\/|~\/|pk_(?:live|test)_)/i;
+  /^(?:[$<[*•…]|%[A-Z_]|\{\{|x{3,}|\.{3}|your|my[_-]?|change[_-]?me|example|sample|dummy|fake|test|placeholder|redacted|secret$|password$|token$|none$|null$|undefined$|true$|false$|string$|number$|boolean$|bigint$|object$|any$|unknown$|required$|optional$|process\.env|os\.environ|os\.getenv|env\.|env\[|import\.meta|settings\.|config\.|secrets\.|vars\.|\.{0,2}\/|~\/|pk_(?:live|test)_)/i;
 
 /** Type annotations and declarations in code: `apiKey: string;`, `token?: string`. */
 const TYPE_NAME =
@@ -112,10 +112,10 @@ export function findSecrets(text: string): SecretMatch[] {
     taken.push([index, index + value.length]);
   }
   for (const m of text.matchAll(ASSIGNED)) {
-    const value = m[3]!;
+    const value = m[2]!;
     const index = m.index + m[0].length - value.length;
     if (isPlaceholder(value) || overlaps(index, index + value.length)) continue;
-    found.push({ what: describeName(m[2]!), value, index });
+    found.push({ what: describeName(m[1]!), value, index });
     taken.push([index, index + value.length]);
   }
   return found.sort((a, b) => a.index - b.index);

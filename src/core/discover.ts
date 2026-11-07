@@ -14,12 +14,12 @@ export function kindOf(rel: string): FileKind | null {
   if (base === 'CLAUDE.md') return 'claude-md';
   if (base === 'CLAUDE.local.md') return 'claude-local-md';
   if (base === '.mcp.json') return 'mcp';
-  if (/(^|\/)\.claude\/settings\.json$/.test(rel)) return 'settings';
-  if (/(^|\/)\.claude\/settings\.local\.json$/.test(rel)) return 'settings-local';
-  if (/(^|\/)\.claude\/rules\/.+\.[mM][dD]$/.test(rel)) return 'rule';
-  if (/(^|\/)\.claude\/skills\/[^/]+\/SKILL\.md$/.test(rel)) return 'skill';
-  if (/(^|\/)\.claude\/agents\/.+\.[mM][dD]$/.test(rel)) return 'agent';
-  if (/(^|\/)\.claude\/commands\/.+\.[mM][dD]$/.test(rel)) return 'command';
+  if (/(?:^|\/)\.claude\/settings\.json$/.test(rel)) return 'settings';
+  if (/(?:^|\/)\.claude\/settings\.local\.json$/.test(rel)) return 'settings-local';
+  if (/(?:^|\/)\.claude\/rules\/.+\.[mM][dD]$/.test(rel)) return 'rule';
+  if (/(?:^|\/)\.claude\/skills\/[^/]+\/SKILL\.md$/.test(rel)) return 'skill';
+  if (/(?:^|\/)\.claude\/agents\/.+\.[mM][dD]$/.test(rel)) return 'agent';
+  if (/(?:^|\/)\.claude\/commands\/.+\.[mM][dD]$/.test(rel)) return 'command';
   return null;
 }
 
@@ -38,14 +38,14 @@ function misnamedAs(rel: string): string | null {
     fixed[at] = '.claude';
     const sub = parts[at + 1]?.toLowerCase();
     if (sub && ['rules', 'skills', 'agents', 'commands'].includes(sub) && at + 2 < parts.length) fixed[at + 1] = sub;
-    if (at + 1 === parts.length - 1 && /^settings(\.local)?\.json$/i.test(parts[at + 1]!))
+    if (at + 1 === parts.length - 1 && /^settings(?:\.local)?\.json$/i.test(parts[at + 1]!))
       fixed[at + 1] = parts[at + 1]!.toLowerCase();
     if (sub === 'skills' && at + 3 === parts.length - 1 && parts[at + 3]!.toLowerCase() === 'skill.md')
       fixed[at + 3] = 'SKILL.md';
-    if (at + 1 === parts.length - 1 && /^claude(\.local)?\.md$/i.test(parts[at + 1]!)) {
+    if (at + 1 === parts.length - 1 && /^claude(?:\.local)?\.md$/i.test(parts[at + 1]!)) {
       fixed[at + 1] = /local/i.test(parts[at + 1]!) ? 'CLAUDE.local.md' : 'CLAUDE.md';
     }
-  } else if (parts.length === 1 && /^claude(\.local)?\.md$/i.test(parts[0]!)) {
+  } else if (parts.length === 1 && /^claude(?:\.local)?\.md$/i.test(parts[0]!)) {
     fixed[0] = /local/i.test(parts[0]!) ? 'CLAUDE.local.md' : 'CLAUDE.md';
   } else if (parts.length === 1 && parts[0]!.toLowerCase() === '.mcp.json') {
     fixed[0] = '.mcp.json';
@@ -58,7 +58,7 @@ const MARKDOWN_KINDS = new Set<FileKind>(['claude-md', 'claude-local-md', 'rule'
 
 /** True for files written as instructions to Claude (markdown), as opposed to JSON config. */
 export const isInstruction = (f: SetupFile): boolean =>
-  MARKDOWN_KINDS.has(f.kind) || (f.kind === 'import' && /\.(md|mdx|markdown|txt)$/i.test(f.path));
+  MARKDOWN_KINDS.has(f.kind) || (f.kind === 'import' && /\.(?:md|mdx|markdown|txt)$/i.test(f.path));
 
 export type ReadResult = { text: string } | { problem: SkippedFile['problem']; detail: string } | null;
 
@@ -153,7 +153,7 @@ const FILE_LIKE =
   /(?:\.[A-Za-z0-9]{1,10}|\/(?:Makefile|Dockerfile|LICENSE|README))$|^(?:Makefile|Dockerfile|LICENSE|README)$/;
 const DOMAIN_LIKE = /^[\w-]+\.(?:com|org|net|io|dev|ai|co|app|me|sh|gg|so|xyz|cloud|in|uk|de|fr|jp|tech|info|biz)$/i;
 const IMPORT = /(^|[\s([{"'])@((?:~[/\\]|\.{1,2}[/\\]|[/\\])?[\p{L}\p{N}_.][\p{L}\p{M}\p{N}_.@+\-/\\]*)/gu;
-const TRAILING = new Set([...'.,;:!?)]}"\'']);
+const TRAILING = new Set('.,;:!?)]}"\'');
 
 /** Drop punctuation that ends a sentence, not the path: "see @docs/a.md." */
 function trimTrailing(raw: string): string {

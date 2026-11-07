@@ -37,7 +37,7 @@ export const duplicateRule: Rule = {
       const first = new Map<string, { file: string; line: number }>();
       for (const f of pool) {
         for (const l of proseLines(f)) {
-          if (/^\s*(#|\||>)/.test(l.text) || notARule(l.text)) continue; // headings, tables, quotes, footers, lead-ins
+          if (/^\s*[#|>]/.test(l.text) || notARule(l.text)) continue; // headings, tables, quotes, footers, lead-ins
           const key = normalizeRule(l.text);
           if (wordCount(key) < MIN_WORDS) continue;
           const seen = first.get(key);

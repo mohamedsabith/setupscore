@@ -50,7 +50,11 @@ const TEST_HEAD = "import { test } from 'node:test';\nimport assert from 'node:a
 
 describe.runIf(available)('OS sandbox, no Docker', () => {
   const cleanup: string[] = [];
-  afterAll(() => cleanup.forEach((d) => rmSync(d, { recursive: true, force: true })));
+  afterAll(() => {
+    cleanup.forEach((d) => {
+      rmSync(d, { recursive: true, force: true });
+    });
+  });
 
   it('keeps tasks whose tests fail before and pass after, and skips the rest', async () => {
     const root = makeRepo({
@@ -376,8 +380,10 @@ describe.runIf(available && process.platform !== 'win32')('sandbox runtime in th
           stdio: ['ignore', 'pipe', 'pipe'],
         });
         let out = '';
-        child.stdout.on('data', (d) => (out += d));
-        child.on('close', () => resolve(out));
+        child.stdout.on('data', (d) => (out += String(d)));
+        child.on('close', () => {
+          resolve(out);
+        });
       });
     const outs = await Promise.all([once(), once()]);
     for (const out of outs)
@@ -412,7 +418,11 @@ describe.runIf(available && process.platform !== 'win32')('sandbox runtime in th
       env: c.env,
       stdio: ['ignore', 'pipe', 'pipe'],
     });
-    const exited = new Promise<number | null>((resolve) => child.on('close', (code) => resolve(code)));
+    const exited = new Promise<number | null>((resolve) =>
+      child.on('close', (code) => {
+        resolve(code);
+      }),
+    );
     const parent = join(c.cache, 'sandbox-runtime');
     const started = () => existsSync(parent) && readdirSync(parent).some((d) => existsSync(join(parent, d, 'started')));
     const until = Date.now() + 60_000;

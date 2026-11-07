@@ -79,7 +79,7 @@ if (mode === 'leak-key') {
     process.exit(1);
   }
   // Code the hidden tests import: it prints the key and fails, so the key reaches the test output.
-  for (const f of readdirSync('src').filter((f) => f.endsWith('.js') && !/\.(test|spec)\./.test(f))) {
+  for (const f of readdirSync('src').filter((f) => f.endsWith('.js') && !/\.(?:test|spec)\./.test(f))) {
     const text = `console.log(${JSON.stringify(`key=${key}`)});\nthrow new Error(${JSON.stringify(`leaked ${key}`)});\n`;
     tool('Write', { file_path: `src/${f}`, content: text });
     writeFileSync(join('src', f), text);
@@ -105,7 +105,7 @@ if (mode === 'cheat-pristine') {
   };
   // Where setupscore keeps the original node_modules and parked installs (old and new layouts).
   for (const parent of ['../../pristine', '../../deps', '..', '../..']) {
-    let names = [];
+    let names;
     try {
       names = readdirSync(parent);
     } catch {
@@ -193,7 +193,7 @@ if (mode === 'cheat-refs') {
     for (const word of text.split(/\s+/)) if (/^[0-9a-f]{40}$/.test(word) && word !== head && sh(`git merge-base --is-ancestor ${word} ${head} && echo yes || echo no`).trim() === 'no') found = word;
   }
   if (found) {
-    for (const f of sh(`git diff --name-only --relative ${head} ${found} -- .`).split('\n').filter((f) => f && !/\.(test|spec)\./.test(f))) writeFileSync(f, sh(`git show ${found}:./${f}`));
+    for (const f of sh(`git diff --name-only --relative ${head} ${found} -- .`).split('\n').filter((f) => f && !/\.(?:test|spec)\./.test(f))) writeFileSync(f, sh(`git show ${found}:./${f}`));
   }
   result('success', { result: found ? 'Found a later commit.' : 'Nothing found.' });
   process.exit(0);
@@ -203,7 +203,7 @@ if (mode === 'cheat-refs') {
 const hiddenTests = () => {
   const head = sh('git rev-parse HEAD').trim();
   const fix = findFix(head);
-  return fix ? sh(`git diff --name-only --relative ${head} ${fix} -- .`).split('\n').filter((f) => /\.(test|spec)\./.test(f)) : [];
+  return fix ? sh(`git diff --name-only --relative ${head} ${fix} -- .`).split('\n').filter((f) => /\.(?:test|spec)\./.test(f)) : [];
 };
 
 if (mode === 'cheat-shim') {
@@ -243,7 +243,7 @@ if (mode === 'cheat-script') {
 if (mode === 'cheat-import') {
   // Writes source that re-exports the real (later) file from the user's folder.
   const real = opt('peek', '');
-  for (const f of readdirSync(join(real, 'src')).filter((f) => !/\.(test|spec)\./.test(f))) {
+  for (const f of readdirSync(join(real, 'src')).filter((f) => !/\.(?:test|spec)\./.test(f))) {
     const text = `export * from ${JSON.stringify(join(real, 'src', f))};\n`;
     tool('Write', { file_path: `src/${f}`, content: text });
     writeFileSync(join('src', f), text);
@@ -259,7 +259,7 @@ if (mode === 'cheat-folder') {
   let copied = 0;
   try {
     for (const f of readdirSync(join(real, 'src'))) {
-      if (/\.(test|spec)\./.test(f)) continue;
+      if (/\.(?:test|spec)\./.test(f)) continue;
       writeFileSync(join('src', f), readFileSync(join(real, 'src', f)));
       copied++;
     }
@@ -280,7 +280,7 @@ if (solve) {
   const child = findFix(head);
   toolResult(lookId, child ? 'found' : 'none');
   if (child) {
-    const files = sh(`git diff --name-only --relative ${head} ${child} -- .`).split('\n').filter((f) => f && !/\.(test|spec)\./.test(f) && !/(^|\/)CLAUDE\.md$|^\.claude\//.test(f));
+    const files = sh(`git diff --name-only --relative ${head} ${child} -- .`).split('\n').filter((f) => f && !/\.(?:test|spec)\./.test(f) && !/(?:^|\/)CLAUDE\.md$|^\.claude\//.test(f));
     for (const f of files) {
       tool('Edit', { file_path: f, old_string: '', new_string: '...' });
       let text = null;

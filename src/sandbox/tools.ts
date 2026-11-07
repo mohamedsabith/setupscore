@@ -94,7 +94,7 @@ const onWsl = () => /microsoft/i.test(readText('/proc/version'));
 
 /** bwrap could not create its namespaces (disabled by the kernel, AppArmor or a container). */
 const isNamespaceError = (detail: string): boolean =>
-  /namespace|uid map|setting up uid|unprivileged|clone.*(not permitted|EPERM)|unshare.*(not permitted|EPERM)|Operation not permitted/i.test(
+  /namespace|uid map|setting up uid|unprivileged|clone.*(?:not permitted|EPERM)|unshare.*(?:not permitted|EPERM)|Operation not permitted/i.test(
     detail,
   );
 

@@ -675,7 +675,7 @@ export function handleError(err: unknown): number {
       ? (e.path ?? e.syscall.slice(6))
       : message.match(/spawn (\S+) ENOENT/)?.[1];
   if (spawned) {
-    const name = spawned.replace(/^.*[\\/]/, '').replace(/\.(cmd|exe)$/i, '');
+    const name = spawned.replace(/^.*[\\/]/, '').replace(/\.(?:cmd|exe)$/i, '');
     if (name === 'git') {
       say(gitMissing('tasks').message, [
         'setupscore reads your git history. Install git from https://git-scm.com and open a new terminal.',
@@ -720,7 +720,7 @@ export function handleError(err: unknown): number {
   }
   // git's own words ("fatal: …", "error: …"), passed on by src/tasks/git.ts: a problem with the
   // repository or this machine, not a bug in setupscore.
-  if (e instanceof Error && /^(fatal|error): /.test(message)) {
+  if (e instanceof Error && /^(?:fatal|error): /.test(message)) {
     say(`Git failed: ${message}`, [
       'Run "git status" in the project folder to see what is wrong, fix it, then run the command again.',
     ]);

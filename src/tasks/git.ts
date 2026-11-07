@@ -69,6 +69,7 @@ const REPO_ENV = [
 /** The environment for a git command: this process's, without the variables above, and never prompting. */
 export function gitEnv(): NodeJS.ProcessEnv {
   const env: NodeJS.ProcessEnv = { ...process.env, GIT_TERMINAL_PROMPT: '0' };
+  // eslint-disable-next-line @typescript-eslint/no-dynamic-delete -- an environment is a plain object: delete is how a variable is unset
   for (const k of REPO_ENV) delete env[k];
   return env;
 }
@@ -280,9 +281,11 @@ function runGit(cwd: string, args: string[], o: RunOptions = {}): Promise<string
     child.stderr!.on('data', (d: Buffer) => {
       if (stderr.length < 64 * 1024) stderr += d.toString('utf8');
     });
-    child.on('error', (err: NodeJS.ErrnoException) =>
-      finish(() => reject(explainGitFailure(cwd, args, { code: err.code ?? 'EUNKNOWN' }))),
-    );
+    child.on('error', (err: NodeJS.ErrnoException) => {
+      finish(() => {
+        reject(explainGitFailure(cwd, args, { code: err.code ?? 'EUNKNOWN' }));
+      });
+    });
     child.on('close', (code) => {
       finish(() => {
         if (timedOut) reject(explainGitFailure(cwd, args, { timedOut: true, timeoutMs, stderr }));

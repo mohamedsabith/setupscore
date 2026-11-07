@@ -574,8 +574,8 @@ describe.runIf(process.platform !== 'win32')('Ctrl+C', () => {
       { env },
     );
     let out = '';
-    child.stdout.on('data', (d) => (out += d));
-    child.stderr.on('data', (d) => (out += d));
+    child.stdout.on('data', (d) => (out += String(d)));
+    child.stderr.on('data', (d) => (out += String(d)));
     // Wait until the first attempt has finished, then press Ctrl+C during the second.
     await new Promise<void>((resolve) => {
       const t = setInterval(() => {

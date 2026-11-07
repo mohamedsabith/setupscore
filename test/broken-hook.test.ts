@@ -15,7 +15,9 @@ const settings = (hooks: unknown, files: Record<string, string> = {}, name = '.c
   makeRepo({ [name]: JSON.stringify({ hooks }, null, 2), ...files });
 const found = (hooks: unknown, files: Record<string, string> = {}) => issuesOf(settings(hooks, files), RULE);
 const messages = (hooks: unknown, files: Record<string, string> = {}) => found(hooks, files).map((i) => i.message);
-const ok = (hooks: unknown, files: Record<string, string> = {}) => expect(found(hooks, files)).toEqual([]);
+const ok = (hooks: unknown, files: Record<string, string> = {}) => {
+  expect(found(hooks, files)).toEqual([]);
+};
 
 describe('broken-hook: the shape of "hooks"', () => {
   it.each([
@@ -155,7 +157,9 @@ describe('broken-hook: matchers', () => {
     'Bash(git *)',
     '^Edit$',
     'Write|Edit|MultiEditX',
-  ])('accepts the PreToolUse matcher %j', (matcher) => ok({ PreToolUse: [group([cmd('echo hi')], matcher)] }));
+  ])('accepts the PreToolUse matcher %j', (matcher) => {
+    ok({ PreToolUse: [group([cmd('echo hi')], matcher)] });
+  });
 
   it('only mentions the effect on other hooks for PreToolUse and PermissionRequest', () => {
     const [i] = found({ PostToolUse: [group([cmd('echo hi')], ['Edit'])] });
@@ -281,7 +285,9 @@ describe('broken-hook: handlers', () => {
     { type: 'mcp_tool', server: 'my_server', tool: 'security_scan', input: { file_path: '${tool_input.file_path}' } },
     { type: 'prompt', prompt: 'Is this safe? $ARGUMENTS' },
     { type: 'agent', prompt: 'Check the tests pass.' },
-  ])('accepts a complete %j hook', (handler) => ok({ Stop: [group([handler])] }));
+  ])('accepts a complete %j hook', (handler) => {
+    ok({ Stop: [group([handler])] });
+  });
 
   it.each(['30s', '30', 0, -5, true, null])('flags "timeout": %j', (timeout) => {
     expect(messages({ Stop: [group([cmd('echo hi', { timeout })])] })).toEqual([
@@ -298,7 +304,9 @@ describe('broken-hook: handlers', () => {
     );
   });
 
-  it.each([30, 0.5, 600])('accepts "timeout": %j', (timeout) => ok({ Stop: [group([cmd('echo hi', { timeout })])] }));
+  it.each([30, 0.5, 600])('accepts "timeout": %j', (timeout) => {
+    ok({ Stop: [group([cmd('echo hi', { timeout })])] });
+  });
 
   it('flags "if" on an event that is not a tool event: that hook never runs', () => {
     const [i] = found({ Stop: [group([cmd('echo hi', { if: 'Bash(git *)' })])] });
@@ -397,7 +405,9 @@ describe('broken-hook: scripts under ${CLAUDE_PROJECT_DIR}', () => {
     '"$CLAUDE_PROJECT_DIR"/node_modules/.bin/eslint .',
     '"$CLAUDE_PROJECT_DIR"/../shared/check.sh',
     'python3 -u "$CLAUDE_PROJECT_DIR"/hooks/a.py',
-  ])('does not guess about %s', (command) => ok({ Stop: [group([cmd(command)])] }));
+  ])('does not guess about %s', (command) => {
+    ok({ Stop: [group([cmd(command)])] });
+  });
 
   it('finds every missing script whatever the order of exec-form and shell-form hooks (regression)', () => {
     const execForm = cmd('${CLAUDE_PROJECT_DIR}/hooks/exec.sh', { args: [] });

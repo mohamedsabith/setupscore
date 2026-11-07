@@ -110,7 +110,14 @@ export const isFinal = (a: Attempt) => a.status === 'passed' || a.status === 'fa
 const sleep = (ms: number, signal: AbortSignal) =>
   new Promise<void>((resolve) => {
     const t = setTimeout(resolve, ms);
-    signal.addEventListener('abort', () => (clearTimeout(t), resolve()), { once: true });
+    signal.addEventListener(
+      'abort',
+      () => {
+        clearTimeout(t);
+        resolve();
+      },
+      { once: true },
+    );
   });
 
 const tail = (text: string, lines = 40) =>
@@ -154,7 +161,9 @@ export async function executeRun(o: RunnerOptions): Promise<RunOutcome> {
 
   // A fatal problem in one worker stops the others too, and so does the user (Ctrl+C).
   const stop = new AbortController();
-  const onUserAbort = () => stop.abort();
+  const onUserAbort = () => {
+    stop.abort();
+  };
   if (o.signal.aborted) stop.abort();
   o.signal.addEventListener('abort', onUserAbort, { once: true });
   let stopReason: { status: RunOutcome['status']; reason: string; fix?: string } | null = null;
@@ -253,12 +262,12 @@ export async function executeRun(o: RunnerOptions): Promise<RunOutcome> {
     }
   };
 
-  let storeError: unknown = null;
+  let storeError: unknown;
   try {
     // Wait for every worker, also when one fails: none may keep a session running on its own.
     const settled = await Promise.allSettled(
       workers.map((w) =>
-        runWorker(w).catch((err) => {
+        runWorker(w).catch((err: unknown) => {
           stop.abort(); // for example results can no longer be saved: stop the others too
           throw err;
         }),
@@ -270,6 +279,7 @@ export async function executeRun(o: RunnerOptions): Promise<RunOutcome> {
     for (const w of workers) w.ws?.close();
     releaseWorkspaces();
   }
+  // eslint-disable-next-line @typescript-eslint/only-throw-error -- rethrows what a worker threw, unchanged
   if (storeError) throw storeError;
 
   if (!stopReason && o.signal.aborted) {

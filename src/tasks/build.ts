@@ -115,7 +115,7 @@ export function policiesFor(ws: Workspace, userTop: string, pmCache: string) {
   return { writable, testPolicy, env };
 }
 
-const FAILURE_LINE = /^\s*(?:not ok\b|FAIL\b|✕|×|✖|●)|\b(?:AssertionError|Error:|ERR_[A-Z_]+|Cannot find module)/;
+const FAILURE_LINE = /^\s*(?:not ok\b|FAIL\b|[✕×✖●])|\b(?:AssertionError|Error:|ERR_[A-Z_]+|Cannot find module)/;
 
 /**
  * The useful part of a failed run, without colour codes: a few lines around each failure
@@ -139,7 +139,7 @@ const tail = (r: ExecResult): string => {
 };
 
 const PROBLEM =
-  /\b(error|fail(?:ed|ure)?|not ok|cannot|can't|missing|not found|ENOENT|EACCES|EPERM|timed? ?out)\b|✖|×/i;
+  /\b(?:error|fail(?:ed|ure)?|not ok|cannot|can't|missing|not found|ENOENT|EACCES|EPERM|timed? ?out)\b|✖|×/i;
 
 /** The most useful lines of output: the last ones that mention a problem, else the last lines. */
 const lastLines = (r: ExecResult, n = 2) => {
@@ -397,7 +397,7 @@ const watchHint = (command: string) =>
 
 /** The sandbox itself failing is not the commit's fault: stop instead of rejecting every commit. */
 function sandboxStillWorks(r: ExecResult): void {
-  const line = `${r.stderr}`.split('\n').find((l) => /^(?:bwrap|sandbox-exec): /.test(l.trim()));
+  const line = r.stderr.split('\n').find((l) => /^(?:bwrap|sandbox-exec): /.test(l.trim()));
   if (line)
     throw new EnvironmentError(`The sandbox stopped working: ${line.trim()}`, [
       'Run "npx setupscore doctor" to check it, then try again.',

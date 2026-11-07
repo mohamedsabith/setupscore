@@ -25,7 +25,7 @@ export function shellArg(s: string): string {
   if ((win ? /^[\w@%+=:,./\\-][\w@%+=:,./\\~-]*$/ : /^[\w@%+=:,./-][\w@%+=:,./~-]*$/).test(s)) return s;
   if (win) return `"${s}"`;
   // Inside "..." a shell still expands $, ` and ! (bash), and JSON escapes such as \n mean nothing to it.
-  // eslint-disable-next-line no-control-regex -- control characters are exactly what "..." cannot carry
+  // Control characters are exactly what "..." cannot carry.
   if (/[$`!\u0000-\u001f]/.test(s)) return `'${s.replaceAll("'", `'\\''`)}'`;
   return JSON.stringify(s);
 }

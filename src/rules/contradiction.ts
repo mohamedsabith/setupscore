@@ -62,7 +62,7 @@ const SCOPE = new Set([
   'directly',
 ]);
 const FILLER = new Set([...STOP, 'any', 'all', 'our', 'your', 'its', 'their', 'code', 'files', 'file']);
-const TRAILING = new Set([...'.,;:!?)']);
+const TRAILING = new Set('.,;:!?)');
 
 /** Drop punctuation at the end of a word, in linear time. */
 function trimPunct(w: string): string {

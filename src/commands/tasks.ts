@@ -69,7 +69,7 @@ function existingTaskCount(file: string): number {
 
 /** Why setupscore was asked to stop, for messages. */
 function stopReason(): string {
-  const r = shutdown.signal.reason;
+  const r: unknown = shutdown.signal.reason;
   return r === 'SIGTERM'
     ? 'setupscore was asked to stop (SIGTERM)'
     : r === 'SIGHUP'

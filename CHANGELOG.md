@@ -18,6 +18,7 @@ All notable changes to this project are documented here. The project follows [Se
 - New checks in `npm run check-all`: security lint rules (eslint-plugin-security), import rules (eslint-plugin-import-x), folder layers (dependency-cruiser), unused code (Knip), the public API report (API Extractor), package checks (publint, Are the Types Wrong), property-based tests (fast-check) and stricter TypeScript settings.
 - Commit messages are checked with commitlint in a Husky commit-msg hook.
 - Removed code that nothing used.
+- Fixed all 255 lint findings that were put aside in `eslint-suppressions.json`, and deleted that file. Regular expressions were only rewritten where the new one matches exactly the same text (checked on generated input for every changed expression).
 
 ## 1.0.4 - 2026-11-07
 

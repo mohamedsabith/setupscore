@@ -93,7 +93,7 @@ function suggestFor(run: RunRecord, attempts: Attempt[], score: RunScore, projec
   for (const [token, { rule, count }] of breaks) {
     if (count < 2) continue;
     out.push({
-      id: `rule-${token.replace(/[^\w]+/g, '-').toLowerCase()}`,
+      id: `rule-${token.replace(/\W+/g, '-').toLowerCase()}`,
       title: `Make the rule about \`${token}\` stick`,
       evidence: `"${rule}" was broken in ${pct(count, total)} attempts.`,
       action:
@@ -115,7 +115,7 @@ function suggestFor(run: RunRecord, attempts: Attempt[], score: RunScore, projec
   for (const [cmd, count] of failed) {
     if (count < 2 || !claudeMd.includes(cmd)) continue;
     out.push({
-      id: `command-${cmd.replace(/[^\w]+/g, '-').toLowerCase()}`,
+      id: `command-${cmd.replace(/\W+/g, '-').toLowerCase()}`,
       title: `Fix the command "${cmd}" in CLAUDE.md`,
       evidence: `It failed in ${pct(count, total)} attempts.`,
       action: 'Check that the script exists and works on a fresh clone, then update CLAUDE.md.',

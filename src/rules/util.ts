@@ -21,7 +21,7 @@ const jsonCache = new WeakMap<SetupFile, { value?: unknown; error?: string; posi
 export function parseJson(f: SetupFile): { value?: unknown; error?: string; position?: number } {
   let r = jsonCache.get(f);
   if (!r) {
-    const text = f.text.replace(/^﻿/, '');
+    const text = f.text.replace(/^\ufeff/, '');
     const offset = f.text.length - text.length;
     try {
       r = text.trim() === '' ? { error: 'the file is empty' } : { value: JSON.parse(text) };
@@ -73,7 +73,7 @@ function diagnoseJson(text: string): { message: string; at: number } | undefined
       if (ch === '\\') {
         const next = text[i + 1];
         if (next === 'u') {
-          if (!/^[0-9a-fA-F]{4}$/.test(text.slice(i + 2, i + 6))) return fail('a \\u escape needs four hex digits');
+          if (!/^[0-9a-f]{4}$/i.test(text.slice(i + 2, i + 6))) return fail('a \\u escape needs four hex digits');
           i += 6;
           continue;
         }
@@ -107,7 +107,7 @@ function diagnoseJson(text: string): { message: string; at: number } | undefined
       if (i < n && /[\w.]/.test(text[i]!)) return fail(`unexpected ${describeChar(text[i])} after a value`);
       return undefined;
     }
-    if (ch !== undefined && /[A-Za-z_]/.test(ch)) return fail('a word without quotes; text values need double quotes');
+    if (ch !== undefined && /[A-Z_]/i.test(ch)) return fail('a word without quotes; text values need double quotes');
     return fail(`expected a value but found ${describeChar(ch)}`);
   };
 
@@ -137,7 +137,7 @@ function diagnoseJson(text: string): { message: string; at: number } | undefined
         top.state = 'colon';
         continue;
       } else if (ch === "'") return fail('keys need double quotes, not single quotes');
-      else if (/[A-Za-z_$]/.test(ch)) return fail('a key without quotes; keys need double quotes');
+      else if (/[A-Z_$]/i.test(ch)) return fail('a key without quotes; keys need double quotes');
       else return fail(`expected a key in double quotes but found ${describeChar(ch)}`);
     } else if (top.type === 'object' && top.state === 'colon') {
       if (ch !== ':') return fail(`expected ":" after the key but found ${describeChar(ch)}`);
@@ -264,9 +264,10 @@ export function packageOf(abs: string): PackageFacts | null {
   return pkgCache.get(abs)!;
 }
 
-export const clearCaches = (): void => pkgCache.clear();
+export const clearCaches = (): void => {
+  pkgCache.clear();
+};
 
-// eslint-disable-next-line no-control-regex -- matching control characters is the point: they are removed
 const CONTROL = /[\u0000-\u001f\u007f-\u009f\u202a-\u202e\u2066-\u2069]/g;
 
 /**

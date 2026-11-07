@@ -1,9 +1,9 @@
 import type { Context, Issue, Rule, SetupFile } from '../core/types.js';
 import { clip, isObject, lineOf, parseJson } from './util.js';
 
-const BARE_VAR = /(?<![$\\])\$(?!\{)([A-Za-z_][A-Za-z0-9_]*)(:[A-Za-z_][A-Za-z0-9_]*)?/;
+const BARE_VAR = /(?<![$\\])\$([A-Z_]\w*)(:[A-Z_]\w*)?/i;
 /** cmd.exe style %VAR%: only cmd.exe expands it, never Claude Code. */
-const PERCENT_VAR = /%([A-Za-z_][A-Za-z0-9_]*)%/;
+const PERCENT_VAR = /%([A-Z_]\w*)%/i;
 const LOCAL_HOST = /^http:\/\/(?:localhost|127\.0\.0\.1|\[::1\]|0\.0\.0\.0)(?::\d+)?(?:\/|$)/i;
 
 /** True when a package spec names a version: pkg@1.2.3, @scope/pkg@1.2.3, pkg==1.2.3 */

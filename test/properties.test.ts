@@ -45,7 +45,7 @@ const nastyChar = fc.oneof(fc.constantFrom(...NASTY), fc.string({ unit: 'graphem
 const nastyString = (maxLength = 40) => fc.string({ unit: nastyChar, maxLength });
 
 /** Every character clip() and safe output must never contain: terminal control and text-direction characters. */
-// eslint-disable-next-line no-control-regex -- control characters are what this checks for
+
 const UNSAFE = /[\u0000-\u001f\u007f-\u009f\u202a-\u202e\u2066-\u2069]/;
 
 const UPPER_DIGITS = Array.from('ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789');

@@ -95,7 +95,7 @@ export function installSignalHandlers(write?: (s: string) => void): void {
 
 /** Why the shutdown signal fired, for messages. */
 export function stopReasonText(): string {
-  const r = shutdown.signal.reason;
+  const r: unknown = shutdown.signal.reason;
   return r === 'SIGTERM'
     ? 'setupscore was asked to stop (SIGTERM)'
     : r === 'SIGHUP'

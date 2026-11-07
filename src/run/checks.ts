@@ -30,7 +30,7 @@ export function forbiddenRules(files: Record<string, string>): ForbiddenRule[] {
   const seen = new Set<string>();
   for (const [file, text] of Object.entries(files)) {
     // Standing instructions only: CLAUDE.md files and .claude/rules.
-    if (!/(^|\/)CLAUDE\.md$|(^|\/)\.claude\/rules\/.+\.md$/.test(file)) continue;
+    if (!/(?:^|\/)CLAUDE\.md$|(?:^|\/)\.claude\/rules\/.+\.md$/.test(file)) continue;
     for (const line of toLines(text, true).lines) {
       if (line.inFence || line.inFrontmatter || line.text.length > MAX_RULE_LINE || !isListItem(line.text)) continue;
       for (const m of line.text.matchAll(NEGATIVE)) {
@@ -70,7 +70,7 @@ export async function addedSourceLines(
     (f) =>
       !TEST_FILE.test(f) &&
       !isSetupPath(f) &&
-      !/(^|\/)(package-lock\.json|pnpm-lock\.yaml|yarn\.lock|bun\.lockb?)$/.test(f),
+      !/(?:^|\/)(?:package-lock\.json|pnpm-lock\.yaml|yarn\.lock|bun\.lockb?)$/.test(f),
   );
   const diff = (await safeGit(projectDir, ['diff', '--no-color', '-U0', '--relative', base, '--', ...source])) ?? '';
   let current = '';
@@ -124,6 +124,7 @@ export function findViolations(
  */
 export function ranTests(input: string[] | Pick<AgentMetrics, 'bashCommands' | 'ranTests'>): boolean {
   if (Array.isArray(input)) return input.some(runsTests);
+  // eslint-disable-next-line @typescript-eslint/no-unnecessary-boolean-literal-compare -- metrics can come from a damaged results file
   return input.ranTests === true || input.bashCommands.some(runsTests);
 }
 

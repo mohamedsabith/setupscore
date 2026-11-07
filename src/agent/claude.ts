@@ -39,9 +39,9 @@ const INSTALL_HINT =
 export function stripAnsi(text: string): string {
   return text
     .replace(/\x1b\][^\x07\x1b]*(?:\x07|\x1b\\)/g, '') // OSC (titles, links)
-    .replace(/\x1b\[[0-?]*[ -/]*[@-~]/g, '') // CSI (colours, cursor moves)
-    .replace(/\x1b[@-_]/g, '')
-    .replace(/[\x00-\x08\x0b\x0c\x0e-\x1f\x7f-\x9f\ufffd]/g, '');
+    .replace(/\x1b\[[\x30-\x3f]*[\x20-\x2f]*[\x40-\x7e]/g, '') // CSI (colours, cursor moves)
+    .replace(/\x1b[\x40-\x5f]/g, '')
+    .replace(/[\x00-\x08\v\f\x0e-\x1f\x7f-\x9f\ufffd]/g, '');
 }
 
 /** A path to a file: quoted for the shell when it has spaces or other special characters. */
@@ -228,10 +228,7 @@ export function isAllowableHost(host: string): boolean {
   if (!host) return false;
   if (/^\[[0-9a-f:.]+\]$/i.test(host)) return isIP(host.slice(1, -1)) === 6;
   if (isIP(host) === 4 || host === 'localhost') return true;
-  return (
-    /^[a-z0-9_-]+(?:\.[a-z0-9_-]+)+$/i.test(host) &&
-    !host.split('.').some((l) => !l || l.startsWith('-') || l.endsWith('-'))
-  );
+  return /^[\w-]+(?:\.[\w-]+)+$/.test(host) && !host.split('.').some((l) => !l || l.startsWith('-') || l.endsWith('-'));
 }
 
 /** Address ranges the OS sandbox never routes to (they skip its proxy, and the sandbox has no other network). */
@@ -251,6 +248,7 @@ PRIVATE.addSubnet('192.168.0.0', 16, 'ipv4');
 function addressKind(ip: string): 'loopback' | 'local' | 'private' | null {
   const family = isIP(ip) === 6 ? 'ipv6' : 'ipv4';
   const mapped = family === 'ipv6' ? /^::ffff:(\d+\.\d+\.\d+\.\d+)$/i.exec(ip)?.[1] : undefined;
+  // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion -- needed: without it fam is a plain string and tsc fails
   const [addr, fam] = mapped ? [mapped, 'ipv4' as const] : [ip, family as 'ipv4' | 'ipv6'];
   if (LOOPBACK.check(addr, fam)) return 'loopback';
   if (LOCAL_ONLY.check(addr, fam)) return 'local';
@@ -332,7 +330,11 @@ export async function endpointProblem(
   const resolve =
     o.resolve ??
     (async (h: string) => {
-      const timeout = new Promise<string[]>((r) => setTimeout(() => r([]), 3_000).unref());
+      const timeout = new Promise<string[]>((r) =>
+        setTimeout(() => {
+          r([]);
+        }, 3_000).unref(),
+      );
       return Promise.race([
         lookup(h, { all: true }).then(
           (xs) => xs.map((x) => x.address),
@@ -520,7 +522,7 @@ export function classifyAgentFailure(
   if (
     code === 'authentication_failed' ||
     (!code &&
-      /invalid (x-)?api[ -]key|authentication[_ ]error|\b401\b|oauth token (has )?expired|please run \/login|not logged in/.test(
+      /invalid (?:x-)?api[ -]key|authentication[_ ]error|\b401\b|oauth token (?:has )?expired|please run \/login|not logged in/.test(
         text,
       ))
   ) {
@@ -532,7 +534,7 @@ export function classifyAgentFailure(
   }
   if (
     code === 'billing_error' ||
-    (!code && /credit balance is too low|insufficient (credit|balance|quota)|billing_error/.test(text))
+    (!code && /credit balance is too low|insufficient (?:credit|balance|quota)|billing_error/.test(text))
   ) {
     return {
       kind: 'fatal',

@@ -66,7 +66,7 @@ function looseFrontmatter(lines: string[]): Record<string, unknown> | null {
   const out: Record<string, unknown> = {};
   let found = false;
   for (const line of lines) {
-    const m = line.match(/^([A-Za-z][\w-]*)\s*:\s?(.*)$/);
+    const m = line.match(/^([A-Z][\w-]*)\s*:\s?(.*)$/i);
     if (!m) continue;
     found = true;
     out[m[1]!] = m[2]!.trim().replace(/^(["'])([\s\S]*)\1$/, '$2');
@@ -136,7 +136,7 @@ export function stripComments(text: string): string {
   return out + text.slice(at);
 }
 
-const LIST_MARK = /^\s*(?:[-*+]|\d+[.)])\s+(?:\[[ xX]\]\s+)?/;
+const LIST_MARK = /^\s*(?:[-*+]|\d+[.)])\s+(?:\[[ x]\]\s+)?/i;
 
 /** True for a markdown list item. */
 export const isListItem = (text: string): boolean => LIST_MARK.test(text);

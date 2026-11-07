@@ -52,7 +52,7 @@ const DOMAIN = /^[\w-]+\.(?:com|org|net|io|dev|ai|co|app|me|sh|gg|so|xyz|cloud|i
 
 /** Example paths written to show a shape, not a real file: path/to/x.ts, src/foo/bar.ts, your-file.ts. */
 const PLACEHOLDER =
-  /(?:^|\/)(?:path\/to|to\/your|foo|bar|baz|qux|xxx+|your[-_][\w-]*|some[-_][\w-]*|my[-_]?(?:file|component|feature|module|test|page|thing)|example|placeholder)(?:\/|\.|$)/i;
+  /(?:^|\/)(?:path\/to|to\/your|foo|bar|baz|qux|x{3,}|your[-_][\w-]*|some[-_][\w-]*|my[-_]?(?:file|component|feature|module|test|page|thing)|example|placeholder)(?:\/|\.|$)/i;
 
 const SPACE_BEFORE = /[\s([*]/;
 const SPACE_AFTER = /[\s.,;:!?)\]*]/;

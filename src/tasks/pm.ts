@@ -104,7 +104,7 @@ function readPackageJson(dir: string): PackageJson | { error: string } {
   }
   try {
     // Editors on Windows often save a byte order mark at the start; JSON.parse rejects it.
-    const pkg = JSON.parse(r.data.toString('utf8').replace(/^﻿/, '')) as unknown;
+    const pkg = JSON.parse(r.data.toString('utf8').replace(/^\ufeff/, '')) as unknown;
     if (!pkg || typeof pkg !== 'object' || Array.isArray(pkg))
       return { error: 'package.json does not hold a JSON object' };
     return pkg;
@@ -296,7 +296,7 @@ function withWarning(script: string): { scriptWarning?: string } {
   if (script.length > MAX_SCRIPT) return {};
   if (/\|\|/.test(script))
     return { scriptWarning: 'the "test" script uses "||", so it reports success even when the tests fail' };
-  if (/(^|[^|])\|(?!\|)/.test(script))
+  if (/(?:^|[^|])\|(?!\|)/.test(script))
     return {
       scriptWarning:
         'the "test" script pipes the output into another command ("|"), which hides whether the tests failed',
@@ -369,7 +369,7 @@ const NODE_VALUE_OPTIONS = new Set([
   '--test-coverage-exclude',
 ]);
 const NPX_OPTIONS = new Set(['--no-install', '--no', '-y', '--yes', '-q', '--quiet']);
-const ASSIGNMENT = /^[A-Za-z_][A-Za-z0-9_]*=/;
+const ASSIGNMENT = /^[A-Z_]\w*=/i;
 
 interface Parsed {
   runner: Runner;

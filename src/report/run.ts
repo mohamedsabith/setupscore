@@ -42,7 +42,7 @@ export function renderRunTerminal(
   out.push('');
 
   const rows = score.setups.map((s) => [
-    `${s.label}`,
+    s.label,
     s.source.length > 24 ? `${s.source.slice(0, 23)}…` : s.source,
     s.attempts ? String(s.score) : '-',
     s.attempts ? `${pct(s.successRate)} (${pct(s.range[0])}–${pct(s.range[1])})` : 'no results',
@@ -118,6 +118,7 @@ const escMdPlain = (s: string) =>
  * stay code when they hold nothing that needs escaping.
  */
 export function mdText(value: unknown): string {
+  // eslint-disable-next-line @typescript-eslint/no-base-to-string -- any value from a results file: an object prints as [object Object], never crashes
   const text = String(value ?? '')
     .replace(/\s+/g, ' ')
     .trim();
@@ -133,6 +134,7 @@ export function mdText(value: unknown): string {
 
 /** A code span for a table cell (| escaped for the table), or escaped plain text when it holds backticks or < >. */
 function mdCodeCell(value: unknown): string {
+  // eslint-disable-next-line @typescript-eslint/no-base-to-string -- any value from a results file: an object prints as [object Object], never crashes
   const text = String(value ?? '')
     .replace(/\s+/g, ' ')
     .trim();
@@ -210,6 +212,7 @@ export function runJson(run: RunRecord, score: RunScore, attempts: Attempt[], su
 }
 
 const esc = (s: unknown) =>
+  // eslint-disable-next-line @typescript-eslint/no-base-to-string -- any value from a results file: an object prints as [object Object], never crashes
   String(s ?? '')
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')

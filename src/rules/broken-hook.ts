@@ -129,9 +129,9 @@ function classify(
 ): { kind: 'all' } | { kind: 'exact'; items: string[] } | { kind: 'regex' } {
   if (matcher === '' || matcher === '*') return { kind: 'all' };
   if (NARROW.has(event)) {
-    return /^[A-Za-z0-9_|]+$/.test(matcher) ? { kind: 'exact', items: split(matcher, /\|/) } : { kind: 'regex' };
+    return /^[\w|]+$/.test(matcher) ? { kind: 'exact', items: split(matcher, /\|/) } : { kind: 'regex' };
   }
-  return /^[A-Za-z0-9_\- ,|]+$/.test(matcher) ? { kind: 'exact', items: split(matcher, /[|,]/) } : { kind: 'regex' };
+  return /^[\w\- ,|]+$/.test(matcher) ? { kind: 'exact', items: split(matcher, /[|,]/) } : { kind: 'regex' };
 }
 const split = (s: string, sep: RegExp) =>
   s
@@ -151,7 +151,7 @@ interface Script {
 
 // "$CLAUDE_PROJECT_DIR", "${CLAUDE_PROJECT_DIR}", optionally in double quotes, then a path.
 // Not global: every search makes its own copy, so no search can leave state behind for the next one.
-const PLACEHOLDER = /"?\$(?:\{CLAUDE_PROJECT_DIR\}|CLAUDE_PROJECT_DIR(?![\w]))"?(\/[^\s"'`;|&<>()$*?{}[\]\\]*)/;
+const PLACEHOLDER = /"?\$(?:\{CLAUDE_PROJECT_DIR\}|CLAUDE_PROJECT_DIR)"?(\/[^\s"'`;|&<>()$*?{}[\]\\]*)/;
 /** Characters that mean the path goes on with something we cannot resolve offline. */
 const UNRESOLVED = /^["']?[$*?{[`\\]/;
 
@@ -176,7 +176,7 @@ function scriptsOf(h: Record<string, unknown>): Script[] {
         .split(/[\\/]/)
         .pop()!
         .replace(/\.exe$/i, '');
-      const first = h.args[0];
+      const first: unknown = h.args[0];
       // Only the script an interpreter runs: other arguments may be output files.
       if (INTERPRETERS.has(program) && typeof first === 'string' && whole(first)) {
         out.push({ path: whole(first)!, direct: false, interpreter: program });
@@ -196,7 +196,7 @@ function scriptsOf(h: Record<string, unknown>): Script[] {
       .pop()!;
     // Leading VAR=value assignments do not change which program runs.
     const words = before
-      .replace(/^\s*(?:[A-Za-z_][A-Za-z0-9_]*=\S*\s+)*/, '')
+      .replace(/^\s*(?:[A-Z_]\w*=\S*\s+)*/i, '')
       .trim()
       .split(/\s+/)
       .filter(Boolean);
@@ -365,6 +365,7 @@ function checkHandler(
     return;
   }
   if (typeof h.type !== 'string' || !TYPES.includes(h.type)) {
+    // eslint-disable-next-line @typescript-eslint/no-base-to-string -- "type" in the user's settings can be any JSON value
     const t = String(h.type);
     const near = TYPES.find((x) => x === t.toLowerCase()) ?? closest(t, TYPES, 0.6);
     if (near) {
@@ -435,7 +436,9 @@ function checkScripts(
   }
   // Executable bit: only for a script that is the program itself, on systems that have the bit.
   if (process.platform === 'win32') return;
-  const direct = scripts.filter((s) => s.script.direct && ctx.existsRel(s.rel) && !/\.(ps1|cmd|bat|exe)$/i.test(s.rel));
+  const direct = scripts.filter(
+    (s) => s.script.direct && ctx.existsRel(s.rel) && !/\.(?:ps1|cmd|bat|exe)$/i.test(s.rel),
+  );
   if (direct.length === 0) return;
   const modes = gitModes(
     ctx.root,
@@ -445,7 +448,7 @@ function checkScripts(
     const key = `${s.f.path}\0${s.rel}`;
     if (reported.has(key)) continue;
     const mode = modes?.get(s.rel);
-    let notExecutable: 'git' | 'disk' | null = null;
+    let notExecutable: 'git' | 'disk' | null;
     if (mode !== undefined) notExecutable = mode === '100644' ? 'git' : null;
     else {
       try {

@@ -13,7 +13,7 @@ const VAGUE = [
   /\bdo (?:it|things) (?:right|properly|well)\b/i,
   /\bmake (?:it|sure it) (?:good|works?|nice|clean)\b/i,
   /\bbe (?:smart|thoughtful|thorough|professional)\b/i,
-  /\buse (?:common sense|good judg(?:e)?ment)\b/i,
+  /\buse (?:common sense|good judge?ment)\b/i,
   /\bkeep (?:it|code|things) (?:clean|simple|nice)\b/i,
   /\b(?:handle|manage) errors (?:properly|well|correctly|appropriately)\b/i,
 ];

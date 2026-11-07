@@ -104,9 +104,13 @@ async function startSlowRun(root: string, extra: string[] = []) {
     { env },
   );
   let out = '';
-  child.stdout.on('data', (d) => (out += d));
-  child.stderr.on('data', (d) => (out += d));
-  const done = new Promise<number | null>((r) => child.on('close', (code, sig) => r(code ?? (sig ? -1 : null))));
+  child.stdout.on('data', (d) => (out += String(d)));
+  child.stderr.on('data', (d) => (out += String(d)));
+  const done = new Promise<number | null>((r) =>
+    child.on('close', (code, sig) => {
+      r(code ?? (sig ? -1 : null));
+    }),
+  );
   for (let i = 0; i < 300 && !/Claude is working/.test(out); i++) await sleep(100);
   await sleep(800); // the fake is running now
   return { child, done, tmp, marker, output: () => out };

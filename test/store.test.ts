@@ -135,6 +135,7 @@ describe('damaged or hand-edited run.json gives a plain message (D10, R4-R29, fu
     ['repeat 1e9', JSON.stringify({ ...record(), options: { ...record().options, repeat: 1e9 } }), /repeat count/],
   ];
   for (const [name, text, expected] of cases) {
+    // eslint-disable-next-line vitest/valid-title -- the names are the string literals in the table above
     it(name, () => {
       const { store, file } = withRun();
       writeFileSync(file('run.json'), text);
@@ -150,7 +151,7 @@ describe('damaged or hand-edited run.json gives a plain message (D10, R4-R29, fu
     r.setups[0].files['bad.md'] = 42;
     r.setups[0].health = 'x';
     r.id = 'some-other-id';
-    writeFileSync(file('run.json'), `﻿${JSON.stringify(r)}`);
+    writeFileSync(file('run.json'), `\uFEFF${JSON.stringify(r)}`);
     const run = store.readRun();
     expect(run.options.repeat).toBe(2);
     expect(run.tasks[0]!.title).toBe('t1');
@@ -194,7 +195,7 @@ describe('attempts.jsonl', () => {
     expect(a.checks).toMatchObject({ ruleViolations: [], filesChanged: [], testsPassed: null });
     expect(a.checks!.testOutput!.length).toBeLessThanOrEqual(MAX_TEST_OUTPUT);
     expect(a.ms).toBe(0);
-    for (const bad of [-5, 1e400, 'abc', null, Infinity]) {
+    for (const bad of [-5, Number.MAX_VALUE * 10, 'abc', null, Infinity]) {
       expect(
         parseAttempt(
           JSON.stringify({ key: 'k', taskId: 't', setup: 'A', status: 'passed', metrics: { costUsd: bad } }),
@@ -234,7 +235,7 @@ describe('attempts.jsonl', () => {
 
   it('reads a BOM, and an attempts.jsonl that is a folder is just empty (A16, A19)', () => {
     const { store, file } = withRun();
-    writeFileSync(file('attempts.jsonl'), `﻿${JSON.stringify(attempt('t1', 'A', 1))}\n`);
+    writeFileSync(file('attempts.jsonl'), `\uFEFF${JSON.stringify(attempt('t1', 'A', 1))}\n`);
     expect(store.readAttempts()).toHaveLength(1);
     rmSync(file('attempts.jsonl'));
     mkdirSync(file('attempts.jsonl'));
@@ -297,10 +298,18 @@ describe('run ids, latest and locks', () => {
     const { dir, store } = withRun();
     const latest = join(dir, '.setupscore', 'latest');
     for (const damage of [
-      () => writeFileSync(latest, ''),
-      () => writeFileSync(latest, '../../../../etc\n'),
-      () => writeFileSync(latest, 'nope\n'),
-      () => mkdirSync(latest),
+      () => {
+        writeFileSync(latest, '');
+      },
+      () => {
+        writeFileSync(latest, '../../../../etc\n');
+      },
+      () => {
+        writeFileSync(latest, 'nope\n');
+      },
+      () => {
+        mkdirSync(latest);
+      },
     ]) {
       rmSync(latest, { recursive: true, force: true });
       damage();
@@ -327,7 +336,11 @@ describe('run ids, latest and locks', () => {
     const { store } = withRun();
     const owner = spawn(process.execPath, ['-e', 'setTimeout(() => {}, 30000)']);
     writeFileSync(join(store.dir, 'lock'), `${owner.pid}\n`);
-    expect(message(() => store.lock())).toMatch(/already being worked on/);
+    expect(
+      message(() => {
+        store.lock();
+      }),
+    ).toMatch(/already being worked on/);
     owner.kill('SIGKILL');
     await new Promise((r) => owner.on('exit', r));
     store.lock();
@@ -393,7 +406,7 @@ describe('tasks.json (fuzz: tasks-json-null, T05-T18)', () => {
   it('reads a BOM and fills a missing title', () => {
     const t: Partial<ReturnType<typeof task>> = task('t1');
     delete t.title;
-    expect(loadTasks(write(`﻿${JSON.stringify({ schemaVersion: 1, tasks: [t] })}`))[0]).toMatchObject({
+    expect(loadTasks(write(`\uFEFF${JSON.stringify({ schemaVersion: 1, tasks: [t] })}`))[0]).toMatchObject({
       id: 't1',
       title: 't1',
     });

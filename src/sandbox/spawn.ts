@@ -43,7 +43,9 @@ export function runShell(
     });
     // Killed if setupscore exits or is stopped, so nothing keeps running after us.
     const untrack = trackProcess(child.pid);
-    const unmark = onCleanup(() => killJob(job));
+    const unmark = onCleanup(() => {
+      killJob(job);
+    });
     const killAll = () => {
       killTree(child.pid);
       killJob(job);
@@ -88,7 +90,9 @@ export function runShell(
       killAll();
     }, timeoutMs);
     // Ctrl+C or a budget stop: end the whole process tree now.
-    const onAbort = () => killAll();
+    const onAbort = () => {
+      killAll();
+    };
     if (signal?.aborted) onAbort();
     signal?.addEventListener('abort', onAbort, { once: true });
 
@@ -103,7 +107,8 @@ export function runShell(
       signal?.removeEventListener('abort', onAbort);
       const result = { code, stdout: out.text(), stderr: err.text() + extraErr, timedOut, ms: Date.now() - started };
       // The files are complete before the caller reads them.
-      void Promise.all(sinks.map((k) => k?.close())).then(() => resolve(result));
+      for (const k of sinks) k?.close();
+      resolve(result);
     };
     child.on('error', (e) => {
       extraErr += `\n${e.message}`;
@@ -119,11 +124,15 @@ export function runShell(
       rearm = () => {
         if (grace && Date.now() - exitedAt > 30_000) return; // a writer that escaped: stop waiting
         clearTimeout(grace);
-        grace = setTimeout(() => finish(timedOut ? null : code), 2_000);
+        grace = setTimeout(() => {
+          finish(timedOut ? null : code);
+        }, 2_000);
       };
       rearm();
     });
-    child.on('close', (code) => finish(timedOut ? null : code));
+    child.on('close', (code) => {
+      finish(timedOut ? null : code);
+    });
   });
 }
 
@@ -166,7 +175,7 @@ function killJob(job: string): void {
 }
 
 /** A file that output chunks are appended to synchronously (so nothing is lost when the process ends). */
-function openSink(file: string): { write(c: Buffer): void; close(): Promise<void> } | null {
+function openSink(file: string): { write(c: Buffer): void; close(): void } | null {
   let fd: number | null;
   try {
     fd = openSync(file, 'w', 0o600);
@@ -183,7 +192,7 @@ function openSink(file: string): { write(c: Buffer): void; close(): Promise<void
         // disk full: keep the in-memory tail at least
       }
     },
-    async close() {
+    close() {
       if (fd === null) return;
       try {
         closeSync(fd);

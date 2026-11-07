@@ -66,7 +66,7 @@ export async function restoreTestSetup(ws: Workspace, hash: string, testFiles: s
   }
   const theirs = contents.get('package.json');
   if (theirs) {
-    let mine: Record<string, unknown> | null = null;
+    let mine: Record<string, unknown> | null;
     try {
       // Only a real file: a link the agent planted could point at a file outside the workspace
       // (its content would end up in the project the tests run in).
@@ -88,6 +88,7 @@ export async function restoreTestSetup(ws: Workspace, hash: string, testFiles: s
     const merged = mine ?? { ...commit };
     for (const key of TEST_FIELDS) {
       if (Object.prototype.hasOwnProperty.call(commit, key)) merged[key] = commit[key];
+      // eslint-disable-next-line @typescript-eslint/no-dynamic-delete -- package.json is written back as a plain JSON object
       else delete merged[key];
     }
     ws.writeSafely('package.json', `${JSON.stringify(merged, null, 2)}\n`);

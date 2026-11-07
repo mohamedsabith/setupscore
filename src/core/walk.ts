@@ -70,7 +70,7 @@ export function walk(
   let realRoot: string | undefined;
   const inside = (real: string, base: string) => {
     const r = relative(base, real);
-    return r === '' || (!r.startsWith(`..${sep}`) && r !== '..' && !r.startsWith(sep) && !/^[A-Za-z]:/.test(r));
+    return r === '' || (!r.startsWith(`..${sep}`) && r !== '..' && !r.startsWith(sep) && !/^[A-Z]:/i.test(r));
   };
   /** True when a folder link may be followed: target inside the root, and not a folder that contains the link. */
   let followed = 0;
@@ -144,7 +144,7 @@ export function exactLookup(root: string): (rel: string) => 'file' | 'dir' | nul
   const listings = new Map<string, Map<string, Dirent> | null>();
   const list = (dirRel: string): Map<string, Dirent> | null => {
     if (listings.has(dirRel)) return listings.get(dirRel)!;
-    let out: Map<string, Dirent> | null = null;
+    let out: Map<string, Dirent> | null;
     try {
       out = new Map();
       for (const e of readdirSync(join(root, dirRel), { withFileTypes: true })) out.set(e.name.normalize('NFC'), e);

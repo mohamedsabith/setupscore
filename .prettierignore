@@ -9,8 +9,5 @@ test/fixtures/
 research_notes/
 reports/
 
-# Written by ESLint (npx eslint . --prune-suppressions).
-eslint-suppressions.json
-
 # Written by API Extractor (npm run api:update).
 api/

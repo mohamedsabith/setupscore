@@ -30,12 +30,16 @@ export default defineConfig(
 
   // Regular expressions: setupscore runs hundreds of them on users' files. The two
   // "super-linear" rules catch ReDoS (a crafted file that makes a regex run for minutes).
-  // Never add them to eslint-suppressions.json: every finding must be fixed.
+  // Never suppress them: every finding must be fixed.
   regexp.configs['flat/recommended'],
   {
     rules: {
       'regexp/no-super-linear-backtracking': 'error',
       'regexp/no-super-linear-move': 'error',
+      // setupscore removes colour codes and control characters from text on purpose. The rule exists to
+      // catch control characters typed by accident; regexp/control-character-escape already makes every
+      // one a visible escape (\x1b, \u0000), so it only reports deliberate ones.
+      'no-control-regex': 'off',
     },
   },
 
@@ -145,6 +149,11 @@ export default defineConfig(
       '@typescript-eslint/no-unsafe-call': 'off',
       '@typescript-eslint/no-unsafe-argument': 'off',
       '@typescript-eslint/no-unsafe-return': 'off',
+      // Some checks only make sense on one platform (if (process.platform !== 'win32') expect(...)),
+      // and table-driven tests check an optional part of a case.
+      'vitest/no-conditional-expect': 'off',
+      // Tests set and unset environment variables, and an environment is a plain object.
+      '@typescript-eslint/no-dynamic-delete': 'off',
     },
     settings: { vitest: { typecheck: false } },
   },

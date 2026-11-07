@@ -352,8 +352,12 @@ describe('setupscore CLI', () => {
       stdio: ['ignore', 'pipe', 'pipe'],
     });
     let err = '';
-    child.stderr.on('data', (d) => (err += d));
-    const exited = new Promise<number | null>((resolve) => child.on('close', (code) => resolve(code)));
+    child.stderr.on('data', (d) => (err += String(d)));
+    const exited = new Promise<number | null>((resolve) =>
+      child.on('close', (code) => {
+        resolve(code);
+      }),
+    );
     const until = Date.now() + 120_000;
     while (!existsSync(mark) && Date.now() < until && child.exitCode === null)
       await new Promise((r) => setTimeout(r, 100));
