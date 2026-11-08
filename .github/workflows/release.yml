@@ -49,12 +49,9 @@ jobs:
       # Prereleases (a "-" in the version) go to the "next" dist-tag, so `npm install setupscore`
       # keeps getting the newest stable version. A version that is already on npm is skipped,
       # so a failed release can be re-run.
-      # The first version is published with a short-lived token (the NPM_TOKEN secret), because
-      # npm only allows trusted publishing for a package that already exists. Once trusted
-      # publishing is set up, delete the secret: npm then signs in with OIDC alone.
+      # npm signs in with trusted publishing (OIDC): no npm token is stored anywhere. npm trusts
+      # only this workflow file in this repository (set in the package's settings on npmjs.com).
       - name: Publish to npm
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
           version="${GITHUB_REF_NAME#v}"
           if [ -n "$(npm view "setupscore@$version" version 2> /dev/null)" ]; then

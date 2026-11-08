@@ -122,10 +122,10 @@ Open a normal issue, or report it to the right project, for these:
 ### How this repository protects its own workflows
 
 - There is one workflow, Release. It starts only when a maintainer pushes a version tag such as `v1.0.4`. Pull requests start no workflow, so code from a pull request never runs with secrets or write permissions.
-- The workflow starts with read-only permissions. Only its publish job gets `contents: write` (to create the GitHub release and move `v1`) and `id-token: write` (for npm provenance).
+- The workflow starts with read-only permissions. Only its publish job gets `contents: write` (to create the GitHub release and move `v1`) and `id-token: write` (for npm trusted publishing and provenance).
 - Every third-party action is pinned to a full commit SHA.
 - Every release is published with npm provenance, so you can check that it was built from this repository by that workflow (`npm audit signatures`).
-- The first releases were published with a short-lived npm token stored as a repository secret. We are moving to npm trusted publishing (OIDC); after that, no npm token exists anywhere.
+- Releases are published with npm trusted publishing (OIDC): npm only accepts a release from this repository's release workflow, and no npm token is stored anywhere. Versions 1.0.0 to 1.1.0 were published with a short-lived npm token.
 
 ## Safe harbor
 
