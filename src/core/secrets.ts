@@ -48,13 +48,26 @@ const FILE_PATH =
 /** Placeholder text inside a value that otherwise looks real: AKIAIOSFODNN7EXAMPLE, sk-ant-xxxxxxxx… */
 const PLACEHOLDER_INSIDE = /EXAMPLE|x{5,}|X{5,}|\.{3}|…|0{8,}|<[^<>]*>|\$\{|\{\{/;
 
+/** A made-up value that says so: "not-a-key", "not_a_real_secret". */
+const SAYS_FAKE = /^not[\W_]*a[\W_]*(?:real[\W_]*)?(?:key|secret|token|password)$/i;
+
+/** Base64 text, which may hide a placeholder: "bm90LWEta2V5" is "not-a-key". */
+const BASE64 = /^[A-Z0-9+/]{8,}={0,2}$/i;
+
 /** The well-known signature of the example JWT on jwt.io. */
 const JWT_IO_EXAMPLE = 'SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c';
 
 /** True when a value is obviously not a real secret: a variable, a placeholder, a type or a path. */
 export function isPlaceholder(value: string): boolean {
   const v = value.trim();
-  if (v === '' || NOT_A_SECRET.test(v) || TYPE_NAME.test(v) || FILE_PATH.test(v)) return true;
+  if (v === '' || NOT_A_SECRET.test(v) || TYPE_NAME.test(v) || FILE_PATH.test(v) || SAYS_FAKE.test(v)) return true;
+  // Code, not a value: Buffer.from('...'), read up to the quote, also with the "(" escaped in JSON or a shell.
+  if (/^[A-Z_$][\w$.]*\\{0,2}\($/i.test(v)) return true;
+  // A test value written in base64: decoded, it is a placeholder.
+  if (BASE64.test(v) && v.length % 4 === 0) {
+    const decoded = Buffer.from(v, 'base64').toString('latin1');
+    if (/^[\x20-\x7e]+$/.test(decoded) && (NOT_A_SECRET.test(decoded) || SAYS_FAKE.test(decoded))) return true;
+  }
   if (PLACEHOLDER_INSIDE.test(v) || v.includes(JWT_IO_EXAMPLE)) return true;
   if (/^(.)\1+$/.test(v)) return true; // ******** or aaaaaaaa
   // The part after a known prefix is all one character: ghp_xxxx…, sk-ant-0000…

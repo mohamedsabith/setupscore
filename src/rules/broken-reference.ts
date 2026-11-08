@@ -54,6 +54,9 @@ const DOMAIN = /^[\w-]+\.(?:com|org|net|io|dev|ai|co|app|me|sh|gg|so|xyz|cloud|i
 const PLACEHOLDER =
   /(?:^|\/)(?:path\/to|to\/your|foo|bar|baz|qux|x{3,}|your[-_][\w-]*|some[-_][\w-]*|my[-_]?(?:file|component|feature|module|test|page|thing)|example|placeholder)(?:\/|\.|$)/i;
 
+/** A file name pattern with a date to fill in: history/YYYY-MM.md, logs/YYYYMMDD.log, notes/yyyy-mm-dd.md. */
+const DATE_PLACEHOLDER = /(?:^|[/_.-])y{2,4}(?:[-_]?mm(?:[-_]?dd)?)?(?=[/_.-]|$)/i;
+
 const SPACE_BEFORE = /[\s([*]/;
 const SPACE_AFTER = /[\s.,;:!?)\]*]/;
 
@@ -116,7 +119,7 @@ export const brokenReference: Rule = {
           const backslashes = ref.includes('\\');
           const path = backslashes ? ref.replaceAll('\\', '/') : ref;
 
-          if (PLACEHOLDER.test(path) || LOCAL_ONLY.test(path)) continue;
+          if (PLACEHOLDER.test(path) || DATE_PLACEHOLDER.test(path) || LOCAL_ONLY.test(path)) continue;
           if (EXAMPLE_BEFORE.test(l.text.slice(Math.max(0, m.index - 100), m.index))) continue;
           const relative = /^\.{1,2}\//.test(path);
           const first = normRel(path).split('/')[0]!;

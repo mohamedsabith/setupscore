@@ -27,6 +27,34 @@ describe('broken-reference', () => {
     ).toEqual([]);
   });
 
+  it('ignores a file name with a date to fill in: history/YYYY-MM.md', () => {
+    for (const path of [
+      'knowledge/history/YYYY-MM.md',
+      'logs/YYYYMMDD.log',
+      'notes/yyyy-mm-dd.md',
+      'reports/YYYY/summary.md',
+      'changes/2024-YYYY.md',
+    ])
+      expect(
+        lint('broken-reference', {
+          'CLAUDE.md': `- Add an entry to \`${path}\`.\n`,
+          'knowledge/x.md': '',
+          'logs/x.log': '',
+          'notes/x.md': '',
+          'reports/x.md': '',
+          'changes/x.md': '',
+        }),
+        path,
+      ).toEqual([]);
+    // A real dated file that is missing is still reported.
+    expect(
+      lint('broken-reference', {
+        'CLAUDE.md': '- Read `knowledge/history/2026-11.md`.\n',
+        'knowledge/history/2026-10.md': '',
+      }),
+    ).toHaveLength(1);
+  });
+
   it('ignores URLs, globs, placeholders, build output, other packages and code blocks', () => {
     expect(
       lint('broken-reference', {
@@ -501,6 +529,24 @@ describe('secret', () => {
         ].join('\n'),
       }),
     ).toEqual([]);
+  });
+
+  it('ignores a test key that says it is fake, also in base64, and code that builds one', () => {
+    // From a real settings.local.json: a sed command that swaps a test fixture.
+    expect(
+      lint('secret', {
+        'CLAUDE.md': [
+          "- JWT_PRIVATE_KEY: 'not-a-key'",
+          "- JWT_PRIVATE_KEY: 'bm90LWEta2V5'", // base64 of "not-a-key"
+          "- JWT_PRIVATE_KEY: Buffer.from('not-a-key').toString('base64')",
+          "- JWT_PRIVATE_KEY: Buffer.from\\('x'\\)",
+          "- API_TOKEN: 'ZmFrZS10b2tlbi0xMjM='", // base64 of "fake-token-123"
+        ].join('\n'),
+      }),
+    ).toEqual([]);
+    // Base64 of a real-looking password is still a secret.
+    expect(lint('secret', { 'CLAUDE.md': "- DB_PASSWORD: 'c3VwZXJzM2NyZXQhMjM0'\n" })).toHaveLength(1);
+    expect(lint('secret', { 'CLAUDE.md': "- DB_PASSWORD: 'hunter2(x'\n" })).toHaveLength(1);
   });
 
   it('checks env and headers blocks in .mcp.json', () => {

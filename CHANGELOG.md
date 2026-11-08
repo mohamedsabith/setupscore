@@ -2,6 +2,13 @@
 
 All notable changes to this project are documented here. The project follows [Semantic Versioning](https://semver.org/). The command line, exit codes, `setupscore.yml` and the JSON output (`schemaVersion`) are the public API.
 
+## Unreleased
+
+### Fixed
+
+- `broken-reference` no longer reports a file name with a date to fill in, such as `knowledge/history/YYYY-MM.md`, `logs/YYYYMMDD.log` or `notes/yyyy-mm-dd.md`: it is a pattern, not a file. A real dated file that is missing (`2026-11.md`) is still reported. On 114 public repositories this removes 12 false alarms.
+- `secret` no longer reports code that builds a value, such as `JWT_PRIVATE_KEY: Buffer.from('…')` or `password = get_password_hash(…)`, or a test value that says it is fake, also in base64 (`'bm90LWEta2V5'` is "not-a-key"). On 114 public repositories this removes 11 false alarms.
+
 ## 1.2.1 - 2026-11-08
 
 ### Fixed
