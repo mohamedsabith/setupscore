@@ -100,7 +100,7 @@ So choose the title with care. A check on every pull request enforces the format
 3. **Add tests** (see [Tests](#tests)) and update the docs if users will notice the change: `README.md`, `docs/`, and `docs/rules.md` for rules. Don't edit `CHANGELOG.md` or the version in `package.json`: the maintainer updates them for each release.
 4. **Run `npm run check-all`.**
 5. **Open the pull request.** Use a Conventional Commit title, fill in the template, and link the issue (`Fixes #123`). Open it as a draft if you want early feedback.
-6. **Checks.** A maintainer runs `npm run check-all` again before merging.
+6. **Checks.** CI runs the tests on Linux, macOS and Windows with Node 22 and 24, plus every other check in `npm run check-all`. Another check makes sure the title is a Conventional Commit. All of them must pass before merging.
 7. **Review.** A maintainer looks at new pull requests within a week. Answer review comments yourself, and push new commits to the same branch.
 8. **Merge and release.** A maintainer squash-merges the pull request. It is published with the next release (see [RELEASING.md](RELEASING.md)).
 

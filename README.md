@@ -4,6 +4,7 @@
 
 <p align="center">
   <a href="https://www.npmjs.com/package/setupscore"><img src="https://img.shields.io/npm/v/setupscore" alt="npm version"></a>
+  <a href="https://github.com/mohamedsabith/setupscore/actions/workflows/ci.yml"><img src="https://github.com/mohamedsabith/setupscore/actions/workflows/ci.yml/badge.svg" alt="CI status"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue" alt="License: MIT"></a>
   <img src="https://img.shields.io/badge/node-%E2%89%A5%2022.12-339933?logo=node.js&logoColor=white" alt="Node.js 22.12 or newer">
   <img src="https://img.shields.io/badge/check-free%20%C2%B7%20offline-2ea44f" alt="check is free and works offline">

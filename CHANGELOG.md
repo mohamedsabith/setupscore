@@ -2,6 +2,12 @@
 
 All notable changes to this project are documented here. The project follows [Semantic Versioning](https://semver.org/). The command line, exit codes, `setupscore.yml` and the JSON output (`schemaVersion`) are the public API.
 
+## Unreleased
+
+### Changed (development only, nothing changes for users)
+
+- CI is back: every pull request and every push to `main` runs the tests on Linux, macOS and Windows with Node 22 and 24, plus format, lint, layer, unused-code, public API and package checks. Pull request titles are checked with commitlint.
+
 ## 1.1.1 - 2026-11-08
 
 ### Changed

@@ -1,0 +1,94 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+# A new push to a pull request cancels the older run. Pushes to main each get their own
+# group, so they are never cancelled or skipped.
+concurrency:
+  group: ci-${{ github.event_name == 'pull_request' && github.ref || github.sha }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  test:
+    name: Node ${{ matrix.node }} on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    env:
+      HUSKY: 0 # no git hooks are needed on CI machines
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        node: [22, 24]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: ${{ matrix.node }}
+          cache: npm
+      - run: npm ci
+
+      # The OS sandbox: built into macOS; on Linux it needs bubblewrap and socat, and
+      # Ubuntu 24.04's AppArmor policy must allow unprivileged user namespaces.
+      # The sandbox runtime also needs ripgrep (rg) on both.
+      # On Windows the sandbox tests are skipped (setupscore tasks uses WSL2 there).
+      - name: Install the Linux sandbox tools
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -y -q bubblewrap socat ripgrep
+          sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0 || true
+      - name: Install ripgrep on macOS
+        if: runner.os == 'macOS'
+        run: command -v rg > /dev/null || brew install ripgrep
+
+      # The checks that give the same result everywhere run once (Linux, Node 24), before the slow tests.
+      - name: Format, lint, layers and unused code
+        if: runner.os == 'Linux' && matrix.node == 24
+        run: |
+          npm run format:check
+          npm run lint
+          npm run deps
+          npm run knip
+
+      - run: npm run typecheck
+      - run: npm test
+
+      - name: Public API report and package checks
+        if: runner.os == 'Linux' && matrix.node == 24
+        run: |
+          npm run api
+          npm run check:package
+
+      - name: The sandbox must work here (Linux and macOS)
+        if: runner.os != 'Windows'
+        run: node dist/cli.js doctor
+
+      - name: Check this repo with itself
+        run: node dist/cli.js check . --strict
+
+      - name: Install the packed package and run it like a user
+        shell: bash
+        run: |
+          npm pack --pack-destination "$RUNNER_TEMP"
+          mkdir -p "$RUNNER_TEMP/app" && cd "$RUNNER_TEMP/app"
+          npm init -y > /dev/null
+          npm install "$RUNNER_TEMP"/setupscore-*.tgz
+          npx setupscore --version
+          # The example is broken on purpose, so exit code 1 is the expected result.
+          set +e
+          npx setupscore check "$GITHUB_WORKSPACE/examples/bakery-api" --json > result.json
+          code=$?
+          set -e
+          test "$code" -eq 1
+          node -e "const r=require('./result.json'); if (r.schemaVersion !== 1 || r.summary.errors < 1) process.exit(1)"
+          # The library loads from ESM and from CommonJS (require(esm), Node 22.12 and newer).
+          node --input-type=module -e "const m = await import('setupscore'); if (typeof m.check !== 'function') process.exit(1)"
+          node -e "const m = require('setupscore'); if (typeof m.check !== 'function') process.exit(1)"

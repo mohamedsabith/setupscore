@@ -1,0 +1,30 @@
+name: Pull request title
+
+# Pull requests are squash-merged, so the title becomes the commit on main. It must be a
+# Conventional Commit (see CONTRIBUTING.md). Runs again when the title is edited.
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened]
+
+permissions:
+  contents: read
+
+jobs:
+  title:
+    name: The title is a Conventional Commit
+    runs-on: ubuntu-latest
+    env:
+      HUSKY: 0
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      # The title comes in through an environment variable, never into the script itself,
+      # so a title like $(curl ...) is only text.
+      - name: Check the title with commitlint
+        env:
+          TITLE: ${{ github.event.pull_request.title }}
+        run: printf '%s\n' "$TITLE" | npx --no -- commitlint
