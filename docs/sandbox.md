@@ -12,7 +12,7 @@ setupscore uses [Anthropic's sandbox runtime](https://github.com/anthropics/sand
 | Linux | bubblewrap | `sudo apt-get install bubblewrap socat ripgrep` (or dnf / pacman) |
 | Windows | WSL2 with bubblewrap | Run setupscore inside WSL2 and install the same three packages; native Windows is planned |
 
-On Linux the sandbox runtime needs all three: bubblewrap isolates each command, socat carries its network traffic through setupscore's filter, and ripgrep (`rg`) finds the files the runtime always protects. On Ubuntu 24.04 and newer, AppArmor can block bubblewrap; when the sandbox can't start, `setupscore doctor` links to the fix.
+On Linux the sandbox runtime needs all three: bubblewrap isolates each command, socat carries its network traffic through setupscore's filter, and ripgrep (`rg`) finds the files the runtime always protects. On Ubuntu 24.04 and newer, AppArmor can block bubblewrap; when the sandbox can't start, `setupscore doctor` shows the fix for your machine. On Ubuntu 25.04 and newer, AppArmor's `bwrap-userns-restrict` profile also stops the sandbox's seccomp helper ([anthropics/sandbox-runtime#429](https://github.com/anthropics/sandbox-runtime/issues/429)). Until the sandbox runtime handles it, the fix turns that profile off until the next restart, which weakens a protection of the whole machine. The GitHub Action does this on its throwaway runners.
 
 **No Docker, no virtual machine.** Commands start in milliseconds.
 

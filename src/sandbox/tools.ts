@@ -92,6 +92,11 @@ const inContainer = () =>
   /docker|containerd|kubepods|lxc/.test(readText('/proc/1/cgroup'));
 const onWsl = () => /microsoft/i.test(readText('/proc/version'));
 
+/** The seccomp helper bwrap starts got no capabilities (Ubuntu 25.04+ AppArmor, anthropics/sandbox-runtime#429). */
+const isHelperCapabilityError = (detail: string): boolean =>
+  /capability-restricted|caller must provide CAP_SYS_ADMIN/i.test(detail);
+const BWRAP_PROFILE = '/etc/apparmor.d/bwrap-userns-restrict';
+
 /** bwrap could not create its namespaces (disabled by the kernel, AppArmor or a container). */
 const isNamespaceError = (detail: string): boolean =>
   /namespace|uid map|setting up uid|unprivileged|clone.*(?:not permitted|EPERM)|unshare.*(?:not permitted|EPERM)|Operation not permitted/i.test(
@@ -111,6 +116,21 @@ export function linuxSandboxFix(detail = ''): string {
         distro,
       )}`,
     );
+  } else if (isHelperCapabilityError(detail)) {
+    lines.push(
+      "The sandbox's seccomp helper gets no capabilities from the programs that start it, so no command can run.",
+    );
+    if (existsSync(BWRAP_PROFILE)) {
+      lines.push(
+        `Ubuntu's AppArmor profile for bubblewrap causes this. To allow it until the next restart:  ${sudo}sysctl -w kernel.apparmor_restrict_unprivileged_userns=0 && ${sudo}apparmor_parser -R ${BWRAP_PROFILE}`,
+      );
+      lines.push(
+        '  This turns off an AppArmor protection for the whole machine: fine on a throwaway CI runner, your call on a computer you use.',
+      );
+    } else {
+      lines.push('A security module (AppArmor or SELinux) or a container takes those capabilities away.');
+    }
+    lines.push('  Details: https://github.com/anthropics/sandbox-runtime/issues/429');
   } else if (isNamespaceError(detail)) {
     lines.push('bubblewrap cannot create the user namespace the sandbox runs in.');
     if (readText('/proc/sys/user/max_user_namespaces').trim() === '0') {

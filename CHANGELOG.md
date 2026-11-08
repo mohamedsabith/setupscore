@@ -6,11 +6,12 @@ All notable changes to this project are documented here. The project follows [Se
 
 ### Fixed
 
+- The GitHub Action's `run` works again on `ubuntu-latest`. Since October 2026 that is Ubuntu 26.04, where AppArmor's `bwrap-userns-restrict` profile stopped the OS sandbox from starting ([anthropics/sandbox-runtime#429](https://github.com/anthropics/sandbox-runtime/issues/429)). The Action now unloads that profile on the runner.
 - On Windows, `report --output` with a folder instead of a file now says "it is a folder" and exits 2, like on macOS and Linux. Before, it said "No permission to write" and exited 3.
 
 ### Changed
 
-- The GitHub Action examples for `run` use `runs-on: ubuntu-24.04`. On the new Ubuntu 26.04 runners (`ubuntu-latest` since October 2026) the OS sandbox cannot start yet, so `run` stops there with exit code 3. `check` works on every runner.
+- On Ubuntu 25.04 and newer, when AppArmor stops the sandbox's seccomp helper, `setupscore doctor` says so and shows the commands that fix it, instead of only suggesting to install bubblewrap.
 
 ### Changed (development only, nothing changes for users)
 

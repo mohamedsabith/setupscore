@@ -15,9 +15,7 @@ permissions:
 
 jobs:
   publish:
-    # Ubuntu 24.04: on the Ubuntu 26.04 runners the OS sandbox cannot start, and its tests
-    # (a malicious test must not escape) would only be skipped.
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     env:
       HUSKY: 0 # no git hooks are needed on the release machine
     permissions:
@@ -45,6 +43,12 @@ jobs:
           sudo apt-get update -q
           sudo apt-get install -y -q bubblewrap socat ripgrep
           sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0 || true
+          # Ubuntu 25.04 and newer (ubuntu-latest is 26.04): this AppArmor profile takes capabilities away
+          # from the programs bwrap starts, so the sandbox's seccomp helper cannot start
+          # (anthropics/sandbox-runtime#429). Unloading it is fine on a throwaway runner.
+          if [ -f /etc/apparmor.d/bwrap-userns-restrict ]; then
+            sudo apparmor_parser -R /etc/apparmor.d/bwrap-userns-restrict
+          fi
       - run: npm run typecheck
       - run: npm test
       # The sandbox tests above are skipped where the sandbox cannot start: make sure they ran.

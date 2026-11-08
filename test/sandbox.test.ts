@@ -28,6 +28,7 @@ import {
   sandboxHint,
 } from '../src/sandbox/index.js';
 import { npmReason } from '../src/sandbox/runtime.js';
+import { linuxSandboxFix } from '../src/sandbox/tools.js';
 import { OsSandbox } from '../src/sandbox/os.js';
 import { buildTasks, policiesFor } from '../src/tasks/build.js';
 import { Workspace } from '../src/tasks/workspace.js';
@@ -285,6 +286,36 @@ describe('sandbox start-up without the sandbox', () => {
       rmSync(cache, { recursive: true, force: true });
     }
   });
+
+  it.runIf(process.platform === 'linux')(
+    'explains when AppArmor stops the seccomp helper (Ubuntu 25.04+), and only then',
+    () => {
+      const bin = mkdtempSync(join(tmpdir(), 'setupscore-bin-'));
+      for (const name of ['bwrap', 'socat', 'rg']) {
+        writeFileSync(join(bin, name), '#!/bin/sh\n');
+        chmodSync(join(bin, name), 0o755);
+      }
+      const old = process.env['PATH'];
+      process.env['PATH'] = bin;
+      try {
+        const helper = linuxSandboxFix(
+          'apply-seccomp: write /proc/self/setgroups (nested userns is capability-restricted; caller must provide CAP_SYS_ADMIN): Permission denied',
+        );
+        expect(helper).toContain('seccomp helper gets no capabilities');
+        expect(helper).toContain('https://github.com/anthropics/sandbox-runtime/issues/429');
+        // The commands are only offered where the profile they unload exists.
+        const profile = existsSync('/etc/apparmor.d/bwrap-userns-restrict');
+        expect(helper.includes('apparmor_parser -R /etc/apparmor.d/bwrap-userns-restrict')).toBe(profile);
+        for (const other of [
+          'bwrap: setting up uid map: Permission denied',
+          'bwrap: execvp sh: No such file or directory',
+        ])
+          expect(linuxSandboxFix(other)).not.toContain('seccomp helper');
+      } finally {
+        process.env['PATH'] = old;
+      }
+    },
+  );
 
   it.runIf(process.platform === 'linux')('names ripgrep when it is missing, and the fix installs it (X8)', () => {
     const bin = mkdtempSync(join(tmpdir(), 'setupscore-bin-'));

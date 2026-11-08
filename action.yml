@@ -61,7 +61,7 @@ runs:
         esac
         if [ "$command" = run ]; then
           if [ "$RUNNER_OS" = Windows ]; then
-            fail 3 'command: run needs an OS sandbox, and native Windows has none. Run this job on ubuntu-24.04 or macos-latest (command: check works on Windows).'
+            fail 3 'command: run needs an OS sandbox, and native Windows has none. Run this job on ubuntu-latest or macos-latest (command: check works on Windows).'
           fi
           if [ "$HAS_KEY" != true ] && [ -z "${ANTHROPIC_AUTH_TOKEN:-}" ] && [ -z "${CLAUDE_CODE_USE_BEDROCK:-}" ]; then
             fail 3 'command: run got no key or token. Pass anthropic-api-key or claude-code-oauth-token from a repository secret. GitHub gives no secrets to pull requests from forks, so use command: check for those (it is free and needs no key).'
@@ -94,6 +94,11 @@ runs:
             sudo apt-get update -q || return
             sudo apt-get install -y -q bubblewrap socat ripgrep || return
             sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0 || true
+            # Ubuntu 25.04+ (ubuntu-latest is 26.04): this AppArmor profile takes capabilities away from the
+            # programs bwrap starts, so the sandbox cannot start. Fine to unload on a throwaway runner.
+            if [ -f /etc/apparmor.d/bwrap-userns-restrict ]; then
+              sudo apparmor_parser -R /etc/apparmor.d/bwrap-userns-restrict || true
+            fi
           elif [ "$RUNNER_OS" = "macOS" ] && ! command -v rg > /dev/null; then
             brew install ripgrep || return
           fi
