@@ -29,7 +29,7 @@ const PLACEHOLDER =
   /(?:^|\/)(?:path\/to|to\/your|foo|bar|baz|qux|x{3,}|your[-_][\w-]*|some[-_][\w-]*|my[-_]?(?:file|component|feature|module|test|page|thing)|example|placeholder)(?:\/|\.|$)/i;
 
 /** A file name pattern with a date to fill in: history/YYYY-MM.md, logs/YYYYMMDD.log, notes/yyyy-mm-dd.md. */
-export const DATE_PLACEHOLDER = /(?:^|[/_.-])y{2,4}(?:[-_]?mm(?:[-_]?dd)?)?(?=[/_.-]|$)/i;
+export const DATE_PLACEHOLDER = /(?:^|[/_.-])[yY]{2,4}(?:[-_]?[mM]{2}(?:[-_]?[dD]{2})?)?(?=[/_.-]|$)|Y{4}/;
 const SPACE_BEFORE = /[\s([*]/;
 const SPACE_AFTER = /[\s.,;:!?)\]*]/;
 

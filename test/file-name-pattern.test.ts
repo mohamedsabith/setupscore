@@ -25,6 +25,11 @@ describe('file-name-pattern: a file name pattern with a date, checked against th
       ['plans/YYYY-MM-DD-ENG-XXXX-description.md', { 'plans/2026-11-08-ENG-1234-fix-login.md': '' }],
       ['adr/YYYY-MM-DD-<title>.md', { 'adr/2026-11-08-use-postgres.md': '' }],
       ['reports/YYYY/MM.md', { 'reports/2026/10.md': '' }],
+      // Letters glued together: ISO time, ISO week, quarter, a prefix before the year.
+      ['logs/YYYY-MM-DDTHH-mm-ss.log', { 'logs/2026-11-08T14-30-05.log': '' }],
+      ['weekly/YYYY-Www.md', { 'weekly/2026-W45.md': '' }],
+      ['okr/YYYY-QN.md', { 'okr/2026-Q4.md': '' }],
+      ['releases/vYYYY.MM.md', { 'releases/v2026.11.md': '' }],
     ];
     for (const [pattern, files, from] of ok) expect(check(pattern, files, from), pattern).toEqual([]);
     // Written in a nested CLAUDE.md: the pattern is read from that folder.
@@ -46,6 +51,8 @@ describe('file-name-pattern: a file name pattern with a date, checked against th
       ['notes/YYYY-MM-DD.md', { 'notes/2026-11.md': '' }, '"2026-11.md"'],
       ['plans/YYYY-MM-DD-ENG-XXXX-description.md', { 'plans/ENG-1234-2026-11-08.md': '' }, '"ENG-1234-2026-11-08.md"'],
       ['logs/YYYYMMDD.log', { 'logs/08-11-2026.log': '' }, '"08-11-2026.log"'],
+      ['releases/vYYYY.MM.md', { 'releases/2026-11.md': '' }, '"2026-11.md"'],
+      ['weekly/YYYY-Www.md', { 'weekly/2026-11-08.md': '' }, '"2026-11-08.md"'],
     ];
     for (const [pattern, files, shown] of wrong) {
       const issues = check(pattern, files);
@@ -94,6 +101,23 @@ describe('file-name-pattern: a file name pattern with a date, checked against th
     expect(
       check('knowledge/history/YYYY-MM.md', { 'docs/history/notes.md': '', 'docs/history/2026_10.md': '' }),
     ).toEqual([]);
+  });
+
+  it("reads a nested file's pattern in its own folder first, even when the root has a folder of that name", () => {
+    expect(
+      lint(RULE, {
+        'history/2000-01-01.md': '',
+        'apps/a/CLAUDE.md': '- Write `history/YYYY-MM.md`.\n',
+        'apps/a/history/2026-10.md': '',
+      }),
+    ).toEqual([]);
+    const wrong = lint(RULE, {
+      'history/2026-10.md': '',
+      'apps/a/CLAUDE.md': '- Write `history/YYYY-MM.md`.\n',
+      'apps/a/history/2026_10.md': '',
+    });
+    expect(wrong).toHaveLength(1);
+    expect(wrong[0]!.message).toContain('no file in apps/a/history/');
   });
 
   it('works in any layout: a monorepo package, a .claude/ folder of a package, a skill, a deep folder', () => {

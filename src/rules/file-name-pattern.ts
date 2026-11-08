@@ -10,19 +10,41 @@ const NAME_WORDS =
 const DATED = /(?<!\d)(?:19|20)\d\d/;
 
 /** One part of a file name pattern as a regular expression: YYYY -> 4 digits, XXXX or <id> -> anything. */
-function tokenPattern(token: string): string {
-  if (/^(?:y{2}|y{4})$/i.test(token) || /^(?:y{2}|y{4})[md]{2,4}(?:hh?(?:mm?)?)?$/i.test(token))
-    return `\\d{${token.length}}`;
-  if (/^(?:mm?|dd?|hh?|ss?)$/i.test(token)) return token.length === 1 ? '\\d{1,2}' : '\\d{2}';
+/** One run of a letter in a pattern: YYYY, MM, D, ww, T, ... */
+function runPattern(run: string): string {
+  if (/^(?:y{2}|y{4})$/i.test(run)) return `\\d{${run.length}}`;
+  // Month, day, hour, second (M or MM ...), and a week number written twice (ww).
+  if (/^(?:mm?|dd?|hh?|ss?|ww)$/i.test(run)) return run.length === 1 ? '\\d{1,2}' : '\\d{2}';
   if (
-    // XXXX, NNNN, ###, and one capital letter such as the P (patch) in YYYY.M.P.md
-    /^(?:x{2,}|n{2,}|#+)$/i.test(token) ||
-    /^[A-Z]$/.test(token) ||
-    NAME_WORDS.test(token) ||
-    /^(?:<[^<>]*>|\{[^{}]*\}|\[[^[\]]*\])$/.test(token)
+    // XXXX, NNNN, ###, and one capital letter such as the P (patch) in YYYY.M.P.md or the T in DDTHH
+    /^(?:x{2,}|n{2,}|#+)$/i.test(run) ||
+    /^[A-Z]$/.test(run) ||
+    NAME_WORDS.test(run) ||
+    /^(?:<[^<>]*>|\{[^{}]*\}|\[[^[\]]*\])$/.test(run)
   )
     return '[^/]+?';
-  return token.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  return run.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+/**
+ * One part of a file name pattern as a regular expression: YYYY -> 4 digits, XXXX or <id> -> anything.
+ * Letters glued together are read one run at a time: YYYYMMDD, DDTHH (ISO time), Www (ISO week, W45),
+ * QN (quarter, Q4), vYYYY (v2026). Only parts made of these date letters, or that hold a year, are split.
+ */
+function tokenPattern(token: string): string {
+  if (/^[a-z]+$/i.test(token) && (/y{2}/i.test(token) || /^[ymdhswqnt]+$/i.test(token))) {
+    // Runs of one letter in one case: "Www" is W then ww, "DDTHH" is DD, T, HH.
+    const runs: string[] = [];
+    for (const ch of token) {
+      const last = runs.length - 1;
+      if (last >= 0 && runs[last]![0] === ch) runs[last] = runs[last]! + ch;
+      else runs.push(ch);
+    }
+    // A capital that only marks what follows is written as it is: the W of W45, the Q of Q4, the T of 14:30.
+    const marker = (run: string, k: number) => /^[A-Z]$/.test(run) && !/^[MDHS]$/.test(run) && k < runs.length - 1;
+    if (runs.length > 1) return runs.map((run, k) => (marker(run, k) ? run : runPattern(run))).join('');
+  }
+  return runPattern(token);
 }
 
 /** A path segment as a regular expression, and whether it holds anything to fill in. */
@@ -45,7 +67,8 @@ type PatternCheck =
  * A file name pattern (knowledge/history/YYYY-MM.md, docs/plans/YYYY-MM-DD-ENG-XXXX-description.md,
  * reports/YYYY/MM.md) compared with the files it describes. No folder name or place is assumed:
  * - the folder is looked up from each place the path may be written from (the project root, the
- *   instruction file's own folder, the folder that holds its .claude/), in any project layout;
+ *   instruction file's own folder, then the folder that holds its .claude/, then the project root),
+ *   in any project layout;
  * - when that folder has files with a year in their name and the same extension, at least one must
  *   fit the pattern, or the pattern and the files disagree;
  * - when the folder exists nowhere, a folder of the same name elsewhere whose files fit is reported
@@ -100,7 +123,8 @@ export const fileNamePattern: Rule = {
   check(ctx: Context): Issue[] {
     const issues: Issue[] = [];
     for (const f of instructionFiles(ctx)) {
-      const bases = [...new Set(['', dirOf(f.path), projectFolder(f.path)])];
+      // The most specific folder first: a nested CLAUDE.md means its own folder, like broken-reference.
+      const bases = [...new Set([dirOf(f.path), projectFolder(f.path), ''])];
       for (const { line, column, ref, path } of pathMentions(f)) {
         if (!DATE_PLACEHOLDER.test(path)) continue;
         const r = checkPattern(ctx, path, bases);

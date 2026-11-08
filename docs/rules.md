@@ -55,9 +55,9 @@ A file name pattern with a date in your instructions (`knowledge/history/YYYY-MM
 that way (the files there look like "2026_10.md" … "2026_11.md"), so Claude would start a second naming style.
 ```
 
-**No folder name or layout is assumed.** The folder is looked up from every place the path may be written from: the project root, the instruction file's own folder (a nested `CLAUDE.md` in a monorepo package), and the folder that holds its `.claude/`. It works the same for any folder name and depth, and for patterns written in `CLAUDE.md`, rules, skills, agents and commands.
+**No folder name or layout is assumed.** The folder is looked up from every place the path may be written from, the most specific first: the instruction file's own folder (a nested `CLAUDE.md` in a monorepo package), the folder that holds its `.claude/`, then the project root. It works the same for any folder name and depth, and for patterns written in `CLAUDE.md`, rules, skills, agents and commands.
 
-**How a pattern is read.** `YYYY`, `YY`, `MM`, `DD` and `HH`, in any letter case, stand for digits. `XXXX`, `NNNN`, one capital letter (the `P` in `YYYY.M.P.md`), `<title>`, `{id}`, `[slug]` and words such as `description`, `slug`, `title` or `version` stand for any text. Everything else must be written as it is (`ENG` in `YYYY-MM-DD-ENG-XXXX.md`).
+**How a pattern is read.** `YYYY`, `YY`, `MM`, `DD`, `HH` and `ss`, in any letter case, stand for digits, also glued together (`YYYYMMDD`, `DDTHH` for ISO times, `Www` for ISO weeks such as `W45`, `QN` for quarters such as `Q4`, `vYYYY` for `v2026`). `XXXX`, `NNNN`, one capital letter (the `P` in `YYYY.M.P.md`), `<title>`, `{id}`, `[slug]` and words such as `description`, `slug`, `title` or `version` stand for any text. Everything else must be written as it is (`ENG` in `YYYY-MM-DD-ENG-XXXX.md`).
 
 **When it reports:**
 
