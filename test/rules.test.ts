@@ -27,32 +27,15 @@ describe('broken-reference', () => {
     ).toEqual([]);
   });
 
-  it('ignores a file name with a date to fill in: history/YYYY-MM.md', () => {
-    for (const path of [
-      'knowledge/history/YYYY-MM.md',
-      'logs/YYYYMMDD.log',
-      'notes/yyyy-mm-dd.md',
-      'reports/YYYY/summary.md',
-      'changes/2024-YYYY.md',
-    ])
+  it('leaves a file name pattern with a date (history/YYYY-MM.md) to file-name-pattern', () => {
+    for (const files of [{}, { 'knowledge/history/2026_10.md': '' }, { 'knowledge/history/2026-10.md': '' }])
       expect(
         lint('broken-reference', {
-          'CLAUDE.md': `- Add an entry to \`${path}\`.\n`,
+          'CLAUDE.md': '- Add an entry to `knowledge/history/YYYY-MM.md`.\n',
           'knowledge/x.md': '',
-          'logs/x.log': '',
-          'notes/x.md': '',
-          'reports/x.md': '',
-          'changes/x.md': '',
+          ...files,
         }),
-        path,
       ).toEqual([]);
-    // A real dated file that is missing is still reported.
-    expect(
-      lint('broken-reference', {
-        'CLAUDE.md': '- Read `knowledge/history/2026-11.md`.\n',
-        'knowledge/history/2026-10.md': '',
-      }),
-    ).toHaveLength(1);
   });
 
   it('ignores URLs, globs, placeholders, build output, other packages and code blocks', () => {

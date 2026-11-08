@@ -44,6 +44,7 @@ npx setupscore rules              # list every rule and why it matters
 | `broken-reference` | error | A file path in your instructions that doesn't exist |
 | `broken-import` | error | An `@path` import in CLAUDE.md that points to a missing file |
 | `missing-script` | error | `npm run x` / `pnpm run x` / `npm test` where the script doesn't exist |
+| `file-name-pattern` | warning | A file name pattern such as `history/YYYY-MM.md` that the files in that folder don't follow |
 | `wrong-package-manager` | warning | "Use pnpm" or `yarn add x` in a project whose lockfile or `packageManager` says npm (or any other mix) |
 | `wrong-test-runner` | warning | "We use Jest" or `npx jest` in a project whose `test` script runs Vitest (or any other mix) |
 | `wrong-node-version` | warning | "Requires Node 18" in a project whose `engines.node` says `>=22.12` |

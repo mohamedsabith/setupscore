@@ -7,6 +7,7 @@ import { brokenReference } from './broken-reference.js';
 import { contradiction } from './contradiction.js';
 import { deepImport } from './deep-import.js';
 import { duplicateRule } from './duplicate-rule.js';
+import { fileNamePattern } from './file-name-pattern.js';
 import { envNotDenied } from './env-not-denied.js';
 import { invalidConfig } from './invalid-config.js';
 import { mcpConfig } from './mcp-config.js';
@@ -26,6 +27,7 @@ import { wrongTestRunner } from './wrong-test-runner.js';
 export const RULES: readonly Rule[] = [
   // Broken things: Claude is told something that cannot work.
   brokenReference,
+  fileNamePattern,
   brokenImport,
   missingScript,
   wrongPackageManager,

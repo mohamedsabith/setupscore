@@ -4,9 +4,13 @@ All notable changes to this project are documented here. The project follows [Se
 
 ## Unreleased
 
+### Added
+
+- New rule `file-name-pattern` (warning): a file name pattern in your instructions, such as `knowledge/history/YYYY-MM.md` or `plans/YYYY-MM-DD-ENG-XXXX-description.md`, that the files in that folder don't follow, so Claude would start a second naming style. No folder name or layout is assumed: the folder is looked up from the project root, the instruction file's folder and the folder of its `.claude/`. When the folder exists nowhere but exactly one folder of that name elsewhere has files that fit, it says where they are. It says nothing when it can't tell (no folder or no dated file yet). On 114 public repositories it finds 4 patterns the files don't follow (two folders whose files have no `ENG-XXXX` part, and two whose files are named `2025-10-24T20-07-16.md`, not `YYYY-MM-DD-HH-MM.md`). See [docs/rules.md](docs/rules.md#file-name-pattern).
+
 ### Fixed
 
-- `broken-reference` no longer reports a file name with a date to fill in, such as `knowledge/history/YYYY-MM.md`, `logs/YYYYMMDD.log` or `notes/yyyy-mm-dd.md`: it is a pattern, not a file. A real dated file that is missing (`2026-11.md`) is still reported. On 114 public repositories this removes 12 false alarms.
+- `broken-reference` no longer says a file name pattern with a date "does not exist" (`knowledge/history/YYYY-MM.md`, `logs/YYYYMMDD.log`): it is a pattern, not a file. A real dated file that is missing (`2026-11.md`) is still reported. On 114 public repositories this removes 12 false alarms.
 - `secret` no longer reports code that builds a value, such as `JWT_PRIVATE_KEY: Buffer.from('…')` or `password = get_password_hash(…)`, or a test value that says it is fake, also in base64 (`'bm90LWEta2V5'` is "not-a-key"). On 114 public repositories this removes 11 false alarms.
 
 ## 1.2.1 - 2026-11-08

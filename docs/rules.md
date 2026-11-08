@@ -38,7 +38,33 @@ Paths in any language (`docs/menü.md`), dot folders (`.github/workflows/ci.yml`
 
 **What it ignores:** URLs, globs (`src/**/*.ts`), placeholders (`src/<name>/index.ts`, `path/to/file.ts`, `index.bundle.{FEATURE}.ts`), examples (after "e.g.", "for example", "such as" or "like"), build output (`dist/`, `build/`, `coverage/`) and anything else `.gitignore` ignores, personal files (`*.local.*`), code blocks, and paths whose first folder doesn't exist in the project (usually package paths or examples). In a file reached through a folder link, a relative path also counts when it works from where the file really is.
 
+**File name patterns with a date** (`knowledge/history/YYYY-MM.md`) are not files, so they are never reported as missing: [file-name-pattern](#file-name-pattern) checks them against the files they describe.
+
 **Auto-fix:** `--fix` rewrites the path when git history shows the file was renamed (the last 2,000 commits), when only the letter case is wrong, or when exactly one file with that name exists elsewhere in the project. Only the flagged occurrence is rewritten, every line keeps its own line ending, and each file is written atomically (a full disk never leaves half a file). If a file cannot be written, the others are still fixed and setupscore says which file failed.
+
+## file-name-pattern
+
+**Level:** warning (new in the next release; tell us with a [false-alarm report](https://github.com/mohamedsabith/setupscore/issues/new?template=2-false-alarm.yml) if it is wrong)
+
+A file name pattern with a date in your instructions (`knowledge/history/YYYY-MM.md`, `logs/YYYYMMDD.log`, `plans/YYYY-MM-DD-ENG-XXXX-description.md`, `reports/YYYY/MM.md`) doesn't fit the files it describes.
+
+**Why it matters:** Claude names new files the way the instructions say. If that differs from the files already there, the folder ends up with two naming styles, and anything that reads it (a script, an index, Claude next week) misses half of them.
+
+```
+"knowledge/history/YYYY-MM.md" is a file name pattern, but no file in knowledge/history/ is named
+that way (the files there look like "2026_10.md" … "2026_11.md"), so Claude would start a second naming style.
+```
+
+**No folder name or layout is assumed.** The folder is looked up from every place the path may be written from: the project root, the instruction file's own folder (a nested `CLAUDE.md` in a monorepo package), and the folder that holds its `.claude/`. It works the same for any folder name and depth, and for patterns written in `CLAUDE.md`, rules, skills, agents and commands.
+
+**How a pattern is read.** `YYYY`, `YY`, `MM`, `DD` and `HH`, in any letter case, stand for digits. `XXXX`, `NNNN`, one capital letter (the `P` in `YYYY.M.P.md`), `<title>`, `{id}`, `[slug]` and words such as `description`, `slug`, `title` or `version` stand for any text. Everything else must be written as it is (`ENG` in `YYYY-MM-DD-ENG-XXXX.md`).
+
+**When it reports:**
+
+- the folder has files with a year in their name and the same extension, and none of them fits the pattern;
+- the folder doesn't exist anywhere the path may be read from, and exactly one folder of that name elsewhere has files that fit. It then names that folder: _Files named that way are in docs/knowledge/history/._
+
+**When it says nothing, because it can't tell:** the folder doesn't exist yet, it has no dated file yet (the first one is still to be written), its files have another extension, more than one folder could be meant, or the pattern is an example ("e.g. …"), a placeholder (`path/to/…`) or in a code block.
 
 ## broken-import
 
