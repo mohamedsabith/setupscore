@@ -74,11 +74,19 @@ export interface LoadContext {
   when: string;
 }
 
-/** The folder a nested CLAUDE.md or .claude/rules/ file is about: "pkg/" for pkg/.claude/CLAUDE.md. */
+/**
+ * The folder a nested CLAUDE.md or rules file is about, as "pkg/" ("" for the root): pkg/.claude/CLAUDE.md
+ * and pkg/.claude/rules/x.md are about pkg/; any other CLAUDE.md (also one inside .claude/skills/x/) is
+ * about its own folder.
+ */
 const folderOf = (f: SetupFile): string => {
-  const at = f.path.indexOf('.claude/');
-  const dir = at === 0 || (at > 0 && f.path[at - 1] === '/') ? f.path.slice(0, at) : `${dirOf(f.path)}/`;
-  return dir === '/' ? '' : dir;
+  const parts = f.path.split('/');
+  const at = parts.indexOf('.claude');
+  const forParent =
+    at >= 0 &&
+    (parts[at + 1] === 'rules' || (parts.length === at + 2 && /^CLAUDE(?:\.local)?\.md$/.test(parts[at + 1]!)));
+  const dir = forParent ? parts.slice(0, at).join('/') : dirOf(f.path);
+  return dir ? `${dir}/` : '';
 };
 
 /** A skill's name is its folder: .claude/skills/deploy/SKILL.md -> "deploy". A command's is its file name. */

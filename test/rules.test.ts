@@ -371,6 +371,17 @@ describe('contradiction and duplicate-rule: files that load together (loadContex
     ).toEqual([]);
   });
 
+  it('reads a CLAUDE.md inside .claude/skills/x/ as being about that folder only', () => {
+    const issues = lint('contradiction', {
+      'CLAUDE.md': ROOT,
+      '.claude/skills/x/CLAUDE.md': '- Use raw SQL for reports.\n',
+      'pkg/CLAUDE.md': '- Keep functions short.\n',
+      'src/a.ts': '',
+    });
+    expect(issues).toHaveLength(1);
+    expect(issues[0]!.message).toContain('(both load when Claude works in .claude/skills/x/)');
+  });
+
   it('reports a start-up clash once, however many nested files there are', () => {
     const files: Record<string, string> = { 'CLAUDE.md': ROOT + '- Use raw SQL for reports.\n' };
     for (const p of ['a', 'b', 'c/d']) files[`packages/${p}/CLAUDE.md`] = '- Keep functions short.\n';

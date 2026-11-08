@@ -66,7 +66,7 @@ setupscore uses the nearest `package.json` (a `package.json` saved with a byte o
 
 ## wrong-package-manager
 
-**Level:** warning (new in the next release; tell us with a [false-alarm report](https://github.com/mohamedsabith/setupscore/issues/new?template=2-false-alarm.yml) if it is wrong)
+**Level:** warning (new in 1.1.0; tell us with a [false-alarm report](https://github.com/mohamedsabith/setupscore/issues/new?template=2-false-alarm.yml) if it is wrong)
 
 Your instructions use a different package manager than the project: "use pnpm" or `pnpm add zod` in a project with `package-lock.json`, or `npm install` in a project with `pnpm-lock.yaml`.
 
