@@ -4,6 +4,12 @@ All notable changes to this project are documented here. The project follows [Se
 
 ## Unreleased
 
+### Added
+
+- New rule `wrong-test-runner` (warning): your instructions say "we use Jest" or `npx jest`, but the project's `test` script runs Vitest (or any other mix of Jest, Vitest, Mocha, AVA and Jasmine). It only reports when the `test` script names one installed runner and the runner in the instructions is not installed at all. See [docs/rules.md](docs/rules.md#wrong-test-runner).
+- New rule `wrong-node-version` (warning): your instructions name a Node.js version that `engines.node` in `package.json` doesn't allow ("Requires Node 18" with `>=22.12`). Only simple ranges are read, and only the major version is compared. See [docs/rules.md](docs/rules.md#wrong-node-version).
+- Both rules find nothing on the 114 public repositories setupscore is tested on; they are conservative on purpose. Each finding lowers the health score by 0.5, and `--strict` fails on it. Turn them off with `rules: { wrong-test-runner: off, wrong-node-version: off }` in `setupscore.yml`.
+
 ### Changed
 
 - `contradiction` and `duplicate-rule` compare the files Claude has in front of it at the same time, not only the files loaded at start-up: a nested `CLAUDE.md` with the root one when Claude works in its folder, a `paths:` rule with `CLAUDE.md` when Claude works on a matching file, a skill or command with `CLAUDE.md` when it runs, and a subagent's prompt with the skills it preloads and with `CLAUDE.md` (unless it sets `omitClaudeMd: true`). Each finding says when the two files meet. Copies between two such files are reported once per pair of files, with a count. Imports more than four levels deep are left out, because Claude Code never loads them. See [When files meet](docs/rules.md#when-files-meet). On 114 public repositories this adds 63 `duplicate-rule` findings in 16 repositories (most are `paths:` rules that copy whole blocks of `CLAUDE.md`) and 1 `contradiction` (a subagent told not to run a command that `CLAUDE.md` says to run). Lines about the file itself ("This file provides guidance to Claude Code…") are no longer reported as duplicates.

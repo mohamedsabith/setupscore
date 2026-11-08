@@ -24,7 +24,7 @@ const CLAIM =
 const MANAGER = /\bpackage[ -]manager\s*(?:is|:)\s*`?(npm|pnpm|yarn|bun)`?(?![\w-])/gi;
 
 /** Words after which a tool is named for contrast, not as the one to use: "pnpm (NOT npm)", "migrated from yarn". */
-const CONTRAST =
+export const CONTRAST =
   /\b(?:never|not|don't|dont|do not|avoid|no longer|instead of|rather than|except|unless|stop|vs|versus|unlike|migrated from|migrating from|moved from|switched from|used to|legacy|deprecated|formerly|previously|old|replaces?|replaced|wrong|bad)\b/i;
 /**
  * Lines about somewhere else than this checkout (global installs, one-off runners, containers, CI,
@@ -37,7 +37,7 @@ const CD = /(?:^|&&|;|`)\s*(?:\$\s*)?cd\s+([^\s;&|`]+)/;
 /** A comment line in a code block: "# WRONG - do not use these". */
 const CODE_COMMENT = /^\s*(?:#|\/\/)/;
 /** Case matters for these: "CI" (not "ci" as in `npm ci`) and a Dockerfile's RUN (not "Run"). */
-const CI_OR_DOCKER_RUN = /\bCI\b|^\s*RUN\s/;
+export const CI_OR_DOCKER_RUN = /\bCI\b|^\s*RUN\s/;
 
 const isCommentLine = (text: string): boolean => /^\s*<!--.*-->\s*$/.test(text);
 

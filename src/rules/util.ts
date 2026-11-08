@@ -1,6 +1,8 @@
+import { join } from 'node:path';
 import { isInstruction, readSetupText } from '../core/discover.js';
 import { pmFromField, type PmName } from '../core/lockfiles.js';
 import { MAX_LINE } from '../core/markdown.js';
+import { dirOf } from '../core/paths.js';
 import { maskSecrets } from '../core/secrets.js';
 import type { Context, Line, SetupFile } from '../core/types.js';
 
@@ -226,6 +228,10 @@ interface PackageFacts {
   scripts: Record<string, string>;
   /** Package managers named by "packageManager" and "devEngines.packageManager". */
   declaredPms: PmName[];
+  /** "engines.node", when it is a string. */
+  engineNode?: string | undefined;
+  /** Names in "dependencies", "devDependencies", "peerDependencies" and "optionalDependencies". */
+  deps: Set<string>;
 }
 
 const pkgCache = new Map<string, PackageFacts | null>();
@@ -250,10 +256,18 @@ export function packageOf(abs: string): PackageFacts | null {
           pmFromField(isObject(pkg) ? pkg['packageManager'] : undefined),
           ...(Array.isArray(dev) ? dev : [dev]).map((d) => pmFromField(isObject(d) ? d['name'] : undefined)),
         ].filter((n): n is PmName => n !== undefined);
+        const engines = isObject(pkg) && isObject(pkg['engines']) ? pkg['engines']['node'] : undefined;
+        const deps = new Set<string>();
+        for (const field of ['dependencies', 'devDependencies', 'peerDependencies', 'optionalDependencies']) {
+          const list = isObject(pkg) ? pkg[field] : undefined;
+          if (isObject(list)) for (const name of Object.keys(list)) deps.add(name);
+        }
         out = {
           name: isObject(pkg) && typeof pkg['name'] === 'string' ? pkg['name'] : undefined,
           scripts,
           declaredPms: [...new Set(declared)],
+          engineNode: typeof engines === 'string' ? engines : undefined,
+          deps,
         };
       }
     } catch {
@@ -262,6 +276,27 @@ export function packageOf(abs: string): PackageFacts | null {
     pkgCache.set(abs, out);
   }
   return pkgCache.get(abs)!;
+}
+
+/** Lines about another place than this checkout: containers, CI, production, another branch. */
+export const ANOTHER_PLACE = /\b(?:docker|dockerfile|container|github actions|production|branch)\b|\.github\//i;
+
+/** The folder an instruction file is about: its own, or the one that holds .claude/ ("" for the root). */
+export function projectFolder(fileRel: string): string {
+  const parts = dirOf(fileRel).split('/');
+  return parts.includes('.claude') ? parts.slice(0, parts.indexOf('.claude')).join('/') : dirOf(fileRel);
+}
+
+/** The package.json closest to a folder (in it or above it), or null. Packages do not inherit "engines" or scripts. */
+export function nearestPackage(ctx: Context, dir: string): { rel: string; facts: PackageFacts } | null {
+  for (let d = dir; ; d = dirOf(d)) {
+    const rel = d ? `${d}/package.json` : 'package.json';
+    if (ctx.existsRel(rel)) {
+      const facts = packageOf(join(ctx.root, rel));
+      return facts ? { rel, facts } : null;
+    }
+    if (!d) return null;
+  }
 }
 
 export const clearCaches = (): void => {

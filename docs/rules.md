@@ -80,6 +80,32 @@ Your instructions use a different package manager than the project: "use pnpm" o
 
 There is no automatic fix: the instructions may be right and the lockfile wrong.
 
+## wrong-test-runner
+
+**Level:** warning (new in the next release; tell us with a [false-alarm report](https://github.com/mohamedsabith/setupscore/issues/new?template=2-false-alarm.yml) if it is wrong)
+
+Your instructions name a different test runner than the project uses: "we use Jest" or `npx jest` in a project whose `test` script runs Vitest.
+
+**Why it matters:** Claude writes tests for the runner the instructions name. With the wrong one, the imports, mocks (`jest.fn` instead of `vi.fn`) and commands don't work.
+
+**What counts as proof.** The `test` script in the `package.json` closest to the instruction file (in its folder or above it) names exactly one of Jest, Vitest, Mocha, AVA or Jasmine, and that runner is a dependency. The runner the instructions name must not be installed at all: a project with both may use each for a different part.
+
+**What counts as an instruction.** Claims such as "we use Jest", "tests are written with jest", "run the tests with mocha" or "Testing: jest", and commands that start a runner (`npx jest`, `pnpm vitest run`, `jest --watch`), also in code blocks. Skills, agents and commands, which are often copied from other projects, are not checked.
+
+**What is left alone:** lines that name several runners ("Vitest has a Jest-compatible API"), runners named for contrast ("not jest", "migrated from jest"), helpers such as `@testing-library/jest-dom` or `jest.fn()`, and lines about CI, Docker or production.
+
+## wrong-node-version
+
+**Level:** warning (new in the next release; tell us with a [false-alarm report](https://github.com/mohamedsabith/setupscore/issues/new?template=2-false-alarm.yml) if it is wrong)
+
+Your instructions name a Node.js version that `engines.node` in `package.json` no longer allows: "Requires Node 18" in a project with `"engines": { "node": ">=22.12" }`.
+
+**Why it matters:** Claude follows the version in the instructions. It may avoid the newer Node features the project relies on, or tell people to set up an old Node.
+
+**What counts as proof.** `engines.node` in the `package.json` closest to the instruction file, when it is a simple lower bound (`>=22.12`, `^22.12.0`, `~22`, `22.x`, `>=20 <25`). Ranges with `||` and other forms are left alone. Only the major version is compared, so "Node 22" is fine for `>=22.12`.
+
+**What is left alone:** versions that the range allows, old versions named for contrast ("Node 18 is not supported", "we dropped Node 18"), lines that name several versions ("tested on Node 18, 20 and 22"), `@types/node`, lines about CI, Docker or production, code blocks, and skills, agents and commands.
+
 ## broken-hook
 
 **Level:** warning
