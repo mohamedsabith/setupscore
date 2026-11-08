@@ -2,6 +2,12 @@
 
 All notable changes to this project are documented here. The project follows [Semantic Versioning](https://semver.org/). The command line, exit codes, `setupscore.yml` and the JSON output (`schemaVersion`) are the public API.
 
+## Unreleased
+
+### Fixed
+
+- `contradiction` missed a ban followed by another sentence: "Never write raw SQL. Use Prisma." read the forbidden name as "raw SQL use", so "For reports, use raw SQL" was not reported. The name now ends with its sentence or at a comma, and so does a scope ("in production"). No finding changes on the 114 public repositories setupscore is tested on.
+
 ## 1.2.0 - 2026-11-08
 
 ### Added

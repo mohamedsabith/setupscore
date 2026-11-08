@@ -77,27 +77,41 @@ function trimPunct(w: string): string {
  * "write raw SQL in reports" -> subject "raw sql", scope ["reports"].
  * The subject drops articles and stops at the first stop word; what follows a scope word is the scope.
  */
+/** The words of a text, lower case, without backticks, each with the punctuation it ended in. */
+const tokens = (text: string): { w: string; raw: string }[] =>
+  text
+    .replaceAll('`', '')
+    .toLowerCase()
+    .split(/\s+/)
+    .map((raw) => ({ w: trimPunct(raw), raw }))
+    .filter((t) => t.w);
+
 function subject(phrase: string, rest: string): { subject: string; scope: string[] } | null {
-  const words = phrase.replaceAll('`', '').toLowerCase().split(/\s+/).map(trimPunct).filter(Boolean);
-  while (words.length && STOP.has(words[0]!)) words.shift();
-  const out: string[] = [];
+  const words = tokens(phrase);
   let k = 0;
+  while (k < words.length && STOP.has(words[k]!.w)) k++;
+  const out: string[] = [];
+  let closed = false;
   for (; k < words.length; k++) {
-    if (STOP.has(words[k]!)) break;
-    out.push(words[k]!);
+    if (STOP.has(words[k]!.w)) break;
+    out.push(words[k]!.w);
+    // The name ends with its sentence or at a comma: "Never write raw SQL. Use Prisma." -> "raw sql".
+    if (/[.!?;:,]$/.test(words[k]!.raw)) {
+      k++;
+      closed = true;
+      break;
+    }
   }
   const s = out.join(' ').trim();
   if (s.length < 3) return null;
-  // The scope: content words after "in", "on", "for" ... in the rest of the rule.
-  const after = [
-    ...words.slice(k),
-    ...rest.replaceAll('`', '').toLowerCase().split(/\s+/).map(trimPunct).filter(Boolean),
-  ].slice(0, 12);
+  // The scope: content words after "in", "on", "for" ... in the same sentence of the rule.
+  const after = closed ? [] : [...words.slice(k), ...tokens(rest)].slice(0, 12);
   const scope: string[] = [];
-  if (after.length && SCOPE.has(after[0]!)) {
-    for (const w of after.slice(1)) {
-      if (w === 'and' || w === 'or' || w === 'because' || w === 'but') break;
-      if (!FILLER.has(w) && w.length >= 3) scope.push(w);
+  if (after.length && SCOPE.has(after[0]!.w)) {
+    for (const t of after.slice(1)) {
+      if (t.w === 'and' || t.w === 'or' || t.w === 'because' || t.w === 'but') break;
+      if (!FILLER.has(t.w) && t.w.length >= 3) scope.push(t.w);
+      if (/[.!?;]$/.test(t.raw)) break;
     }
   }
   return { subject: s, scope };

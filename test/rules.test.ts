@@ -232,6 +232,33 @@ describe('contradiction', () => {
     ).toHaveLength(1);
   });
 
+  it('ends the forbidden name with its sentence or at a comma', () => {
+    for (const no of [
+      '- Never write raw SQL. Use Prisma.',
+      '- Never use axios, fetch is enough.',
+      '- Never use raw SQL; Prisma covers it.',
+    ])
+      expect(
+        lint('contradiction', {
+          'CLAUDE.md': `${no}\n- For reports, use ${no.includes('axios') ? 'axios' : 'raw SQL'}.\n`,
+        }),
+        no,
+      ).toHaveLength(1);
+    // The scope also ends with its sentence: "in production" limits the ban, the next sentence does not.
+    expect(
+      lint('contradiction', {
+        'CLAUDE.md':
+          '- Never run migrations in production. Ask the on-call engineer first.\n- Run migrations in production on Fridays.\n',
+      }),
+    ).toHaveLength(1);
+    expect(
+      lint('contradiction', {
+        'CLAUDE.md':
+          '- Never run migrations in production. Ask the on-call engineer first.\n- Run migrations locally.\n',
+      }),
+    ).toEqual([]);
+  });
+
   it('accepts a rule that states its own exception', () => {
     expect(
       lint('contradiction', {
