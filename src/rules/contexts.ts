@@ -1,10 +1,11 @@
 import picomatch from 'picomatch';
+import { CLAUDE_IMPORT_HOPS } from '../core/discover.js';
 import { dirOf } from '../core/paths.js';
 import type { Context, SetupFile } from '../core/types.js';
 import { instructionFiles } from './util.js';
 
 /** Claude Code follows imports "with a maximum depth of four hops" (code.claude.com/docs/en/memory). */
-export const MAX_IMPORT_HOPS = 4;
+export const MAX_IMPORT_HOPS = CLAUDE_IMPORT_HOPS;
 
 /** Split "a/**, b/*.{ts,tsx}" on commas that are not inside {braces}. */
 function splitPatterns(s: string): string[] {

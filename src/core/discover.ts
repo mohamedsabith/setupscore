@@ -6,6 +6,8 @@ import type { FileKind, ImportRef, MisnamedFile, SetupFile, SkippedFile } from '
 
 export const MAX_BYTES = 2 * 1024 * 1024;
 const MAX_IMPORT_DEPTH = 10; // stop runaway or circular chains; Claude Code itself stops much earlier
+/** Claude Code follows imports "with a maximum depth of four hops" (code.claude.com/docs/en/memory). */
+export const CLAUDE_IMPORT_HOPS = 4;
 
 /** Work out what kind of setup file a path is, or null if it is not one. Folder names must match exactly. */
 export function kindOf(rel: string): FileKind | null {
@@ -371,7 +373,8 @@ export function discover(root: string, repoFiles: string[], options: DiscoverOpt
       const imported = makeSetupFile(root, target, 'import', r.text);
       imported.importedBy = file.path;
       imported.importDepth = depth + 1;
-      imported.loadsAtStart = file.loadsAtStart;
+      // Past four hops Claude Code never loads it; it is still read, so broken-import and deep-import see it.
+      imported.loadsAtStart = file.loadsAtStart && depth + 1 <= CLAUDE_IMPORT_HOPS;
       files.push(imported);
       byPath.set(target, imported);
       queue.push({ file: imported, depth: depth + 1 });

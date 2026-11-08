@@ -2,6 +2,12 @@
 
 All notable changes to this project are documented here. The project follows [Semantic Versioning](https://semver.org/). The command line, exit codes, `setupscore.yml` and the JSON output (`schemaVersion`) are the public API.
 
+## Unreleased
+
+### Fixed
+
+- An import more than four levels deep (CLAUDE.md imports A, A imports B, and so on) is no longer counted as loaded at start-up: Claude Code stops after four hops. In `--json`, its `loadsAtStart` is now `false`, and its tokens no longer count in the start-up total (`--cost`). `deep-import` and `broken-import` still check it. None of the 114 public repositories setupscore is tested on has such an import, so their output is the same.
+
 ## 1.3.0 - 2026-11-08
 
 ### Added

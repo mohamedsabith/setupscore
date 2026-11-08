@@ -95,6 +95,17 @@ describe('discovery', () => {
     expect(run.files[0]!.path).toBe('CLAUDE.local.md');
   });
 
+  it('marks imports past four hops as not loaded, and leaves them out of the start-up tokens', () => {
+    const files: Record<string, string> = { 'CLAUDE.md': '@d1.md\n' };
+    for (let i = 1; i <= 5; i++) files[`d${i}.md`] = i < 5 ? `${'x'.repeat(400)}\n@d${i + 1}.md\n` : 'y'.repeat(4000);
+    const run = check(makeRepo(files), { config: { rules: {}, ignore: [] } });
+    const loads = Object.fromEntries(run.files.map((f) => [f.path, f.loadsAtStart]));
+    expect(loads).toMatchObject({ 'd1.md': true, 'd4.md': true, 'd5.md': false });
+    // d5.md is still read: deep-import reports it.
+    expect(run.issues.map((i) => i.rule)).toContain('deep-import');
+    expect(run.startupTokens).toBeLessThan(estimateTokens('y'.repeat(4000)));
+  });
+
   it('survives circular imports', () => {
     const root = makeRepo({ 'CLAUDE.md': '@a.md', 'a.md': '@b.md', 'b.md': '@a.md' });
     expect(() => check(root, { config: { rules: {}, ignore: [] } })).not.toThrow();
