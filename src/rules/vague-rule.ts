@@ -24,6 +24,7 @@ const MAX_WORDS = 10;
 export const vagueRule: Rule = {
   id: 'vague-rule',
   severity: 'warning',
+  certainty: 'guess',
   summary: 'A rule is too vague for Claude to act on, like "write good code" or "be careful".',
   why: 'Claude already tries to write good code. A vague rule costs tokens on every message and changes nothing. A concrete rule ("wrap DB calls in try/catch and log with logger.error") does.',
   check(ctx: Context): Issue[] {

@@ -16,6 +16,8 @@ export interface JsonReport {
     files: number;
     errors: number;
     warnings: number;
+    /** Findings at the "hint" level, which never fail a build. */
+    hints: number;
     fixable: number;
     startupTokens: number;
     /** True when the file scan stopped at its limit (100,000 files), so some files were not checked. */
@@ -39,6 +41,7 @@ export function toJson(run: CheckRun, fixed: Applied[] = []): JsonReport {
       files: run.files.length,
       errors: run.errors,
       warnings: run.warnings,
+      hints: run.hints,
       fixable: run.fixable,
       startupTokens: run.startupTokens,
       truncated: run.truncated,

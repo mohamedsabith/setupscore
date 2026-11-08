@@ -5,6 +5,7 @@ import { quote } from './util.js';
 export const agentFrontmatter: Rule = {
   id: 'agent-frontmatter',
   severity: 'warning',
+  certainty: 'advice',
   summary: 'A subagent in .claude/agents/ has no name or no useful description.',
   why: 'Claude decides when to hand work to a subagent from its description. Without a clear one, the subagent is rarely used.',
   check(ctx: Context): Issue[] {
@@ -12,8 +13,16 @@ export const agentFrontmatter: Rule = {
     for (const f of ctx.files.filter((f) => f.kind === 'agent')) {
       if (f.frontmatter?.error) continue;
       const data = f.frontmatter?.data;
-      const add = (message: string, hint: string) =>
-        issues.push({ rule: 'agent-frontmatter', severity: 'warning', file: f.path, line: 1, message, hint });
+      const add = (message: string, hint: string, certainty?: 'guess') =>
+        issues.push({
+          rule: 'agent-frontmatter',
+          severity: 'warning',
+          file: f.path,
+          line: 1,
+          message,
+          hint,
+          certainty,
+        });
       if (!data) {
         add(
           'No frontmatter. Subagents need a name and a description.',
@@ -33,6 +42,7 @@ export const agentFrontmatter: Rule = {
         add(
           `The description ${quote(desc, 60)} is too short to tell Claude when to use this subagent.`,
           'Say what it does and when to use it.',
+          'guess', // a word count is a rule of thumb
         );
     }
     return issues;

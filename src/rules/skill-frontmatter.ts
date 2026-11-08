@@ -20,6 +20,7 @@ const DESCRIBE = 'Write it as "<What it does>. Use when <situation>." Claude pic
 export const skillFrontmatter: Rule = {
   id: 'skill-frontmatter',
   severity: 'warning',
+  certainty: 'advice',
   summary: 'A skill has a missing, short or invalid name or description.',
   why: 'Claude decides whether to load a skill from its description alone. A missing or one-word description means the skill is rarely or never used.',
   check(ctx: Context): Issue[] {
@@ -69,14 +70,15 @@ export const skillFrontmatter: Rule = {
       } else if (typeof desc !== 'string') {
         issues.push(issue(f, 'description must be text.', DESCRIBE, lineOfKey('description')));
       } else if (wordCount(desc) < MIN_DESCRIPTION_WORDS) {
-        issues.push(
-          issue(
+        issues.push({
+          ...issue(
             f,
             `The description ${quote(desc, 60)} is too short for Claude to know when to use this skill.`,
             DESCRIBE,
             lineOfKey('description'),
           ),
-        );
+          certainty: 'guess', // a word count is a rule of thumb
+        });
       } else if (desc.length > MAX_DESCRIPTION_CHARS) {
         issues.push(
           issue(

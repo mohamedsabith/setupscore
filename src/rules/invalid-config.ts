@@ -6,6 +6,7 @@ const isClaudeFolder = (rel: string): boolean => rel.split('/').includes('.claud
 export const invalidConfig: Rule = {
   id: 'invalid-config',
   severity: 'error',
+  certainty: 'sure',
   summary:
     "settings.json, .mcp.json or a file's YAML frontmatter cannot be parsed, or a setup file cannot be read at all.",
   why: 'Claude Code cannot read a broken file, so the permissions, MCP servers or skill settings in it do nothing.',

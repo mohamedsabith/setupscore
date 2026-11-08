@@ -25,6 +25,7 @@ function notARule(text: string): boolean {
 export const duplicateRule: Rule = {
   id: 'duplicate-rule',
   severity: 'warning',
+  certainty: 'guess',
   summary: 'The same rule is written twice.',
   why: 'Every copy is sent to the model on every message. Duplicates also drift apart over time and turn into contradictions.',
   check(ctx: Context): Issue[] {

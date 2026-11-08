@@ -1,5 +1,13 @@
-export type Severity = 'error' | 'warning';
+/** A hint never fails a build. It only appears with "levels: by-certainty" or when setupscore.yml asks for it. */
+export type Severity = 'error' | 'warning' | 'hint';
 export type RuleSetting = Severity | 'off';
+/**
+ * How sure a finding is. sure: the setup provably cannot work, or Claude Code provably ignores it.
+ * guess: a heuristic that can be wrong. advice: a risk or a recommendation, not a fault.
+ */
+export type Certainty = 'sure' | 'guess' | 'advice';
+/** How findings get their level: "default" uses each rule's level; "by-certainty" makes sure problems errors and guesses hints. */
+export type Levels = 'default' | 'by-certainty';
 
 /** Replace `from` with `to` on one line of one file. */
 export interface Fix {
@@ -23,6 +31,8 @@ export interface Issue {
   hint?: string;
   /** Present when `--fix` can repair this safely. */
   fix?: Fix | undefined;
+  /** How sure this finding is. A rule sets it only where it differs from the rule's own certainty. */
+  certainty?: Certainty | undefined;
 }
 
 export type FileKind =
@@ -127,6 +137,11 @@ export interface Context {
 export interface Rule {
   id: string;
   severity: Severity;
+  /**
+   * How sure this rule's findings are, unless a finding says otherwise. Every built-in rule sets it;
+   * a rule without it counts as advice, so its level never changes with "levels: by-certainty".
+   */
+  certainty?: Certainty | undefined;
   /** One line: what the rule checks. */
   summary: string;
   /** Why it matters, in plain words. */
@@ -147,6 +162,8 @@ export interface CheckResult {
   issues: Issue[];
   errors: number;
   warnings: number;
+  /** Findings at the "hint" level: they never fail a build and don't lower the health score. */
+  hints: number;
   fixable: number;
   /** 0 to 10. 10 minus 1 per error and 0.5 per warning. */
   health: number;

@@ -201,8 +201,9 @@ Most projects need none. To change a rule's level or turn it off, add `setupscor
 
 ```yaml
 version: 1
+levels: by-certainty     # optional: sure problems are errors, guesses are hints (see below)
 rules:
-  vague-rule: off        # off, warning or error
+  vague-rule: off        # off, hint, warning or error
   too-long: error
 ignore:
   - "examples/**"        # folders or files to skip
@@ -216,6 +217,22 @@ agent:
   bin: "/opt/claude/bin/claude"  # optional: how "run" starts Claude Code (like --claude-bin)
   model: claude-sonnet-5-5       # optional: the model "run" tests (like --model)
 ```
+
+### Levels: sure problems and guesses
+
+Every finding says how sure setupscore is (`certainty` in `--json`, and next to each rule in `setupscore rules`):
+
+- **sure:** the setup provably can't work, or Claude Code provably ignores it: a missing file or script, a broken import, an `AGENTS.md` that Claude never reads, an import past four levels, a misnamed file, a `paths:` rule that matches nothing, a hook whose script is missing.
+- **guess:** a heuristic that can be wrong: two rules that seem to contradict each other, a duplicate, a vague rule, the wrong package manager, test runner or Node version, a file name pattern, a misspelled hook event, a skill or subagent description that seems too short.
+- **advice:** a risk or a recommendation, not a fault: a risky permission, a `.env` Claude can read, a long file, frontmatter that could be better, an unpinned MCP server.
+
+By default each rule keeps its level (`setupscore rules` lists them). With `levels: by-certainty`, **sure** problems become errors, **guesses** become hints, and **advice** stays a warning. A hint is shown, but it never fails a build, not even with `--strict`, and it doesn't lower the health score. An error is never lowered: `secret` stays an error. A level you set under `rules:` always wins. This will be the default in 2.0.
+
+| Certainty | Rules |
+| --- | --- |
+| sure | `broken-reference`, `broken-import`, `missing-script`, `invalid-config`, `agents-md-not-loaded`, `deep-import`, `misnamed-file`, `unused-path-rule`, `broken-hook` (except a misspelled event, a hook with no matcher, a bad timeout, or a script that is only not executable on this disk) |
+| guess | `contradiction`, `duplicate-rule`, `vague-rule`, `wrong-package-manager`, `wrong-test-runner`, `wrong-node-version`, `file-name-pattern`, `secret` (stays an error), the guesses of `broken-hook`, a description that is too short in `skill-frontmatter` and `agent-frontmatter` |
+| advice | `risky-permission`, `env-not-denied`, `too-long`, `skill-frontmatter`, `agent-frontmatter`, `mcp-config` (except a missing `mcpServers` and a variable Claude Code never expands, which are sure) |
 
 Flags on the command line win over `agent:`. `setupscore run` also uses your `rules` and `ignore` settings when it measures instruction health.
 
@@ -289,7 +306,7 @@ Secrets aren't available to pull requests from forks, so `command: run` stops th
 | Code | Meaning |
 | --: | --- |
 | `0` | No errors |
-| `1` | Errors found (or warnings with `--strict`), no usable tasks, or a score below `--fail-under` |
+| `1` | Errors found (or warnings with `--strict`; hints never count), no usable tasks, or a score below `--fail-under` |
 | `2` | Bad usage or an invalid config file |
 | `3` | An environment problem, such as a missing sandbox tool, Claude Code not installed or no API key (run `setupscore doctor`), or no attempt could be scored (for example the Claude API was unreachable the whole time) |
 | `4` | A run stopped early (budget used up or Ctrl+C); continue it with `--resume` |
@@ -305,13 +322,15 @@ Every error message says what went wrong and what to do next. If you hit somethi
   "schemaVersion": 1,
   "tool": { "name": "setupscore", "version": "1.0.0" },
   "health": 2,
-  "summary": { "files": 4, "errors": 4, "warnings": 8, "fixable": 0, "startupTokens": 144 },
+  "summary": { "files": 4, "errors": 4, "warnings": 8, "hints": 0, "fixable": 0, "startupTokens": 144 },
   "issues": [
-    { "rule": "broken-reference", "severity": "error", "file": "CLAUDE.md", "line": 11, "column": 23,
+    { "rule": "broken-reference", "severity": "error", "certainty": "sure", "file": "CLAUDE.md", "line": 11, "column": 23,
       "message": "\"src/common/logger.js\" does not exist, so Claude cannot follow this.", "fixable": false }
   ]
 }
 ```
+
+`severity` is `error`, `warning` or, with `levels: by-certainty` or a `hint` level in `setupscore.yml`, `hint`. `certainty` is `sure`, `guess` or `advice` (see [Levels](#levels-sure-problems-and-guesses)).
 
 ## Use it from code
 

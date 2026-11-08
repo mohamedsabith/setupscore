@@ -42,6 +42,7 @@ function hasText(abs: string): boolean {
 export const agentsMdNotLoaded: Rule = {
   id: 'agents-md-not-loaded',
   severity: 'warning',
+  certainty: 'sure',
   summary:
     'An AGENTS.md that Claude Code never reads, because a CLAUDE.md or CLAUDE.local.md next to it or above it does not import it.',
   why: 'Claude Code reads AGENTS.md on its own only when there is no CLAUDE.md. When there is one, Claude reads only the CLAUDE.md files, so everything in AGENTS.md is silently missing unless CLAUDE.md imports it with @AGENTS.md.',

@@ -9,7 +9,7 @@ import { discover } from './discover.js';
 import { gitRenames } from './git.js';
 import { readDisables } from './markdown.js';
 import { maskSecrets } from './secrets.js';
-import type { CheckResult, Context, Issue, Rule } from './types.js';
+import type { Certainty, CheckResult, Context, Issue, Rule, Severity } from './types.js';
 import { exactLookup, isSetupLink, walk } from './walk.js';
 
 export interface CheckOptions {
@@ -121,9 +121,18 @@ export function check(dir: string, options: CheckOptions = {}): CheckRun {
 
   const issues: Issue[] = [];
   const ruleErrors: CheckRun['ruleErrors'] = [];
+  /**
+   * The level of one finding. A level set in setupscore.yml wins. With "levels: by-certainty", sure
+   * problems are errors, guesses are hints and advice stays a warning; an error is never lowered.
+   */
+  const levelOf = (rule: Rule, certainty: Certainty): Severity => {
+    const set = config.rules[rule.id];
+    if (set !== undefined && set !== 'off') return set;
+    if (config.levels !== 'by-certainty' || rule.severity === 'error') return rule.severity;
+    return certainty === 'sure' ? 'error' : certainty === 'guess' ? 'hint' : 'warning';
+  };
   for (const rule of rules) {
-    const setting = config.rules[rule.id] ?? rule.severity;
-    if (setting === 'off') continue;
+    if (config.rules[rule.id] === 'off') continue;
     let found: Issue[];
     try {
       found = rule.check(ctx);
@@ -134,7 +143,8 @@ export function check(dir: string, options: CheckOptions = {}): CheckRun {
     }
     for (const i of found) {
       if (isDisabled(i)) continue;
-      const issue: Issue = { ...i, severity: setting, message: safeText(i.message) };
+      const certainty = i.certainty ?? rule.certainty ?? 'advice';
+      const issue: Issue = { ...i, severity: levelOf(rule, certainty), certainty, message: safeText(i.message) };
       if (i.hint !== undefined) issue.hint = safeText(i.hint);
       issues.push(issue);
     }
@@ -142,7 +152,8 @@ export function check(dir: string, options: CheckOptions = {}): CheckRun {
   issues.sort(order);
 
   const errors = issues.filter((i) => i.severity === 'error').length;
-  const warnings = issues.length - errors;
+  const warnings = issues.filter((i) => i.severity === 'warning').length;
+  const hints = issues.filter((i) => i.severity === 'hint').length;
   const reports = files
     .map((f) => ({ path: f.path, kind: f.kind, loadsAtStart: f.loadsAtStart, tokens: estimateTokens(f.text) }))
     .sort((a, b) => byPath(a.path, b.path));
@@ -153,6 +164,7 @@ export function check(dir: string, options: CheckOptions = {}): CheckRun {
     issues,
     errors,
     warnings,
+    hints,
     fixable: issues.filter((i) => i.fix).length,
     health:
       files.length === 0 && issues.length === 0

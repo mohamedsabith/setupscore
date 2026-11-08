@@ -1,15 +1,19 @@
 import pc from 'picocolors';
 import type { CheckRun } from '../core/check.js';
 import type { Applied } from '../core/fix.js';
-import type { FileKind, Issue } from '../core/types.js';
+import type { FileKind, Issue, Severity } from '../core/types.js';
 import { RULES } from '../rules/index.js';
 import { VERSION } from '../version.js';
 
 const useUnicode =
   process.platform !== 'win32' || !!process.env['WT_SESSION'] || process.env['TERM_PROGRAM'] === 'vscode';
 const SYM = useUnicode
-  ? { error: '✖', warning: '⚠', ok: '✔', arrow: '→', dot: '·' }
-  : { error: 'x', warning: '!', ok: 'v', arrow: '->', dot: '-' };
+  ? { error: '✖', warning: '⚠', hint: 'ℹ', ok: '✔', arrow: '→', dot: '·' }
+  : { error: 'x', warning: '!', hint: 'i', ok: 'v', arrow: '->', dot: '-' };
+
+/** The level as a fixed-width, coloured label. */
+const level = (s: Severity): string =>
+  s === 'error' ? pc.red('error  ') : s === 'warning' ? pc.yellow('warning') : pc.cyan('hint   ');
 
 export interface TerminalOptions {
   quiet?: boolean | undefined;
@@ -27,8 +31,7 @@ const clean = (text: string): string =>
 
 function issueLines(i: Issue, width: number): string[] {
   const pos = i.line !== undefined ? `${i.line}${i.column ? `:${i.column}` : ''}` : '-';
-  const sev = i.severity === 'error' ? pc.red('error  ') : pc.yellow('warning');
-  const out = [`  ${pc.dim(pos.padEnd(width))}  ${sev}  ${i.message}  ${pc.dim(i.rule)}`];
+  const out = [`  ${pc.dim(pos.padEnd(width))}  ${level(i.severity)}  ${i.message}  ${pc.dim(i.rule)}`];
   if (i.hint) out.push(`  ${' '.repeat(width)}           ${pc.dim(`${SYM.arrow} ${i.hint}`)}`);
   return out;
 }
@@ -121,9 +124,16 @@ export function renderTerminal(run: CheckRun, opts: TerminalOptions = {}): strin
     const parts = [
       run.errors ? pc.red(plural(run.errors, 'error')) : null,
       run.warnings ? pc.yellow(plural(run.warnings, 'warning')) : null,
+      run.hints ? pc.cyan(plural(run.hints, 'hint')) : null,
     ].filter(Boolean);
-    const icon = run.errors ? pc.red(SYM.error) : pc.yellow(SYM.warning);
-    const hidden = opts.quiet && run.warnings ? pc.dim(` (${plural(run.warnings, 'warning')} hidden by --quiet)`) : '';
+    const icon = run.errors ? pc.red(SYM.error) : run.warnings ? pc.yellow(SYM.warning) : pc.cyan(SYM.hint);
+    const quieted = [
+      run.warnings ? plural(run.warnings, 'warning') : null,
+      run.hints ? plural(run.hints, 'hint') : null,
+    ]
+      .filter(Boolean)
+      .join(' and ');
+    const hidden = opts.quiet && quieted ? pc.dim(` (${quieted} hidden by --quiet)`) : '';
     out.push(`${icon} ${parts.join(', ')} in ${files}${hidden}`);
     const health = run.health >= 8 ? pc.green : run.health >= 5 ? pc.yellow : pc.red;
     out.push(`  Instruction health ${health(pc.bold(`${run.health}/10`))}`);
@@ -147,12 +157,15 @@ export function renderRules(): string {
   const out = [pc.bold('setupscore rules'), ''];
   const width = Math.max(...RULES.map((r) => r.id.length));
   for (const r of RULES) {
-    const sev = r.severity === 'error' ? pc.red('error  ') : pc.yellow('warning');
-    out.push(`  ${pc.bold(r.id.padEnd(width))}  ${sev}  ${r.summary}`);
+    out.push(
+      `  ${pc.bold(r.id.padEnd(width))}  ${level(r.severity)}  ${r.summary}  ${pc.dim(`(${r.certainty ?? 'advice'})`)}`,
+    );
     out.push(`  ${' '.repeat(width)}           ${pc.dim(r.why)}`);
     out.push('');
   }
   out.push(pc.dim('Change a level or turn a rule off in setupscore.yml:'));
   out.push(pc.dim('  version: 1\n  rules:\n    vague-rule: off\n    too-long: error'));
+  out.push(pc.dim('Or let sure problems be errors and guesses hints (the default in 2.0):'));
+  out.push(pc.dim('  levels: by-certainty'));
   return out.join('\n');
 }

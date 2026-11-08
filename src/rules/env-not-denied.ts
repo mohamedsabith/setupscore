@@ -38,6 +38,7 @@ function covers(d: Deny, envPath: string): boolean {
 export const envNotDenied: Rule = {
   id: 'env-not-denied',
   severity: 'warning',
+  certainty: 'advice',
   summary: 'The project has a .env file but no permission rule stops Claude from reading it.',
   why: "Claude Code can read any file in the project. A deny rule keeps API keys and passwords in .env out of the conversation, and out of the AI provider's logs.",
   check(ctx: Context): Issue[] {

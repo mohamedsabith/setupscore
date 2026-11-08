@@ -204,6 +204,7 @@ function byWord(positives: Positive[]): Map<string, Positive[]> {
 export const contradiction: Rule = {
   id: 'contradiction',
   severity: 'warning',
+  certainty: 'guess',
   summary: 'Two rules seem to say opposite things, like "never write raw SQL" and "use raw SQL for reports".',
   why: 'When rules conflict Claude has to guess which one wins, and it will not guess the same way every time.',
   check(ctx: Context): Issue[] {

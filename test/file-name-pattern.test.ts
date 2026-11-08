@@ -86,6 +86,45 @@ describe('file-name-pattern: a file name pattern with a date, checked against th
     ).toHaveLength(1);
   });
 
+  it('reports a file that does not follow a pattern the other files use (a wrong history file)', () => {
+    // From a real project: knowledge/history/ has 2026-10.md (fits), README.md, and a new 21_20.md.
+    const [issue, ...rest] = check(
+      'knowledge/history/YYYY-MM.md',
+      { 'knowledge/history/2026-10.md': '', 'knowledge/history/README.md': '', 'knowledge/history/21_20.md': '' },
+      '.claude/skills/update-knowledge/SKILL.md',
+    );
+    expect(rest).toEqual([]);
+    expect(issue!.message).toBe(
+      '"21_20.md" in knowledge/history/ does not follow the file name pattern "knowledge/history/YYYY-MM.md" (the other files do, like "2026-10.md").',
+    );
+    expect(issue!.hint).toBe('Rename it to fit the pattern, or move it out of knowledge/history/.');
+    // Several wrong files are listed in one finding.
+    const many = check('notes/YYYY-MM.md', {
+      'notes/2026-10.md': '',
+      'notes/2026_11.md': '',
+      'notes/2026-12-notes.md': '',
+      'notes/11-2026.md': '',
+      'notes/2027.01.md': '',
+    });
+    expect(many).toHaveLength(1);
+    expect(many[0]!.message).toContain(
+      '"11-2026.md", "2026-12-notes.md", "2026_11.md" and 1 more in notes/ do not follow',
+    );
+    // Other documents in the folder are not entries: README, an index, a guide with a version number.
+    expect(
+      check('notes/YYYY-MM.md', {
+        'notes/2026-10.md': '',
+        'notes/README.md': '',
+        'notes/index.md': '',
+        'notes/v2-guide.md': '',
+      }),
+    ).toEqual([]);
+    // A folder whose only entry is all digits but the wrong shape: the pattern fits nothing.
+    expect(check('notes/YYYY-MM.md', { 'notes/21_20.md': '' })[0]!.message).toContain(
+      'no file in notes/ is named that way',
+    );
+  });
+
   it('finds the folder when it moved, but only when there is exactly one candidate', () => {
     const moved = check('knowledge/history/YYYY-MM.md', { 'docs/knowledge/history/2026-10.md': '' });
     expect(moved).toHaveLength(1);

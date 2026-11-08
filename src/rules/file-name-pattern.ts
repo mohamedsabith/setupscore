@@ -9,6 +9,16 @@ const NAME_WORDS =
 /** A year in a file name: 2026-10.md, 20261031.log, 2026.3.1.md. */
 const DATED = /(?<!\d)(?:19|20)\d\d/;
 
+/**
+ * A file that is one of the dated entries of a folder: its name holds a year, or is only digits and
+ * separators ("21_20.md"). Other files ("README.md", "index.md", "v2-guide.md") are something else.
+ */
+function isEntry(rest: string): boolean {
+  const name = rest.slice(rest.lastIndexOf('/') + 1);
+  const stem = name.includes('.') ? name.slice(0, name.lastIndexOf('.')) : name;
+  return DATED.test(rest) || (/^[\d\W_]+$/.test(stem) && /\d\D*\d/.test(stem));
+}
+
 /** One part of a file name pattern as a regular expression: YYYY -> 4 digits, XXXX or <id> -> anything. */
 /** One run of a letter in a pattern: YYYY, MM, D, ww, T, ... */
 function runPattern(run: string): string {
@@ -61,6 +71,7 @@ type PatternCheck =
   | { kind: 'fits' }
   | { kind: 'unknown' }
   | { kind: 'mismatch'; folder: string; files: string[] }
+  | { kind: 'stray'; folder: string; stray: string[]; fit: string[] }
   | { kind: 'moved'; folder: string; written: string };
 
 /**
@@ -69,8 +80,9 @@ type PatternCheck =
  * - the folder is looked up from each place the path may be written from (the project root, the
  *   instruction file's own folder, then the folder that holds its .claude/, then the project root),
  *   in any project layout;
- * - when that folder has files with a year in their name and the same extension, at least one must
- *   fit the pattern, or the pattern and the files disagree;
+ * - the entries of that folder are its files with the same extension whose name holds a year or is
+ *   only digits ("2026-10.md", "21_20.md"; not "README.md"). When none fits, the pattern and the
+ *   files disagree; when some fit, the pattern is in use and every entry that doesn't is named wrong;
  * - when the folder exists nowhere, a folder of the same name elsewhere whose files fit is reported
  *   as the place it moved to, but only when there is exactly one.
  * Anything else is "unknown": no folder or no dated file yet (the first one is still to be written).
@@ -96,15 +108,18 @@ function checkPattern(ctx: Context, path: string, bases: string[]): PatternCheck
       .repoFiles()
       .filter((p) => p.startsWith(prefix))
       .map((p) => p.slice(prefix.length))
-      .filter((rest) => rest.split('/').length === depth && rest.toLowerCase().endsWith(ext) && DATED.test(rest));
+      .filter((rest) => rest.split('/').length === depth && rest.toLowerCase().endsWith(ext) && isEntry(rest));
   };
   const written = segments.slice(0, fixed).join('/');
   for (const base of bases) {
     const folder = joinRel(base, written);
     if (folder !== '' && !ctx.isDir(folder)) continue;
-    const files = under(folder);
+    const files = under(folder).sort();
     if (files.length === 0) return { kind: 'unknown' };
-    return files.some((rest) => fits.test(rest)) ? { kind: 'fits' } : { kind: 'mismatch', folder, files: files.sort() };
+    const fit = files.filter((rest) => fits.test(rest));
+    if (fit.length === 0) return { kind: 'mismatch', folder, files };
+    const stray = files.filter((rest) => !fits.test(rest));
+    return stray.length ? { kind: 'stray', folder, stray, fit } : { kind: 'fits' };
   }
   // The folder is nowhere it may be read from. Is there one folder of the same name whose files fit?
   const name = written.slice(written.lastIndexOf('/') + 1);
@@ -118,6 +133,7 @@ function checkPattern(ctx: Context, path: string, bases: string[]): PatternCheck
 export const fileNamePattern: Rule = {
   id: 'file-name-pattern',
   severity: 'warning',
+  certainty: 'guess',
   summary: 'A file name pattern in your instructions (history/YYYY-MM.md) does not fit the files it describes.',
   why: 'Claude writes new files the way the instructions say. If that differs from the files already there, the folder ends up with two naming styles, and tools that read it miss half the files.',
   check(ctx: Context): Issue[] {
@@ -136,6 +152,18 @@ export const fileNamePattern: Rule = {
             ...at,
             message: `"${ref}" is a file name pattern, but no file in ${folder || '.'}/ is named that way (the files there look like ${shown}), so Claude would start a second naming style.`,
             hint: 'Write the pattern the files use, or rename the files to fit it.',
+          });
+        } else if (r.kind === 'stray') {
+          const { folder, stray, fit } = r;
+          const names =
+            stray
+              .slice(0, 3)
+              .map((n) => `"${n}"`)
+              .join(', ') + (stray.length > 3 ? ` and ${stray.length - 3} more` : '');
+          issues.push({
+            ...at,
+            message: `${names} in ${folder || '.'}/ ${stray.length === 1 ? 'does' : 'do'} not follow the file name pattern "${ref}" (the other files do, like "${fit[0]}").`,
+            hint: `Rename ${stray.length === 1 ? 'it' : 'them'} to fit the pattern, or move ${stray.length === 1 ? 'it' : 'them'} out of ${folder || 'the project folder'}/.`,
           });
         } else if (r.kind === 'moved') {
           issues.push({

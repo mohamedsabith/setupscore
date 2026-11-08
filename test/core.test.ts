@@ -426,6 +426,7 @@ describe('reports', () => {
     const boom = {
       id: 'boom',
       severity: 'error' as const,
+      certainty: 'sure' as const,
       summary: '',
       why: '',
       check: () => {

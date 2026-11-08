@@ -259,7 +259,7 @@ export async function main(argv: string[]): Promise<number> {
       if (flags.json)
         write(
           JSON.stringify(
-            RULES.map(({ id, severity, summary, why }) => ({ id, severity, summary, why })),
+            RULES.map(({ id, severity, certainty, summary, why }) => ({ id, severity, certainty, summary, why })),
             null,
             2,
           ),

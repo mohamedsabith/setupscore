@@ -21,6 +21,7 @@ function lowerBound(files: readonly string[], prefix: string): number {
 export const unusedPathRule: Rule = {
   id: 'unused-path-rule',
   severity: 'warning',
+  certainty: 'sure',
   summary: 'A file in .claude/rules/ has "paths:" that match no file, so it never loads.',
   why: 'Path-scoped rules only load when Claude touches a matching file. If nothing matches, often after a folder was renamed, the rule is dead.',
   check(ctx: Context): Issue[] {

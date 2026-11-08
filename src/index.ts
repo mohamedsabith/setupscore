@@ -13,6 +13,7 @@ export { RULES, RULE_IDS } from './rules/index.js';
 export { toJson, JSON_SCHEMA_VERSION, type JsonReport } from './report/json.js';
 export { VERSION } from './version.js';
 export type {
+  Certainty,
   CheckResult,
   Context,
   FileKind,
@@ -21,6 +22,7 @@ export type {
   Frontmatter,
   ImportRef,
   Issue,
+  Levels,
   Line,
   MisnamedFile,
   Rule,

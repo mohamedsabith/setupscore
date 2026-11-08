@@ -4,7 +4,7 @@ import { parse as parseYaml } from 'yaml';
 import { z } from 'zod';
 import { readSetupText } from './discover.js';
 import { closest } from './suggest.js';
-import type { RuleSetting } from './types.js';
+import type { Levels, RuleSetting } from './types.js';
 
 export const CONFIG_NAMES = ['setupscore.yml', 'setupscore.yaml', '.setupscore.yml', '.setupscore.yaml'];
 
@@ -12,6 +12,8 @@ export interface Config {
   /** Which file it came from, relative to the root; undefined when using defaults. */
   source?: string;
   rules: Record<string, RuleSetting>;
+  /** "by-certainty": sure problems are errors and guesses are hints (the default in 2.0). */
+  levels?: Levels | undefined;
   ignore: string[];
   /** Custom commands for `setupscore tasks`. */
   tasks?: { test?: string | undefined; install?: string | undefined } | undefined;
@@ -34,7 +36,8 @@ export class ConfigError extends Error {
 const schema = z
   .object({
     version: z.literal(1, { error: 'version must be 1' }),
-    rules: z.record(z.string(), z.enum(['off', 'warning', 'error'])).optional(),
+    rules: z.record(z.string(), z.enum(['off', 'hint', 'warning', 'error'])).optional(),
+    levels: z.enum(['default', 'by-certainty'], { error: 'use "default" or "by-certainty"' }).optional(),
     ignore: z
       .array(
         z
@@ -58,7 +61,7 @@ const schema = z
   })
   .strict();
 
-const TOP_KEYS = ['version', 'rules', 'ignore', 'tasks', 'sandbox', 'agent'];
+const TOP_KEYS = ['version', 'rules', 'levels', 'ignore', 'tasks', 'sandbox', 'agent'];
 
 export function loadConfig(root: string, ruleIds: string[]): Config {
   const name = CONFIG_NAMES.find((n) => existsSync(join(root, n)));
@@ -109,7 +112,8 @@ export function loadConfig(root: string, ruleIds: string[]): Config {
           .join('; ');
       }
       const where = i.path.length ? `${i.path.join('.')}: ` : '';
-      if (i.path[0] === 'rules' && i.path.length === 2) return `${where}use "off", "warning" or "error"`;
+      if (i.path[0] === 'rules' && i.path.length === 2) return `${where}use "off", "hint", "warning" or "error"`;
+      if (i.path[0] === 'levels') return 'levels: use "default" or "by-certainty"';
       if (i.path[0] === 'version') return 'add "version: 1" at the top';
       return `${where}${i.message}`;
     });
@@ -129,6 +133,7 @@ export function loadConfig(root: string, ruleIds: string[]): Config {
   return {
     source: name,
     rules,
+    levels: parsed.data.levels,
     ignore: parsed.data.ignore ?? [],
     tasks: parsed.data.tasks,
     sandbox: parsed.data.sandbox,

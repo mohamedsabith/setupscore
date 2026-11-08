@@ -69,6 +69,7 @@ const PROSE = new Set([
 export const missingScript: Rule = {
   id: 'missing-script',
   severity: 'error',
+  certainty: 'sure',
   summary: 'Your instructions tell Claude to run a package.json script that does not exist.',
   why: 'Claude runs the command, it fails, and Claude either gives up on checking its work or invents another command.',
   check(ctx: Context): Issue[] {

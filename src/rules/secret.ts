@@ -43,6 +43,7 @@ function structured(f: SetupFile): { key: string; value: string }[] {
 export const secret: Rule = {
   id: 'secret',
   severity: 'error',
+  certainty: 'guess',
   summary: 'An API key, token or password is written into a setup file.',
   why: 'Setup files are committed to git and sent to the AI provider. Anyone with the repo, or its history, can read the key.',
   check(ctx: Context): Issue[] {

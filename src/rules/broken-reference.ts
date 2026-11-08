@@ -43,6 +43,7 @@ function hintFor(s: PathSuggestion): string {
 export const brokenReference: Rule = {
   id: 'broken-reference',
   severity: 'error',
+  certainty: 'sure',
   summary: 'A file path in your instructions points to a file that does not exist.',
   why: 'Claude looks for the file, finds nothing, and has to guess. Old paths are the most common way instructions rot after a refactor.',
   check(ctx: Context): Issue[] {

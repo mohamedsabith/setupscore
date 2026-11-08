@@ -20,6 +20,7 @@ const mb = (bytes: string): string => `${(Number(bytes) / 1024 / 1024).toFixed(1
 export const tooLong: Rule = {
   id: 'too-long',
   severity: 'warning',
+  certainty: 'advice',
   summary: 'An instruction file is longer than Anthropic recommends (200 lines for CLAUDE.md, 500 for a skill).',
   why: 'Files loaded at start are sent with every message. Long files cost more and Claude follows each rule less reliably.',
   check(ctx: Context): Issue[] {

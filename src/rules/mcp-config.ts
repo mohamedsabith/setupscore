@@ -34,6 +34,7 @@ function strings(server: Record<string, unknown>): { where: string; value: strin
 export const mcpConfig: Rule = {
   id: 'mcp-config',
   severity: 'warning',
+  certainty: 'advice',
   summary: 'An MCP server in .mcp.json is unpinned, uses $VAR or %VAR% that never expands, or talks plain HTTP.',
   why: 'An unpinned npx or uvx server runs whatever version is newest each time, so a bad release runs on your machine. "$VAR" and "%VAR%" are passed through as literal text (only "${VAR}" is expanded), and plain HTTP sends data unencrypted.',
   check(ctx: Context): Issue[] {
@@ -41,14 +42,15 @@ export const mcpConfig: Rule = {
     for (const f of ctx.files.filter((f) => f.kind === 'mcp')) {
       const { value } = parseJson(f);
       if (value === undefined) continue; // invalid-config reports it
-      const add = (message: string, hint: string, line?: number) =>
-        issues.push({ rule: 'mcp-config', severity: 'warning', file: f.path, line, message, hint });
+      const add = (message: string, hint: string, line?: number, certainty?: 'sure') =>
+        issues.push({ rule: 'mcp-config', severity: 'warning', file: f.path, line, message, hint, certainty });
 
       if (!isObject(value) || !isObject(value['mcpServers'])) {
         add(
           'No "mcpServers" object, so Claude Code finds no servers here.',
           'Use { "mcpServers": { "name": { "command": "…", "args": [] } } }.',
           1,
+          'sure',
         );
         continue;
       }
@@ -73,7 +75,7 @@ function checkServer(
   f: SetupFile,
   name: string,
   server: Record<string, unknown>,
-  add: (message: string, hint: string, line?: number) => void,
+  add: (message: string, hint: string, line?: number, certainty?: 'sure') => void,
 ): void {
   const line = lineOf(f, JSON.stringify(name));
   const label = `Server "${clip(name, 40)}"`;
@@ -130,7 +132,12 @@ function checkServer(
       // PowerShell's $env:TOKEN means the variable TOKEN.
       const v = m[1]!.toLowerCase() === 'env' && m[2] ? m[2].slice(1) : m[1]!;
       const written = m[2] && m[1]!.toLowerCase() === 'env' ? `$${m[1]}${m[2]}` : `$${m[1]}`;
-      add(`${label} ${where} uses "${written}", which Claude Code never expands.`, `Write "\${${v}}" instead.`, at);
+      add(
+        `${label} ${where} uses "${written}", which Claude Code never expands.`,
+        `Write "\${${v}}" instead.`,
+        at,
+        'sure',
+      );
       continue;
     }
     // cmd.exe expands %VAR% in the arguments it runs, but nothing expands it in env, headers or url.
@@ -140,6 +147,7 @@ function checkServer(
         `${label} ${where} uses "%${p[1]}%", which Claude Code passes on as literal text: it only expands "\${VAR}".`,
         `Write "\${${p[1]}}" instead.`,
         at,
+        'sure',
       );
     }
   }

@@ -30,6 +30,7 @@ export function scriptRunner(script: string | undefined, deps: ReadonlySet<strin
 export const wrongTestRunner: Rule = {
   id: 'wrong-test-runner',
   severity: 'warning',
+  certainty: 'guess',
   summary: 'Your instructions name a different test runner than the project uses.',
   why: 'Claude writes tests for the runner the instructions name: with the wrong one the imports, mocks and commands do not work.',
   check(ctx: Context): Issue[] {

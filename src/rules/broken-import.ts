@@ -6,6 +6,7 @@ import type { Context, Issue, Rule } from '../core/types.js';
 export const brokenImport: Rule = {
   id: 'broken-import',
   severity: 'error',
+  certainty: 'sure',
   summary: 'An @path import in CLAUDE.md points to a file that does not exist.',
   why: 'Claude Code silently skips imports it cannot find, so whatever that file was meant to teach Claude never reaches it.',
   check(ctx: Context): Issue[] {

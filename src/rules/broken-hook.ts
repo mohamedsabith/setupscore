@@ -210,6 +210,7 @@ function scriptsOf(h: Record<string, unknown>): Script[] {
 export const brokenHook: Rule = {
   id: 'broken-hook',
   severity: 'warning',
+  certainty: 'sure',
   summary:
     'A hook in .claude/settings.json can never run as written: a wrong shape, a misspelled event, a matcher that matches nothing, or a missing script.',
   why: 'A broken hook fails quietly. Claude Code shows at most a one-line "hook error" and carries on, so a check you rely on (formatting, tests, blocking dangerous commands) silently does nothing. A missing Python script can instead block every tool call.',
@@ -244,6 +245,8 @@ export const brokenHook: Rule = {
               message:
                 `"${event}" is not a hook event, so Claude Code skips these hooks. ${sameLetters ? 'Event names are case-sensitive.' : ''}`.trim(),
               hint: `Did you mean "${near}"?`,
+              // Sure when only the letter case differs; a close spelling may be a newer event.
+              ...(sameLetters ? {} : { certainty: 'guess' as const }),
             });
           }
           continue; // a name far from every known event may be newer than this list
@@ -305,6 +308,7 @@ function checkMatcher(matcher: unknown, event: string, line: number | undefined,
     add({
       line,
       message: `${event} has no matcher, so ${quote(matcher, 40)} is ignored and this hook runs every time.`,
+      certainty: 'guess',
       hint: 'Remove the matcher, or filter inside the hook.',
     });
     return;
@@ -390,6 +394,7 @@ function checkHandler(
     add({
       line,
       message: `The ${event} hook${what} has "timeout": ${clip(JSON.stringify(h['timeout']) ?? String(h['timeout']), 20)}. It must be a number of seconds above 0.`,
+      certainty: 'guess',
       hint: 'For example "timeout": 30.',
     });
   }
@@ -473,6 +478,8 @@ function checkScripts(
           ? `The ${s.event} hook runs ${s.rel} directly, but git stores it as not executable, so it fails with "Permission denied" on every clone.`
           : `The ${s.event} hook runs ${s.rel} directly, but the file is not executable, so it fails with "Permission denied".`,
       hint: notExecutable === 'git' ? `Run: git update-index --chmod=+x ${s.rel}` : `Run: chmod +x ${s.rel}`,
+      // Git says so for every clone; a file on this disk may only be wrong here.
+      certainty: notExecutable === 'git' ? 'sure' : 'guess',
     });
   }
 }

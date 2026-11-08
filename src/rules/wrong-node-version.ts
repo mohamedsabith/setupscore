@@ -19,6 +19,7 @@ export function minNodeMajor(range: string): number | null {
 export const wrongNodeVersion: Rule = {
   id: 'wrong-node-version',
   severity: 'warning',
+  certainty: 'guess',
   summary: 'Your instructions name a Node.js version that the project no longer allows.',
   why: 'Claude follows the version in the instructions: it may avoid newer Node features the project relies on, or suggest setting up an old Node.',
   check(ctx: Context): Issue[] {

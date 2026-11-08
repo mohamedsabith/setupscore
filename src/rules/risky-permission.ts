@@ -17,6 +17,7 @@ const SHELL =
 export const riskyPermission: Rule = {
   id: 'risky-permission',
   severity: 'warning',
+  certainty: 'advice',
   summary: 'settings.json lets Claude run risky commands without asking, or turns permission prompts off.',
   why: 'Allowed commands run with no prompt. One bad step, or a prompt injection hidden in a file or web page, can then delete files, push code or send data out.',
   check(ctx: Context): Issue[] {

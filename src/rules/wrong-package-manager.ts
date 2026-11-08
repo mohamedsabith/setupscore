@@ -60,6 +60,7 @@ interface ProjectPm {
 export const wrongPackageManager: Rule = {
   id: 'wrong-package-manager',
   severity: 'warning',
+  certainty: 'guess',
   summary: 'Your instructions use a different package manager than the project does.',
   why: 'Claude tends to follow the instructions over the lockfile. It runs the wrong tool, which can install other versions and leave a second lockfile.',
   check(ctx: Context): Issue[] {

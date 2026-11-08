@@ -4,6 +4,17 @@ All notable changes to this project are documented here. The project follows [Se
 
 ## Unreleased
 
+### Added
+
+- Every finding says how sure it is: `certainty` is `sure` (the setup provably can't work, or Claude Code provably ignores it), `guess` (a heuristic that can be wrong) or `advice` (a risk or a recommendation). It is in `--json` and in `setupscore rules`. See [Levels](docs/reference.md#levels-sure-problems-and-guesses) for which rule is which.
+- New setting `levels: by-certainty` in `setupscore.yml`, off by default: sure problems become errors, guesses become hints, advice stays a warning. A hint is shown but never fails a build, not even with `--strict`, and doesn't lower the health score. An error is never lowered, and a level set under `rules:` always wins. This will be the default in 2.0. On the 114 public repositories setupscore is tested on, it turns 111 guesses into hints and 13 more repositories would fail a build, mostly because of an `AGENTS.md` that Claude Code never reads.
+- `hint` is a level you can give any rule in `setupscore.yml` (`rules: { vague-rule: hint }`), and `--json` has `summary.hints`.
+- `file-name-pattern` also reports a file that doesn't follow a pattern the other files in its folder use: with `knowledge/history/2026-10.md` already there, a new `21_20.md` is reported. Only the folder's dated entries count (a name with a year in it, or only digits); `README.md` and other documents are left alone.
+
+### Changed
+
+- For library users: `Severity` is now `'error' | 'warning' | 'hint'`, `Issue` has an optional `certainty`, `Rule` an optional `certainty` (a rule of your own without it counts as advice), and `CheckResult` a `hints` count. The new types `Certainty` and `Levels` are exported. Code that handles every `Severity` may need a branch for `'hint'`; it only appears when `levels: by-certainty` or a `hint` level is set.
+
 ### Fixed
 
 - An import more than four levels deep (CLAUDE.md imports A, A imports B, and so on) is no longer counted as loaded at start-up: Claude Code stops after four hops. In `--json`, its `loadsAtStart` is now `false`, and its tokens no longer count in the start-up total (`--cost`). `deep-import` and `broken-import` still check it. None of the 114 public repositories setupscore is tested on has such an import, so their output is the same.

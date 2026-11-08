@@ -7,6 +7,7 @@ const SAFE_DEPTH = MAX_IMPORT_HOPS;
 export const deepImport: Rule = {
   id: 'deep-import',
   severity: 'warning',
+  certainty: 'sure',
   summary: 'An @import chain is so deep that Claude Code may stop following it.',
   why: 'Claude Code follows imports inside imports to a depth of four. Files past that never load.',
   check(ctx: Context): Issue[] {

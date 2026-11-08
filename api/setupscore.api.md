@@ -15,6 +15,9 @@ export interface Applied {
 // @public
 export function applyFixes(root: string, issues: Issue[], failures?: FixFailure[]): Applied[];
 
+// @public
+export type Certainty = 'sure' | 'guess' | 'advice';
+
 // @public (undocumented)
 export function check(dir: string, options?: CheckOptions): CheckRun;
 
@@ -33,6 +36,7 @@ export interface CheckResult {
     // (undocumented)
     fixable: number;
     health: number;
+    hints: number;
     // (undocumented)
     issues: Issue[];
     // (undocumented)
@@ -62,6 +66,7 @@ export interface Config {
     } | undefined;
     // (undocumented)
     ignore: string[];
+    levels?: Levels | undefined;
     // (undocumented)
     rules: Record<string, RuleSetting>;
     sandbox?: {
@@ -168,6 +173,7 @@ export interface ImportRef {
 
 // @public (undocumented)
 export interface Issue {
+    certainty?: Certainty | undefined;
     // (undocumented)
     column?: number;
     file: string;
@@ -220,6 +226,7 @@ export interface JsonReport {
         files: number;
         errors: number;
         warnings: number;
+        hints: number;
         fixable: number;
         startupTokens: number;
         truncated: boolean;
@@ -230,6 +237,9 @@ export interface JsonReport {
         version: string;
     };
 }
+
+// @public
+export type Levels = 'default' | 'by-certainty';
 
 // @public (undocumented)
 export interface Line {
@@ -252,6 +262,7 @@ export interface MisnamedFile {
 
 // @public (undocumented)
 export interface Rule {
+    certainty?: Certainty | undefined;
     // (undocumented)
     check(ctx: Context): Issue[];
     // (undocumented)
@@ -291,8 +302,8 @@ export interface SetupFile {
     text: string;
 }
 
-// @public (undocumented)
-export type Severity = 'error' | 'warning';
+// @public
+export type Severity = 'error' | 'warning' | 'hint';
 
 // @public
 export interface SkippedFile {
