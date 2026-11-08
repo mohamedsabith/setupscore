@@ -101,3 +101,50 @@ jobs:
           # The library loads from ESM and from CommonJS (require(esm), Node 22.12 and newer).
           node --input-type=module -e "const m = await import('setupscore'); if (typeof m.check !== 'function') process.exit(1)"
           node -e "const m = require('setupscore'); if (typeof m.check !== 'function') process.exit(1)"
+
+  oldest-node:
+    # package.json promises Node 22.12 or newer. Some development tools (ESLint, tsup) need a newer
+    # Node, so the package is built on Node 24, then tested and installed on Node 22.12 itself.
+    name: Node 22.12 (the oldest supported)
+    runs-on: ubuntu-latest
+    env:
+      HUSKY: 0
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: Install the Linux sandbox tools
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -y -q bubblewrap socat ripgrep
+          sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0 || true
+          if [ -f /etc/apparmor.d/bwrap-userns-restrict ]; then
+            sudo apparmor_parser -R /etc/apparmor.d/bwrap-userns-restrict
+          fi
+      - run: npm run build && npm pack --pack-destination "$RUNNER_TEMP"
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22.12.0
+      - run: test "$(node --version)" = v22.12.0
+      - name: The tests pass on Node 22.12
+        run: npx vitest run
+      - name: Install the packed package and run it like a user
+        run: |
+          mkdir -p "$RUNNER_TEMP/app" && cd "$RUNNER_TEMP/app"
+          npm init -y > /dev/null
+          npm install --engine-strict "$RUNNER_TEMP"/setupscore-*.tgz
+          npx setupscore --version
+          set +e
+          npx setupscore check "$GITHUB_WORKSPACE/examples/bakery-api" --json > result.json
+          code=$?
+          set -e
+          test "$code" -eq 1
+          node -e "const r=require('./result.json'); if (r.schemaVersion !== 1 || r.summary.errors < 1) process.exit(1)"
+          node --input-type=module -e "const m = await import('setupscore'); if (typeof m.check !== 'function') process.exit(1)"
+          node -e "const m = require('setupscore'); if (typeof m.check !== 'function') process.exit(1)"

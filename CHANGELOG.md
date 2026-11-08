@@ -2,6 +2,12 @@
 
 All notable changes to this project are documented here. The project follows [Semantic Versioning](https://semver.org/). The command line, exit codes, `setupscore.yml` and the JSON output (`schemaVersion`) are the public API.
 
+## Unreleased
+
+### Changed (development only, nothing changes for users)
+
+- CI also runs the tests on Node 22.12, the oldest version `package.json` allows, and installs the packed package there with `--engine-strict`.
+
 ## 1.1.2 - 2026-11-08
 
 ### Fixed
