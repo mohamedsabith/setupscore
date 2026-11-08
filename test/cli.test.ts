@@ -219,6 +219,7 @@ describe('setupscore CLI', () => {
   it('quotes paths in hints only when needed, the way each shell reads them', () => {
     const platform = Object.getOwnPropertyDescriptor(process, 'platform')!;
     try {
+      Object.defineProperty(process, 'platform', { value: 'linux' });
       expect(shellArg('/tmp/a~1/b')).toBe('/tmp/a~1/b');
       expect(shellArg('~/b')).toBe('"~/b"');
       expect(shellArg('a b')).toBe('"a b"');

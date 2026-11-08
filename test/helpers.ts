@@ -36,6 +36,8 @@ export function initGit(root: string): void {
   git(root, 'config', 'user.email', 'test@example.com');
   git(root, 'config', 'user.name', 'Test');
   git(root, 'config', 'commit.gpgsign', 'false');
+  // Files keep their exact bytes on every OS (Windows runners turn LF into CRLF by default).
+  git(root, 'config', 'core.autocrlf', 'false');
   git(root, 'add', '-A');
   git(root, 'commit', '-qm', 'init');
 }

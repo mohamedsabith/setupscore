@@ -465,7 +465,7 @@ describe('package managers', () => {
     );
   });
 
-  it("runs tsx tests without its socket, and Yarn Plug'n'Play runners through yarn", () => {
+  posixOnly("runs tsx tests without its socket, and Yarn Plug'n'Play runners through yarn", () => {
     const f = ['a.test.ts'];
     expect(runnerCommand('tsx --test', f)).toBe("node --import tsx --test 'a.test.ts'");
     expect(runnerCommand('tsx --test', f, { tsxMajor: 3 })).toBe("node --loader tsx --test 'a.test.ts'");

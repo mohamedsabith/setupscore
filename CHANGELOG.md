@@ -4,6 +4,14 @@ All notable changes to this project are documented here. The project follows [Se
 
 ## Unreleased
 
+### Fixed
+
+- On Windows, `report --output` with a folder instead of a file now says "it is a folder" and exits 2, like on macOS and Linux. Before, it said "No permission to write" and exited 3.
+
+### Changed
+
+- The GitHub Action examples for `run` use `runs-on: ubuntu-24.04`. On the new Ubuntu 26.04 runners (`ubuntu-latest` since October 2026) the OS sandbox cannot start yet, so `run` stops there with exit code 3. `check` works on every runner.
+
 ### Changed (development only, nothing changes for users)
 
 - CI is back: every pull request and every push to `main` runs the tests on Linux, macOS and Windows with Node 22 and 24, plus format, lint, layer, unused-code, public API and package checks. Pull request titles are checked with commitlint.

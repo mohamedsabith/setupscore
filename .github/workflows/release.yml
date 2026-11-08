@@ -15,7 +15,9 @@ permissions:
 
 jobs:
   publish:
-    runs-on: ubuntu-latest
+    # Ubuntu 24.04: on the Ubuntu 26.04 runners the OS sandbox cannot start, and its tests
+    # (a malicious test must not escape) would only be skipped.
+    runs-on: ubuntu-24.04
     env:
       HUSKY: 0 # no git hooks are needed on the release machine
     permissions:
@@ -45,6 +47,9 @@ jobs:
           sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0 || true
       - run: npm run typecheck
       - run: npm test
+      # The sandbox tests above are skipped where the sandbox cannot start: make sure they ran.
+      - name: The sandbox must work here
+        run: node dist/cli.js doctor
 
       # Prereleases (a "-" in the version) go to the "next" dist-tag, so `npm install setupscore`
       # keeps getting the newest stable version. A version that is already on npm is skipped,

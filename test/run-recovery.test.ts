@@ -381,7 +381,8 @@ describe('cheap checks happen before asking and before the run exists (W11, C9, 
       ANTHROPIC_BASE_URL: 'http://litellm:4000',
     });
     expect(single.code).toBe(3);
-    expect(single.err).toMatch(/single name/);
+    // Native Windows refuses `run` (no OS sandbox) before it looks at the gateway.
+    expect(single.err).toMatch(process.platform === 'win32' ? /native Windows/ : /single name/);
     const notUrl = cli(['run', root, '--claude-bin', fake('solve'), ...NONE], { ANTHROPIC_BASE_URL: 'not a url' });
     expect(notUrl.code).toBe(3);
     const cacheFile = join(mkdtempSync(join(tmpdir(), 'setupscore-cachefile-')), 'file');

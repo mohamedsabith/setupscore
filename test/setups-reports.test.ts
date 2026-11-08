@@ -152,7 +152,9 @@ describe('what a setup holds (C3, C5)', () => {
       expect(existsSync(join(ws.dir, '.claude/hooks/old-hook.sh'))).toBe(false);
       expect(existsSync(join(ws.dir, 'CLAUDE.local.md'))).toBe(false);
       expect(readFileSync(join(ws.dir, '.claude/skills/testing/reference.md'), 'utf8')).toBe('the reference\n');
-      expect(statSync(join(ws.dir, '.claude/hooks/check.sh')).mode & 0o111).not.toBe(0);
+      // Windows has no executable bit.
+      if (process.platform !== 'win32')
+        expect(statSync(join(ws.dir, '.claude/hooks/check.sh')).mode & 0o111).not.toBe(0);
       expect(readFileSync(join(ws.dir, 'CLAUDE.md'), 'utf8')).toBe('# New\n');
       expect(readFileSync(join(ws.dir, 'src/a.js'), 'utf8')).toContain('a = 1');
 

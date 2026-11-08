@@ -61,7 +61,7 @@ runs:
         esac
         if [ "$command" = run ]; then
           if [ "$RUNNER_OS" = Windows ]; then
-            fail 3 'command: run needs an OS sandbox, and native Windows has none. Run this job on ubuntu-latest or macos-latest (command: check works on Windows).'
+            fail 3 'command: run needs an OS sandbox, and native Windows has none. Run this job on ubuntu-24.04 or macos-latest (command: check works on Windows).'
           fi
           if [ "$HAS_KEY" != true ] && [ -z "${ANTHROPIC_AUTH_TOKEN:-}" ] && [ -z "${CLAUDE_CODE_USE_BEDROCK:-}" ]; then
             fail 3 'command: run got no key or token. Pass anthropic-api-key or claude-code-oauth-token from a repository secret. GitHub gives no secrets to pull requests from forks, so use command: check for those (it is free and needs no key).'

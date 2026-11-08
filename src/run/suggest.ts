@@ -236,6 +236,10 @@ export function saveTextFile(file: string, text: string, mode?: number): void {
       throw new EnvironmentError(`${file} is on a read-only file system, so it could not be saved. ${kept}`, [
         'Save it somewhere writable instead.',
       ]);
+    // Windows reports EPERM, not EISDIR, when the path is a folder: that is a wrong path, not a permission problem.
+    const folder =
+      e.code === 'EISDIR' || (e.code === 'EPERM' && statSync(file, { throwIfNoEntry: false })?.isDirectory());
+    if (folder) throw new UsageError(`Cannot write ${file}: it is a folder.`, ['Choose a file path instead.']);
     if (e.code === 'EACCES' || e.code === 'EPERM')
       throw new EnvironmentError(`No permission to write ${file}. ${kept}`, [
         'Check the permissions of the file and its folder, and do not run setupscore with sudo.',
@@ -244,11 +248,10 @@ export function saveTextFile(file: string, text: string, mode?: number): void {
       throw new UsageError(`Cannot write ${file}: the folder does not exist.`, [
         'Create the folder first, or choose another path.',
       ]);
-    if (e.code === 'EISDIR' || e.code === 'ENOTDIR')
-      throw new UsageError(
-        `Cannot write ${file}: ${e.code === 'EISDIR' ? 'it is a folder' : 'part of the path is a file, not a folder'}.`,
-        ['Choose a file path instead.'],
-      );
+    if (e.code === 'ENOTDIR')
+      throw new UsageError(`Cannot write ${file}: part of the path is a file, not a folder.`, [
+        'Choose a file path instead.',
+      ]);
     if (e.code)
       throw new EnvironmentError(`Cannot write ${file}: ${e.message}. ${kept}`, [
         'Check the disk and the folder, then try again.',

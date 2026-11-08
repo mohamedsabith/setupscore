@@ -23,7 +23,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
+        # Ubuntu 24.04, not ubuntu-latest: on the Ubuntu 26.04 runners the sandbox cannot start
+        # ("nested userns is capability-restricted"), so its tests would only be skipped.
+        os: [ubuntu-24.04, macos-latest, windows-latest]
         node: [22, 24]
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1

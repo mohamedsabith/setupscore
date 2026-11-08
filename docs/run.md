@@ -171,7 +171,7 @@ permissions:
   pull-requests: write   # for the results comment
 jobs:
   setup:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04  # the sandbox does not start on the Ubuntu 26.04 runners yet
     steps:
       - uses: actions/checkout@v7
         with:

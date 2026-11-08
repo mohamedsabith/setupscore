@@ -255,7 +255,7 @@ permissions:
   pull-requests: write                        # for the results comment
 jobs:
   setup:
-    runs-on: ubuntu-latest                    # or macos-latest; "run" needs a sandbox, so not Windows
+    runs-on: ubuntu-24.04                     # or macos-latest; "run" needs a sandbox: not Windows, not Ubuntu 26.04 yet
     steps:
       - uses: actions/checkout@v7
         with:
