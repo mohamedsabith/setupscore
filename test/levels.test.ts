@@ -1,5 +1,6 @@
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
+import { stripVTControlCharacters } from 'node:util';
 import { describe, expect, it } from 'vitest';
 import { check } from '../src/core/check.js';
 import { ConfigError, loadConfig } from '../src/core/config.js';
@@ -73,10 +74,13 @@ describe('levels: every finding says how sure it is', () => {
 
   it('shows hints in the terminal, and --quiet hides them with the warnings', () => {
     const { run } = levels({ levels: 'by-certainty' });
-    const text = renderTerminal(run);
+    // CI forces colours on: compare the text without them.
+    const text = stripVTControlCharacters(renderTerminal(run));
     expect(text).toMatch(/hint\s+"Use axios for requests\."/);
     expect(text).toContain('3 errors, 1 warning, 2 hints in');
-    expect(renderTerminal(run, { quiet: true })).toContain('(1 warning and 2 hints hidden by --quiet)');
+    expect(stripVTControlCharacters(renderTerminal(run, { quiet: true }))).toContain(
+      '(1 warning and 2 hints hidden by --quiet)',
+    );
   });
 
   it('reads "levels" from setupscore.yml and explains a wrong value or a misspelled key', () => {
