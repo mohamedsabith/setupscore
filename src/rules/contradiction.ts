@@ -5,7 +5,8 @@ import { instructionFiles, proseLines, quote } from './util.js';
 const VERBS =
   'use|using|write|writing|call|calling|add|adding|import|importing|create|creating|run|running|install|installing';
 const NEGATIVE = new RegExp(
-  `\\b(?:never|don't|do not|dont|avoid|stop|no longer)\\s+(?:${VERBS})\\s+((?:the\\s+|a\\s+|an\\s+)?[\\w.+#@/-]+(?:\\s+[\\w.+#@/-]+){0,2})`,
+  // Names are often written as code: "never use `npm`". The backticks are dropped from the subject.
+  `\\b(?:never|don't|do not|dont|avoid|stop|no longer)\\s+(?:${VERBS})\\s+((?:the\\s+|a\\s+|an\\s+)?[\\w.+#@/\`-]+(?:\\s+[\\w.+#@/\`-]+){0,2})`,
   'i',
 );
 const NEGATION_WORDS = /\b(?:never|not|don't|dont|do not|avoid|no longer|instead of|rather than|except|unless|stop)\b/i;
@@ -76,7 +77,7 @@ function trimPunct(w: string): string {
  * The subject drops articles and stops at the first stop word; what follows a scope word is the scope.
  */
 function subject(phrase: string, rest: string): { subject: string; scope: string[] } | null {
-  const words = phrase.toLowerCase().split(/\s+/).map(trimPunct).filter(Boolean);
+  const words = phrase.replaceAll('`', '').toLowerCase().split(/\s+/).map(trimPunct).filter(Boolean);
   while (words.length && STOP.has(words[0]!)) words.shift();
   const out: string[] = [];
   let k = 0;
@@ -87,7 +88,10 @@ function subject(phrase: string, rest: string): { subject: string; scope: string
   const s = out.join(' ').trim();
   if (s.length < 3) return null;
   // The scope: content words after "in", "on", "for" ... in the rest of the rule.
-  const after = [...words.slice(k), ...rest.toLowerCase().split(/\s+/).map(trimPunct).filter(Boolean)].slice(0, 12);
+  const after = [
+    ...words.slice(k),
+    ...rest.replaceAll('`', '').toLowerCase().split(/\s+/).map(trimPunct).filter(Boolean),
+  ].slice(0, 12);
   const scope: string[] = [];
   if (after.length && SCOPE.has(after[0]!)) {
     for (const w of after.slice(1)) {
@@ -100,10 +104,28 @@ function subject(phrase: string, rest: string): { subject: string; scope: string
 
 const escapeRe = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
+/** A heading over a list of what not to do: "Common mistakes", "Anti-patterns", "Avoid". */
+const DONT_HEADING = /\b(?:mistakes?|anti-?patterns?|pitfalls?|avoid|don't|do not|never|wrong|bad)\b/i;
+/** A list item marked as a bad example: "❌ ...", "Bad: ...", "Wrong: ...". */
+const BAD_EXAMPLE = /^(?:\W*[❌🚫⛔✗✘]|\s*\**(?:bad|wrong|incorrect)\b)/iu;
+
+/** Each line number of a file -> the text of the heading it is under. */
+function headings(file: SetupFile): Map<number, string> {
+  const out = new Map<number, string>();
+  let current = '';
+  for (const l of file.lines) {
+    if (!l.inFence && !l.inFrontmatter && /^#{1,6}\s/.test(l.text)) current = l.text;
+    out.set(l.n, current);
+  }
+  return out;
+}
+
 interface RuleLine {
   file: SetupFile;
   line: Line;
   text: string;
+  /** Under a "mistakes" heading or marked ❌: it shows what not to do. */
+  bad: boolean;
 }
 
 export const contradiction: Rule = {
@@ -121,13 +143,18 @@ export const contradiction: Rule = {
     const issues: Issue[] = [];
     for (const group of groups) {
       // Only list items: rules are written as lists, and wrapped prose paragraphs give false matches.
-      const rules: RuleLine[] = group.flatMap((file) =>
-        proseLines(file)
+      const rules: RuleLine[] = group.flatMap((file) => {
+        const under = headings(file);
+        return proseLines(file)
           .filter((line) => isListItem(line.text))
-          .map((line) => ({ file, line, text: ruleText(line.text) })),
-      );
+          .map((line) => {
+            const text = ruleText(line.text);
+            return { file, line, text, bad: BAD_EXAMPLE.test(text) || DONT_HEADING.test(under.get(line.n) ?? '') };
+          });
+      });
+      // A bad example is not an instruction to do it.
       const positives = rules
-        .filter((r) => !NEGATION_WORDS.test(r.text))
+        .filter((r) => !r.bad && !NEGATION_WORDS.test(r.text))
         .map((r) => ({ ...r, lower: r.text.toLowerCase() }));
       // Word -> the positive rules that contain it, so each subject only looks at a few candidates.
       const byWord = new Map<string, typeof positives>();
@@ -144,6 +171,8 @@ export const contradiction: Rule = {
       for (const neg of rules) {
         const m = neg.text.match(NEGATIVE);
         if (!m) continue;
+        // An open code span: the name goes on past the words read ("never run `npm exec nx build`"), so it is cut short.
+        if ((m[1]!.split('`').length - 1) % 2 === 1) continue;
         const s = subject(m[1]!, neg.text.slice(m.index! + m[0].length));
         if (!s) continue;
         const key = `${s.subject}|${s.scope.join(' ')}`;
@@ -156,7 +185,7 @@ export const contradiction: Rule = {
         const subj = key.slice(0, key.indexOf('|'));
         // eslint-disable-next-line security/detect-non-literal-regexp -- the subject from the file is escaped (escapeRe)
         const positive = new RegExp(
-          `\\b(?:${VERBS}|prefer|always use)\\s+(?:the\\s+|a\\s+|an\\s+)?${escapeRe(subj)}\\b`,
+          `\\b(?:${VERBS}|prefer|always use)\\s+(?:the\\s+|a\\s+|an\\s+)?\`?${escapeRe(subj)}\\b`,
           'i',
         );
         // A scoped ban ("never ... in production") only clashes with a rule that mentions the same scope.

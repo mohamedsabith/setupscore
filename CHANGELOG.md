@@ -4,6 +4,10 @@ All notable changes to this project are documented here. The project follows [Se
 
 ## Unreleased
 
+### Changed
+
+- `contradiction` reads tool names written as code: "Never use `npm`" against "Use `npm` for installs" is now reported, as it was without the backticks. A name cut short inside a code span is skipped, and so are lines that show what not to do: a list under a "Common mistakes" (or "Anti-patterns", "Avoid") heading, and items marked ❌, "Bad:" or "Wrong:". On 114 public repositories this adds no finding and removes one false alarm.
+
 ### Changed (development only, nothing changes for users)
 
 - CI also runs the tests on Node 22.12, the oldest version `package.json` allows, and installs the packed package there with `--engine-strict`.

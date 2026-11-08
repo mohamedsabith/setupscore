@@ -198,6 +198,40 @@ describe('contradiction', () => {
     ).toEqual([]);
   });
 
+  it('reads tool names written as code: never use `npm` (backticks)', () => {
+    for (const [no, yes] of [
+      ['- Never use `npm`.', '- Use `npm` for installs.'],
+      ['- Never use `npm`.', '- Use npm for installs.'],
+      ['- Never use npm.', '- Use `npm` for installs.'],
+      ['- Never use `raw SQL`.', '- For reports, use `raw SQL`.'],
+    ])
+      expect(lint('contradiction', { 'CLAUDE.md': `${no}\n${yes}\n` }), `${no} / ${yes}`).toHaveLength(1);
+    for (const [no, yes] of [
+      ['- Never use `npm`.', '- Use `pnpm` for installs.'],
+      ['- Never use `npm` in production.', '- Use `npm` for local installs.'],
+      ['- Never run `rm -rf /`.', '- Run `rm` on temp files only.'],
+      // Cut short inside a code span: build is not test.
+      ['- In CI, do not run `npm exec nx build`.', '- Prefer `npm exec nx test <project>`.'],
+      ["- DON'T call `p.nextToken()` BEFORE.", '- ALWAYS call `p.nextToken()` AFTER.'],
+    ])
+      expect(lint('contradiction', { 'CLAUDE.md': `${no}\n${yes}\n` }), `${no} / ${yes}`).toEqual([]);
+  });
+
+  it('does not read a list of mistakes or a ❌ example as an instruction', () => {
+    expect(
+      lint('contradiction', {
+        'CLAUDE.md':
+          '- Do not add a `# Release` heading.\n\n## Common mistakes\n\n- Adding a `# Release` heading: the tag has the version.\n',
+      }),
+    ).toEqual([]);
+    expect(lint('contradiction', { 'CLAUDE.md': '- Never use axios.\n- ❌ Use axios for requests.\n' })).toEqual([]);
+    expect(lint('contradiction', { 'CLAUDE.md': '- Never use axios.\n- Bad: use axios for requests.\n' })).toEqual([]);
+    // Under any other heading it is still a clash.
+    expect(
+      lint('contradiction', { 'CLAUDE.md': '- Never use axios.\n\n## HTTP\n\n- Use axios for requests.\n' }),
+    ).toHaveLength(1);
+  });
+
   it('accepts a rule that states its own exception', () => {
     expect(
       lint('contradiction', {
