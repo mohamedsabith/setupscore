@@ -228,7 +228,9 @@ describe('monorepo packages (C4)', () => {
       expect(existsSync(join(ws.root, '.claude/rules/old.md'))).toBe(false);
       expect(readFileSync(join(ws.root, '.claude/rules/new.md'), 'utf8')).toBe('new rule\n');
       expect(readFileSync(join(ws.dir, 'CLAUDE.md'), 'utf8')).toBe('- APP\n');
-      expect(readFileSync(join(ws.root, 'packages/other/CLAUDE.md'), 'utf8')).toBe('- OTHER\n'); // untouched
+      expect(readFileSync(join(ws.root, 'packages/other/CLAUDE.md'), 'utf8').replaceAll('\r\n', '\n')).toBe(
+        '- OTHER\n',
+      ); // untouched
 
       applySetup(ws.dir, { label: 'baseline', source: 'none', files: {} });
       expect(existsSync(join(ws.root, 'CLAUDE.md'))).toBe(false);
