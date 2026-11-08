@@ -2,6 +2,12 @@
 
 All notable changes to this project are documented here. The project follows [Semantic Versioning](https://semver.org/). The command line, exit codes, `setupscore.yml` and the JSON output (`schemaVersion`) are the public API.
 
+## 1.1.1 - 2026-11-08
+
+### Changed
+
+- Releases are published with npm trusted publishing: npm only accepts a new version from this repository's release workflow, and no npm token is stored anywhere. Nothing changes in the package itself; `npm audit signatures` still verifies its provenance.
+
 ## 1.1.0 - 2026-11-08
 
 ### Added
