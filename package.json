@@ -1,6 +1,6 @@
 {
   "name": "setupscore",
-  "version": "1.1.2",
+  "version": "1.2.0",
   "description": "Check your Claude Code setup (CLAUDE.md, rules, skills, agents, settings, .mcp.json) for broken paths, leaked secrets and contradictions, then measure whether it actually helps: real tasks from your git history, run in an OS sandbox, with a Setup Score.",
   "keywords": [
     "claude",

@@ -82,7 +82,7 @@ There is no automatic fix: the instructions may be right and the lockfile wrong.
 
 ## wrong-test-runner
 
-**Level:** warning (new in the next release; tell us with a [false-alarm report](https://github.com/mohamedsabith/setupscore/issues/new?template=2-false-alarm.yml) if it is wrong)
+**Level:** warning (new in 1.2.0; tell us with a [false-alarm report](https://github.com/mohamedsabith/setupscore/issues/new?template=2-false-alarm.yml) if it is wrong)
 
 Your instructions name a different test runner than the project uses: "we use Jest" or `npx jest` in a project whose `test` script runs Vitest.
 
@@ -96,7 +96,7 @@ Your instructions name a different test runner than the project uses: "we use Je
 
 ## wrong-node-version
 
-**Level:** warning (new in the next release; tell us with a [false-alarm report](https://github.com/mohamedsabith/setupscore/issues/new?template=2-false-alarm.yml) if it is wrong)
+**Level:** warning (new in 1.2.0; tell us with a [false-alarm report](https://github.com/mohamedsabith/setupscore/issues/new?template=2-false-alarm.yml) if it is wrong)
 
 Your instructions name a Node.js version that `engines.node` in `package.json` no longer allows: "Requires Node 18" in a project with `"engines": { "node": ">=22.12" }`.
 
