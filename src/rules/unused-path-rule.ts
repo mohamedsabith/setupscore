@@ -1,6 +1,6 @@
-import picomatch from 'picomatch';
 import type { Context, Issue, Rule } from '../core/types.js';
 import { SKIP_DIRS } from '../core/walk.js';
+import { compilePathPattern, toPatterns } from './contexts.js';
 import { quote } from './util.js';
 
 /** A glob longer than this cannot be a real path (picomatch refuses over 65,536 characters). */
@@ -17,30 +17,6 @@ function lowerBound(files: readonly string[], prefix: string): number {
   }
   return lo;
 }
-
-/** Split "a/**, b/*.{ts,tsx}" on commas that are not inside {braces}. */
-function splitPatterns(s: string): string[] {
-  const out: string[] = [];
-  let depth = 0;
-  let cur = '';
-  for (const ch of s) {
-    if (ch === '{') depth++;
-    if (ch === '}') depth = Math.max(0, depth - 1);
-    if (ch === ',' && depth === 0) {
-      out.push(cur);
-      cur = '';
-    } else cur += ch;
-  }
-  out.push(cur);
-  return out;
-}
-
-/** `paths:` may be a list or a comma-separated string. */
-const toPatterns = (v: unknown): string[] =>
-  (Array.isArray(v) ? v : typeof v === 'string' ? splitPatterns(v) : [])
-    .filter((p): p is string => typeof p === 'string')
-    .map((p) => p.trim().replace(/^\.\//, ''))
-    .filter(Boolean);
 
 export const unusedPathRule: Rule = {
   id: 'unused-path-rule',
@@ -63,26 +39,7 @@ export const unusedPathRule: Rule = {
       const key = `${root}\0${pattern}`;
       let c = compiled.get(key);
       if (c === undefined) {
-        try {
-          const anywhere = !pattern.includes('/');
-          const glob = root + pattern.replace(/^\/+/, '');
-          let base = root.replace(/\/$/, '');
-          if (!anywhere) {
-            const scan = picomatch.scan(glob);
-            base = scan.isGlob ? scan.base : glob.slice(0, Math.max(0, glob.lastIndexOf('/')));
-          }
-          if (base.includes('\\')) base = ''; // escaped characters: test every file
-          const prefix = base ? `${base}/` : '';
-          const match = anywhere
-            ? (() => {
-                const m = picomatch(pattern, { dot: true, basename: true });
-                return (p: string) => m(p.slice(root.length));
-              })()
-            : picomatch(glob, { dot: true });
-          c = { base: prefix, match };
-        } catch {
-          c = null; // not a glob picomatch can read: cannot check it
-        }
+        c = compilePathPattern(root, pattern); // null: not a glob picomatch can read, so it cannot be checked
         compiled.set(key, c);
       }
       if (c === null) return true;

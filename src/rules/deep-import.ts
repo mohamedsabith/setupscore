@@ -1,13 +1,14 @@
 import type { Context, Issue, Rule } from '../core/types.js';
+import { MAX_IMPORT_HOPS } from './contexts.js';
 
-/** Sources disagree on whether Claude Code follows 4 or 5 hops, so warn from the 5th. */
-const SAFE_DEPTH = 4;
+/** Claude Code follows imports to a maximum depth of four hops (code.claude.com/docs/en/memory). */
+const SAFE_DEPTH = MAX_IMPORT_HOPS;
 
 export const deepImport: Rule = {
   id: 'deep-import',
   severity: 'warning',
   summary: 'An @import chain is so deep that Claude Code may stop following it.',
-  why: 'Claude Code only follows a few levels of imports inside imports (4 to 5, depending on the version). Files past that never load.',
+  why: 'Claude Code follows imports inside imports to a depth of four. Files past that never load.',
   check(ctx: Context): Issue[] {
     return ctx.imports
       .filter((i) => i.exists && i.depth > SAFE_DEPTH)

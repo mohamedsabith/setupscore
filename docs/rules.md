@@ -223,7 +223,11 @@ There is a problem with a server in `.mcp.json`:
 
 **Level:** warning
 
-Two rules seem to say opposite things: one says _never use/write/call X_, another says _use X_. Only list items are compared, across everything loaded at start-up, or within one file. A ban with a scope ("Never run migrations **in production**") only clashes with a rule that mentions the same scope. Each forbidden subject is reported once, with a count of the other lines that say the same.
+Two rules seem to say opposite things: one says _never use/write/call X_, another says _use X_. Only list items are compared. A ban with a scope ("Never run migrations **in production**") only clashes with a rule that mentions the same scope. Each forbidden subject is reported once, with a count of the other lines that say the same.
+
+Rules are compared when Claude has them in front of it at the same time (see [When files meet](#when-files-meet)): the files loaded at start-up, plus a nested `CLAUDE.md` when Claude works in its folder, a `paths:` rule when Claude works on a matching file, a skill or command when it runs, and a subagent's prompt. The finding says when the two meet, for example _(both load when Claude works in packages/api/)_.
+
+A name written as code is read too ("Never use `npm`"), and it must match exactly, because code is case-sensitive: a ban on `plan` doesn't clash with "Use Plan mode". Lines that show what not to do are skipped: a list under a heading such as "Common mistakes", "Anti-patterns" or "Avoid", items marked ❌, "Bad:" or "Wrong:", and items that describe instead of ask ("Creating wrappers that only delegate").
 
 **Why it matters:** when rules conflict, Claude has to guess which one wins, and it won't guess the same way every time.
 
@@ -258,9 +262,22 @@ A short rule built around a phrase like "write good code", "be careful", "follow
 
 **Level:** warning
 
-The same rule (at least 4 words) appears twice in the instructions loaded at start-up. Case, list style, extra spaces and punctuation at the start or end of the line are ignored; punctuation inside the line, such as a comma, still counts. Link footers ("Reference: [Blog](https://…)") and lead-ins that end with a colon are not rules and may repeat.
+The same rule (at least 4 words) appears twice in instructions that Claude has in front of it at the same time (see [When files meet](#when-files-meet)): the files loaded at start-up, or those plus a nested `CLAUDE.md` or a `paths:` rule. Skills, subagents and commands may repeat steps on purpose and are not checked. Case, list style, extra spaces and punctuation at the start or end of the line are ignored; punctuation inside the line, such as a comma, still counts. Link footers ("Reference: [Blog](https://…)"), lead-ins that end with a colon, and lines about the file itself ("This file provides guidance to Claude Code…") are not rules and may repeat.
+
+Copies between a file loaded at start-up and one loaded later are reported once per pair of files, with a count: _Same rule as CLAUDE.md:90 (both load when Claude works on src/api.ts), and 34 more lines of this file repeat CLAUDE.md._
 
 **Why it matters:** every copy is sent with every message. Copies also drift apart over time and turn into contradictions.
+
+## When files meet
+
+Claude Code adds instruction files together; none overrides another ([memory docs](https://code.claude.com/docs/en/memory)). `contradiction` and `duplicate-rule` compare the files of each of these sets:
+
+- **At start-up:** `CLAUDE.md`, `.claude/CLAUDE.md` and `CLAUDE.local.md` in the project folder, rules in `.claude/rules/` without `paths:`, and their imports.
+- **When Claude works on a file:** also every `CLAUDE.md`, `CLAUDE.local.md` and `.claude/rules/` file without `paths:` in the folders above it, and every `paths:` rule that matches it.
+- **When a skill or command runs:** the start-up set and its body.
+- **In a subagent:** its prompt and the skills it lists in `skills:`, plus the start-up set unless it sets `omitClaudeMd: true` ([subagent docs](https://code.claude.com/docs/en/sub-agents)).
+
+Imports more than four levels deep are left out: Claude Code never loads them. Within one session, files that load on demand stay loaded, so Claude may also see two folders' files together; setupscore compares the files of one task at a time, not every possible mix.
 
 ## too-long
 
@@ -280,7 +297,7 @@ A setup file over 2 MB is too big for setupscore to read, so it is reported here
 
 An `@import` sits more than 4 levels deep (CLAUDE.md imports A, which imports B, and so on).
 
-**Why it matters:** Claude Code only follows a few levels of imports within imports. Sources say 4 or 5, depending on the version. Anything deeper may never load.
+**Why it matters:** Claude Code follows imports to a maximum depth of four hops ([memory docs](https://code.claude.com/docs/en/memory)). Anything deeper never loads, so `contradiction` and `duplicate-rule` leave it out.
 
 ## unused-path-rule
 

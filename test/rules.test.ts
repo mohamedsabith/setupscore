@@ -242,6 +242,173 @@ describe('contradiction', () => {
   });
 });
 
+describe('contradiction and duplicate-rule: files that load together (loadContexts)', () => {
+  const ROOT = '- Never use raw SQL.\n';
+  it('compares a nested CLAUDE.md with the root one, and says when they meet', () => {
+    const [issue, ...rest] = lint('contradiction', {
+      'CLAUDE.md': ROOT,
+      'packages/api/CLAUDE.md': '- For reports, use raw SQL.\n',
+    });
+    expect(rest).toEqual([]);
+    expect(issue).toMatchObject({ file: 'packages/api/CLAUDE.md', line: 1 });
+    expect(issue!.message).toContain('contradicts CLAUDE.md:1');
+    expect(issue!.message).toContain('(both load when Claude works in packages/api/)');
+  });
+
+  it('compares a rule in a nested .claude/rules/ and a nested .claude/CLAUDE.md the same way', () => {
+    expect(
+      lint('contradiction', { 'CLAUDE.md': ROOT, 'pkg/.claude/rules/db.md': '- Use raw SQL for reports.\n' }),
+    ).toHaveLength(1);
+    expect(
+      lint('contradiction', { 'CLAUDE.md': ROOT, 'pkg/.claude/CLAUDE.md': '- Use raw SQL for reports.\n' }),
+    ).toHaveLength(1);
+  });
+
+  it('compares a paths: rule with CLAUDE.md when a file matches it', () => {
+    const files = {
+      'CLAUDE.md': ROOT,
+      '.claude/rules/api.md': '---\npaths: src/api/**\n---\n- Use raw SQL for reports.\n',
+    };
+    const [issue, ...rest] = lint('contradiction', { ...files, 'src/api/report.ts': '' });
+    expect(rest).toEqual([]);
+    expect(issue!.message).toContain('(both load when Claude works on src/api/report.ts)');
+  });
+
+  it('compares a skill, a command and a subagent with CLAUDE.md', () => {
+    const skill = lint('contradiction', {
+      'CLAUDE.md': ROOT,
+      '.claude/skills/report/SKILL.md': '---\nname: report\ndescription: d\n---\n- Use raw SQL for reports.\n',
+    });
+    expect(skill).toHaveLength(1);
+    expect(skill[0]!.message).toContain('(both load when /report runs)');
+    expect(
+      lint('contradiction', { 'CLAUDE.md': ROOT, '.claude/commands/report.md': '- Use raw SQL for reports.\n' }),
+    ).toHaveLength(1);
+    const agent = lint('contradiction', {
+      'CLAUDE.md': ROOT,
+      '.claude/agents/db.md': '---\nname: db-helper\ndescription: d\n---\n- Use raw SQL for reports.\n',
+    });
+    expect(agent[0]!.message).toContain('(both load in the db-helper subagent)');
+  });
+
+  it('compares a subagent with the skills it preloads, and not with CLAUDE.md when it sets omitClaudeMd', () => {
+    expect(
+      lint('contradiction', {
+        'CLAUDE.md': ROOT,
+        '.claude/agents/db.md': '---\nname: db\ndescription: d\nomitClaudeMd: true\n---\n- Use raw SQL for reports.\n',
+      }),
+    ).toEqual([]);
+    const preload = lint('contradiction', {
+      '.claude/agents/db.md': '---\nname: db\ndescription: d\nskills:\n  - sql\n---\n- Never use raw SQL.\n',
+      '.claude/skills/sql/SKILL.md': '---\nname: sql\ndescription: d\n---\n- Use raw SQL for reports.\n',
+    });
+    expect(preload).toHaveLength(1);
+    expect(preload[0]!.message).toContain('in the db subagent');
+  });
+
+  it('does not compare files that never load together', () => {
+    // Two sibling packages.
+    expect(
+      lint('contradiction', {
+        'packages/a/CLAUDE.md': ROOT,
+        'packages/b/CLAUDE.md': '- Use raw SQL for reports.\n',
+      }),
+    ).toEqual([]);
+    // Two paths: rules with no file in common.
+    expect(
+      lint('contradiction', {
+        '.claude/rules/a.md': '---\npaths: a/**\n---\n' + ROOT,
+        '.claude/rules/b.md': '---\npaths: b/**\n---\n- Use raw SQL for reports.\n',
+        'a/x.ts': '',
+        'b/y.ts': '',
+      }),
+    ).toEqual([]);
+    // Two skills: only one runs at a time.
+    expect(
+      lint('contradiction', {
+        '.claude/skills/a/SKILL.md': '---\nname: a\ndescription: d\n---\n' + ROOT,
+        '.claude/skills/b/SKILL.md': '---\nname: b\ndescription: d\n---\n- Use raw SQL for reports.\n',
+      }),
+    ).toEqual([]);
+  });
+
+  it('reads a name in backticks exactly (code is case-sensitive) and skips descriptions', () => {
+    // `plan` (a command) is not "Plan mode".
+    expect(
+      lint('contradiction', { 'CLAUDE.md': '- Never run `plan` or `apply`.\n- Use Plan mode for big changes.\n' }),
+    ).toEqual([]);
+    expect(lint('contradiction', { 'CLAUDE.md': '- Never run `plan`.\n- Run plan before apply.\n' })).toHaveLength(1);
+    // A checklist of mistakes written as "Creating ..." describes, it does not ask.
+    expect(
+      lint('contradiction', {
+        'CLAUDE.md': '- Never create wrapper functions that only delegate.\n',
+        'pkg/CLAUDE.md': '1. Creating wrapper functions that only delegate\n',
+      }),
+    ).toEqual([]);
+  });
+
+  it('reports copies between two files that meet on demand once per pair, with a count', () => {
+    const rules = [
+      '- Run the linter before every commit.',
+      '- Keep every handler under fifty lines.',
+      '- Log errors with the request id.',
+    ];
+    const issues = lint('duplicate-rule', {
+      'CLAUDE.md': rules.join('\n') + '\n',
+      '.claude/rules/api.md': '---\npaths: api/**\n---\n' + rules.join('\n') + '\n',
+      'api/x.ts': '',
+    });
+    expect(issues).toHaveLength(1);
+    expect(issues[0]!.message).toBe(
+      'Same rule as CLAUDE.md:1 (both load when Claude works on api/x.ts), and 2 more lines of this file repeat CLAUDE.md.',
+    );
+    // A line about the file itself is not a rule.
+    expect(
+      lint('duplicate-rule', {
+        'CLAUDE.md': '- This file provides guidance to Claude Code when working here.\n',
+        'pkg/CLAUDE.md': '- This file provides guidance to Claude Code when working here.\n',
+      }),
+    ).toEqual([]);
+  });
+
+  it('reports a start-up clash once, however many nested files there are', () => {
+    const files: Record<string, string> = { 'CLAUDE.md': ROOT + '- Use raw SQL for reports.\n' };
+    for (const p of ['a', 'b', 'c/d']) files[`packages/${p}/CLAUDE.md`] = '- Keep functions short.\n';
+    const issues = lint('contradiction', files);
+    expect(issues).toHaveLength(1);
+    expect(issues[0]!.message).not.toContain('both load');
+  });
+
+  it('leaves out imports past four hops: Claude Code never loads them', () => {
+    const chain = (depth: number): Record<string, string> => {
+      const files: Record<string, string> = { 'CLAUDE.md': ROOT + '@d1.md\n' };
+      for (let i = 1; i < depth; i++) files[`d${i}.md`] = `@d${i + 1}.md\n`;
+      files[`d${depth}.md`] = '- Use raw SQL for reports.\n';
+      return files;
+    };
+    expect(lint('contradiction', chain(4))).toHaveLength(1);
+    expect(lint('contradiction', chain(5))).toEqual([]);
+  });
+
+  it('finds the same rule in a nested CLAUDE.md and the root one, once', () => {
+    const issues = lint('duplicate-rule', {
+      'CLAUDE.md': '- Run the linter before every commit.\n',
+      'packages/api/CLAUDE.md': '- Run the linter before every commit.\n',
+      'packages/api/src/x.ts': '',
+      'packages/api/test/y.ts': '',
+    });
+    expect(issues).toHaveLength(1);
+    expect(issues[0]).toMatchObject({ file: 'packages/api/CLAUDE.md', line: 1 });
+    expect(issues[0]!.message).toBe('Same rule as CLAUDE.md:1 (both load when Claude works in packages/api/).');
+    expect(
+      lint('duplicate-rule', {
+        'packages/a/CLAUDE.md': '- Run the linter before every commit.\n',
+        'packages/b/CLAUDE.md': '- Run the linter before every commit.\n',
+      }),
+    ).toEqual([]);
+  });
+});
+
 describe('duplicate-rule', () => {
   it('flags the same rule twice, ignoring case and list style', () => {
     const issues = lint('duplicate-rule', {
