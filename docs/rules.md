@@ -44,7 +44,7 @@ Paths in any language (`docs/menü.md`), dot folders (`.github/workflows/ci.yml`
 
 ## file-name-pattern
 
-**Level:** warning (new in the next release; tell us with a [false-alarm report](https://github.com/mohamedsabith/setupscore/issues/new?template=2-false-alarm.yml) if it is wrong)
+**Level:** warning (new in 1.3.0; tell us with a [false-alarm report](https://github.com/mohamedsabith/setupscore/issues/new?template=2-false-alarm.yml) if it is wrong)
 
 A file name pattern with a date in your instructions (`knowledge/history/YYYY-MM.md`, `logs/YYYYMMDD.log`, `plans/YYYY-MM-DD-ENG-XXXX-description.md`, `reports/YYYY/MM.md`) doesn't fit the files it describes.
 
