@@ -78,7 +78,7 @@
     "zod": "^4.6.7"
   },
   "devDependencies": {
-    "@anthropic-ai/sandbox-runtime": "0.0.81",
+    "@anthropic-ai/sandbox-runtime": "0.0.83",
     "@arethetypeswrong/cli": "^0.18.5",
     "@commitlint/cli": "^21.2.4",
     "@commitlint/config-conventional": "^21.2.4",
@@ -99,11 +99,11 @@
     "globals": "^17.14.0",
     "husky": "^9.1.7",
     "knip": "^6.44.1",
-    "prettier": "3.9.10",
+    "prettier": "3.10.1",
     "publint": "^0.3.25",
     "tsup": "^9.0.0",
     "typescript": "~6.0.3",
-    "typescript-eslint": "~8.72.1",
+    "typescript-eslint": "~8.73.0",
     "vitest": "^5.1.0"
   },
   "publishConfig": {
